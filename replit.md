@@ -1,45 +1,54 @@
-# [Project name]
+# Bloom — Postpartum Wellness
 
-_Replace the heading above with the project's name, and this line with one sentence describing what this app does for users._
+A mobile app that helps new mothers track postpartum depression indicators daily and predicts their PPD risk level using a wellness score algorithm.
 
 ## Run & Operate
 
-- `pnpm --filter @workspace/api-server run dev` — run the API server (port 5000)
+- `pnpm --filter @workspace/mobile run dev` — run the Expo app (via workflow)
 - `pnpm run typecheck` — full typecheck across all packages
 - `pnpm run build` — typecheck + build all packages
-- `pnpm --filter @workspace/api-spec run codegen` — regenerate API hooks and Zod schemas from the OpenAPI spec
-- `pnpm --filter @workspace/db run push` — push DB schema changes (dev only)
-- Required env: `DATABASE_URL` — Postgres connection string
 
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
-- API: Express 5
-- DB: PostgreSQL + Drizzle ORM
-- Validation: Zod (`zod/v4`), `drizzle-zod`
-- API codegen: Orval (from OpenAPI spec)
-- Build: esbuild (CJS bundle)
+- Mobile: Expo (React Native) with expo-router
+- State: AsyncStorage (local persistence, no backend)
+- Fonts: Inter (400/500/600/700) via @expo-google-fonts/inter
 
 ## Where things live
 
-_Populate as you build — short repo map plus pointers to the source-of-truth file for DB schema, API contracts, theme files, etc._
+- `artifacts/mobile/` — Expo mobile app
+- `artifacts/mobile/app/` — screens (onboarding, tabs)
+- `artifacts/mobile/context/AppContext.tsx` — all app state, PPD risk algorithm, AsyncStorage persistence
+- `artifacts/mobile/components/` — MoodScale, RiskGauge components
+- `artifacts/mobile/constants/colors.ts` — warm cream/lavender/blush palette
 
 ## Architecture decisions
 
-_Populate as you build — non-obvious choices a reader couldn't infer from the code (3-5 bullets)._
+- Frontend-only: all data stored locally via AsyncStorage, no backend needed
+- PPD risk score (0–100) is computed from 6 daily factors: mood, sleep, anxiety, appetite, bonding, support
+- Risk levels: Low (0–35), Moderate (36–65), High (66+) — based on EPDS principles
+- Onboarding redirect handled in root `_layout.tsx` via `profile.setupComplete` flag
 
 ## Product
 
-_Describe the high-level user-facing capabilities of this app once they exist._
+- **Onboarding**: Collects user name, baby name, and birth date (3-step flow)
+- **Home**: Dashboard with greeting, risk score, 7-day bar chart, streak counter
+- **Check-In**: Step-by-step daily survey (6 factors + optional notes)
+- **History**: Expandable list of past entries with per-metric dot indicators
+- **Insights**: PPD prediction trend, 7-day averages, 30-day summary, coping tips, crisis resources
 
 ## User preferences
 
-_Populate as you build — explicit user instructions worth remembering across sessions._
+_Populate as needed._
 
 ## Gotchas
 
-_Populate as you build — sharp edges, "always run X before Y" rules._
+- Only restart the Expo workflow after dependency changes or Metro errors — HMR handles code changes
+- Do not create a backend or database: the app is intentionally frontend-only
+- Web preview may render text differently than native; Expo Go on device is the source of truth
 
 ## Pointers
 
-- See the `pnpm-workspace` skill for workspace structure, TypeScript setup, and package details
+- See the `pnpm-workspace` skill for workspace structure
+- See the `expo` skill for mobile guidelines
