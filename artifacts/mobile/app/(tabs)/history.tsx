@@ -1,13 +1,12 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useMemo } from "react";
 import {
+  FlatList,
   Platform,
-  ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
-  FlatList,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp, getRiskLevel, CheckIn } from "@/context/AppContext";
@@ -35,36 +34,71 @@ function formatRelative(dateStr: string): string {
   return formatDateShort(dateStr);
 }
 
+function pct(val: number, max = 5, invert = false): number {
+  const p = ((val - 1) / (max - 1)) * 100;
+  return invert ? 100 - p : p;
+}
+
 function avg(arr: number[]) {
   if (!arr.length) return 0;
   return parseFloat((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1));
 }
+
+function HBar({ value, color, bg }: { value: number; color: string; bg: string }) {
+  return (
+    <View style={[hBarStyles.track, { backgroundColor: bg }]}>
+      <View style={[hBarStyles.fill, { width: `${value}%` as any, backgroundColor: color }]} />
+    </View>
+  );
+}
+const hBarStyles = StyleSheet.create({
+  track: { height: 8, borderRadius: 4, overflow: "hidden", flex: 1 },
+  fill: { height: "100%", borderRadius: 4 },
+});
 
 function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
   const colors = useColors();
   const last7 = checkIns.slice(0, 7);
   const last30 = checkIns.slice(0, 30);
 
-  const avgScore = last7.length ? Math.round(last7.reduce((a, c) => a + c.riskScore, 0) / last7.length) : 0;
+  const avgScore = last7.length
+    ? Math.round(last7.reduce((a, c) => a + c.riskScore, 0) / last7.length)
+    : 0;
   const wellness = Math.max(0, 100 - avgScore);
   const level = getRiskLevel(avgScore);
-  const levelColor = level === "low" ? colors.riskLow : level === "moderate" ? colors.riskModerate : colors.riskHigh;
+  const levelColor =
+    level === "low" ? colors.riskLow : level === "moderate" ? colors.riskModerate : colors.riskHigh;
+
   const avgSleep = avg(last7.map((c) => c.sleep));
   const avgMood = avg(last7.map((c) => c.mood));
   const avgAnxiety = avg(last7.map((c) => c.anxiety));
+  const avgBonding = avg(last7.map((c) => c.bonding));
   const lowDays = last30.filter((c) => c.riskScore <= 35).length;
+  const modDays = last30.filter((c) => c.riskScore > 35 && c.riskScore <= 65).length;
   const highDays = last30.filter((c) => c.riskScore > 65).length;
+
+  const cognitiveLoad = Math.round((avgAnxiety / 5) * 100);
+  const emotionalResilience = Math.round(((avgMood + avgBonding) / 10) * 100);
+  const moodStability = Math.round((avgMood / 5) * 100);
+
+  const firstDate = last30.length > 0 ? last30[last30.length - 1].date : "";
+  const lastDate = last30.length > 0 ? last30[0].date : "";
 
   return (
     <View style={[summaryStyles.container, { backgroundColor: colors.card }]}>
       <View style={summaryStyles.header}>
-        <View>
+        <View style={{ flex: 1 }}>
           <Text style={[summaryStyles.reportLabel, { color: colors.mutedForeground }]}>
             CLINICAL WELLNESS REPORT
           </Text>
           <Text style={[summaryStyles.title, { color: colors.foreground }]}>
-            7-Day Summary
+            Comprehensive Overview
           </Text>
+          {firstDate && lastDate && (
+            <Text style={[summaryStyles.period, { color: colors.mutedForeground }]}>
+              {formatDateShort(firstDate)} – {formatDateShort(lastDate)}, {new Date(lastDate + "T12:00:00").getFullYear()}
+            </Text>
+          )}
         </View>
         <View style={[summaryStyles.scoreCircle, { borderColor: levelColor }]}>
           <Text style={[summaryStyles.scoreNum, { color: levelColor }]}>{wellness}</Text>
@@ -74,46 +108,50 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
 
       <View style={[summaryStyles.divider, { backgroundColor: colors.border }]} />
 
-      <View style={summaryStyles.metricsGrid}>
+      <View>
+        <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>Mood Stability</Text>
+        <Text style={[summaryStyles.sectionSub, { color: colors.mutedForeground }]}>
+          Average over the last {last7.length} days
+        </Text>
+        <View style={summaryStyles.barRow}>
+          <HBar value={moodStability} color={colors.primary} bg={colors.lavender} />
+          <Text style={[summaryStyles.barVal, { color: colors.foreground }]}>{avgMood}/5</Text>
+        </View>
+      </View>
+
+      <View style={summaryStyles.metricsRow}>
         {[
           {
             icon: "🌙",
             label: "Sleep Quality",
             value: `${avgSleep}h avg`,
-            sublabel: avgSleep >= 7 ? "Restful" : avgSleep >= 5 ? "Fair" : "Poor",
+            sub: avgSleep >= 7 ? "Restful" : avgSleep >= 5 ? "Fair" : "Poor",
             subColor: avgSleep >= 7 ? colors.riskLow : avgSleep >= 5 ? colors.riskModerate : colors.riskHigh,
             bg: colors.blush,
           },
           {
-            icon: "😊",
-            label: "Mood Stability",
-            value: `${avgMood}/5`,
-            sublabel: avgMood >= 4 ? "Stable" : avgMood >= 3 ? "Variable" : "Low",
-            subColor: avgMood >= 4 ? colors.riskLow : avgMood >= 3 ? colors.riskModerate : colors.riskHigh,
+            icon: "💚",
+            label: "Wellness Score",
+            value: `${wellness}`,
+            sub: level === "low" ? "Low Risk" : level === "moderate" ? "Moderate" : "High Risk",
+            subColor: levelColor,
             bg: colors.softGreen,
           },
           {
-            icon: "💭",
-            label: "Anxiety Level",
-            value: `${avgAnxiety}/5`,
-            sublabel: avgAnxiety <= 2 ? "Managed" : avgAnxiety <= 3 ? "Moderate" : "Elevated",
-            subColor: avgAnxiety <= 2 ? colors.riskLow : avgAnxiety <= 3 ? colors.riskModerate : colors.riskHigh,
-            bg: colors.softOrange,
+            icon: "🤱",
+            label: "Bonding",
+            value: `${avgBonding}/5`,
+            sub: avgBonding >= 4 ? "Strong" : "Growing",
+            subColor: avgBonding >= 4 ? colors.riskLow : colors.riskModerate,
+            bg: colors.lavender,
           },
         ].map((m) => (
-          <View
-            key={m.label}
-            style={[summaryStyles.metricCard, { backgroundColor: m.bg }]}
-          >
+          <View key={m.label} style={[summaryStyles.metricCard, { backgroundColor: m.bg }]}>
             <Text style={{ fontSize: 20 }}>{m.icon}</Text>
-            <Text style={[summaryStyles.metricLabel, { color: colors.mutedForeground }]}>
-              {m.label}
-            </Text>
-            <Text style={[summaryStyles.metricVal, { color: colors.foreground }]}>
-              {m.value}
-            </Text>
+            <Text style={[summaryStyles.metricLabel, { color: colors.mutedForeground }]}>{m.label}</Text>
+            <Text style={[summaryStyles.metricVal, { color: colors.foreground }]}>{m.value}</Text>
             <View style={[summaryStyles.statusPill, { backgroundColor: m.subColor + "22" }]}>
-              <Text style={[summaryStyles.statusText, { color: m.subColor }]}>{m.sublabel}</Text>
+              <Text style={[summaryStyles.statusText, { color: m.subColor }]}>{m.sub}</Text>
             </View>
           </View>
         ))}
@@ -121,43 +159,153 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
 
       <View style={[summaryStyles.divider, { backgroundColor: colors.border }]} />
 
-      <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>
-        30-Day Risk Indicators
-      </Text>
-      <View style={summaryStyles.indicators}>
-        <View style={summaryStyles.indicatorRow}>
-          <View style={[summaryStyles.indicatorDot, { backgroundColor: colors.riskLow }]} />
-          <Text style={[summaryStyles.indicatorText, { color: colors.text }]}>
-            Low risk days
+      <View style={{ gap: 14 }}>
+        <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>
+          Risk Indicators & Resilience
+        </Text>
+
+        <View style={{ gap: 8 }}>
+          <View style={summaryStyles.indicatorHeader}>
+            <Text style={[summaryStyles.indicatorTitle, { color: colors.text }]}>
+              Cognitive Load & Stress
+            </Text>
+            <View
+              style={[
+                summaryStyles.indicatorBadge,
+                {
+                  backgroundColor:
+                    cognitiveLoad <= 40
+                      ? colors.softGreen
+                      : cognitiveLoad <= 65
+                      ? colors.softOrange
+                      : colors.softRed,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  summaryStyles.indicatorBadgeText,
+                  {
+                    color:
+                      cognitiveLoad <= 40
+                        ? colors.riskLow
+                        : cognitiveLoad <= 65
+                        ? colors.riskModerate
+                        : colors.riskHigh,
+                  },
+                ]}
+              >
+                {cognitiveLoad <= 40 ? "LOW" : cognitiveLoad <= 65 ? "MODERATE" : "ELEVATED"}
+              </Text>
+            </View>
+          </View>
+          <View style={summaryStyles.barRow}>
+            <HBar
+              value={cognitiveLoad}
+              color={
+                cognitiveLoad <= 40
+                  ? colors.riskLow
+                  : cognitiveLoad <= 65
+                  ? colors.riskModerate
+                  : colors.riskHigh
+              }
+              bg={colors.lavender}
+            />
+            <Text style={[summaryStyles.barVal, { color: colors.mutedForeground }]}>{cognitiveLoad}%</Text>
+          </View>
+          <Text style={[summaryStyles.indicatorDesc, { color: colors.mutedForeground }]}>
+            {cognitiveLoad <= 40
+              ? "Anxiety is well-managed. Your nervous system appears regulated."
+              : cognitiveLoad <= 65
+              ? "Moderate stress patterns detected. Rest and grounding exercises may help."
+              : "Elevated stress indicators. Prioritise support and consider professional guidance."}
           </Text>
-          <Text style={[summaryStyles.indicatorVal, { color: colors.riskLow }]}>{lowDays}</Text>
         </View>
-        <View style={summaryStyles.indicatorRow}>
-          <View style={[summaryStyles.indicatorDot, { backgroundColor: colors.riskModerate }]} />
-          <Text style={[summaryStyles.indicatorText, { color: colors.text }]}>
-            Moderate risk days
+
+        <View style={[summaryStyles.divider, { backgroundColor: colors.border }]} />
+
+        <View style={{ gap: 8 }}>
+          <View style={summaryStyles.indicatorHeader}>
+            <Text style={[summaryStyles.indicatorTitle, { color: colors.text }]}>
+              Emotional Resilience
+            </Text>
+            <View
+              style={[
+                summaryStyles.indicatorBadge,
+                {
+                  backgroundColor:
+                    emotionalResilience >= 70
+                      ? colors.softGreen
+                      : emotionalResilience >= 50
+                      ? colors.softOrange
+                      : colors.softRed,
+                },
+              ]}
+            >
+              <Text
+                style={[
+                  summaryStyles.indicatorBadgeText,
+                  {
+                    color:
+                      emotionalResilience >= 70
+                        ? colors.riskLow
+                        : emotionalResilience >= 50
+                        ? colors.riskModerate
+                        : colors.riskHigh,
+                  },
+                ]}
+              >
+                {emotionalResilience >= 70 ? "HIGH" : emotionalResilience >= 50 ? "MODERATE" : "LOW"}
+              </Text>
+            </View>
+          </View>
+          <View style={summaryStyles.barRow}>
+            <HBar
+              value={emotionalResilience}
+              color={
+                emotionalResilience >= 70
+                  ? colors.riskLow
+                  : emotionalResilience >= 50
+                  ? colors.riskModerate
+                  : colors.riskHigh
+              }
+              bg={colors.lavender}
+            />
+            <Text style={[summaryStyles.barVal, { color: colors.mutedForeground }]}>{emotionalResilience}%</Text>
+          </View>
+          <Text style={[summaryStyles.indicatorDesc, { color: colors.mutedForeground }]}>
+            {emotionalResilience >= 70
+              ? "High emotional resilience. Mood and bonding scores indicate strong self-regulation."
+              : emotionalResilience >= 50
+              ? "Moderate resilience. Building routine and social connection can strengthen this further."
+              : "Lower resilience detected. Speaking with a counselor may be beneficial right now."}
           </Text>
-          <Text style={[summaryStyles.indicatorVal, { color: colors.riskModerate }]}>
-            {last30.length - lowDays - highDays}
-          </Text>
-        </View>
-        <View style={summaryStyles.indicatorRow}>
-          <View style={[summaryStyles.indicatorDot, { backgroundColor: colors.riskHigh }]} />
-          <Text style={[summaryStyles.indicatorText, { color: colors.text }]}>
-            High risk days
-          </Text>
-          <Text style={[summaryStyles.indicatorVal, { color: colors.riskHigh }]}>{highDays}</Text>
         </View>
       </View>
 
-      <View style={[summaryStyles.insight, { backgroundColor: colors.muted }]}>
-        <Feather name="info" size={14} color={colors.primary} />
-        <Text style={[summaryStyles.insightText, { color: colors.mutedForeground }]}>
-          {level === "low"
-            ? "Your risk score is low. Your recovery is progressing well."
-            : level === "moderate"
-            ? "Moderate stress detected. Rest, social support, and routine can help."
-            : "Elevated risk detected. Please speak with your healthcare provider."}
+      <View style={[summaryStyles.divider, { backgroundColor: colors.border }]} />
+
+      <View style={{ gap: 10 }}>
+        <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>
+          30-Day Risk Summary
+        </Text>
+        {[
+          { color: colors.riskLow, label: "Low risk days", count: lowDays },
+          { color: colors.riskModerate, label: "Moderate risk days", count: modDays },
+          { color: colors.riskHigh, label: "High risk days", count: highDays },
+        ].map((r) => (
+          <View key={r.label} style={summaryStyles.riskRow}>
+            <View style={[summaryStyles.riskDot, { backgroundColor: r.color }]} />
+            <Text style={[summaryStyles.riskLabel, { color: colors.text }]}>{r.label}</Text>
+            <Text style={[summaryStyles.riskCount, { color: r.color }]}>{r.count}</Text>
+          </View>
+        ))}
+      </View>
+
+      <View style={[summaryStyles.disclaimer, { backgroundColor: colors.muted }]}>
+        <Feather name="info" size={13} color={colors.primary} />
+        <Text style={[summaryStyles.disclaimerText, { color: colors.mutedForeground }]}>
+          This report is an expert tool for clinical awareness and should not be used for self-diagnosis. Always consult a licensed healthcare provider.
         </Text>
       </View>
     </View>
@@ -165,153 +313,197 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
 }
 
 const summaryStyles = StyleSheet.create({
-  container: { borderRadius: 20, padding: 18, gap: 14 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-start",
-  },
+  container: { borderRadius: 20, padding: 18, gap: 16 },
+  header: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start", gap: 12 },
   reportLabel: {
     fontSize: 10,
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 0.8,
     marginBottom: 4,
   },
-  title: { fontSize: 19, fontFamily: "Inter_700Bold" },
+  title: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  period: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 3 },
   scoreCircle: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     borderWidth: 2.5,
     alignItems: "center",
     justifyContent: "center",
+    flexShrink: 0,
   },
-  scoreNum: { fontSize: 20, fontFamily: "Inter_700Bold" },
+  scoreNum: { fontSize: 22, fontFamily: "Inter_700Bold" },
   scoreLabel: { fontSize: 9, fontFamily: "Inter_500Medium" },
   divider: { height: 1 },
-  metricsGrid: { flexDirection: "row", gap: 8 },
-  metricCard: { flex: 1, borderRadius: 14, padding: 12, alignItems: "center", gap: 4 },
-  metricLabel: { fontSize: 10, fontFamily: "Inter_400Regular", textAlign: "center" },
-  metricVal: { fontSize: 15, fontFamily: "Inter_700Bold" },
-  statusPill: { paddingHorizontal: 8, paddingVertical: 2, borderRadius: 10 },
-  statusText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
   sectionLabel: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  indicators: { gap: 10 },
-  indicatorRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  indicatorDot: { width: 10, height: 10, borderRadius: 5 },
-  indicatorText: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular" },
-  indicatorVal: { fontSize: 16, fontFamily: "Inter_700Bold" },
-  insight: {
+  sectionSub: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 2, marginBottom: 8 },
+  barRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  barVal: { fontSize: 13, fontFamily: "Inter_600SemiBold", minWidth: 36, textAlign: "right" },
+  metricsRow: { flexDirection: "row", gap: 8 },
+  metricCard: { flex: 1, borderRadius: 14, padding: 11, alignItems: "center", gap: 4 },
+  metricLabel: { fontSize: 9, fontFamily: "Inter_400Regular", textAlign: "center" },
+  metricVal: { fontSize: 15, fontFamily: "Inter_700Bold" },
+  statusPill: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 8 },
+  statusText: { fontSize: 9, fontFamily: "Inter_600SemiBold" },
+  indicatorHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  indicatorTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  indicatorBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  indicatorBadgeText: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 0.3 },
+  indicatorDesc: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17 },
+  riskRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  riskDot: { width: 10, height: 10, borderRadius: 5 },
+  riskLabel: { flex: 1, fontSize: 13, fontFamily: "Inter_400Regular" },
+  riskCount: { fontSize: 18, fontFamily: "Inter_700Bold" },
+  disclaimer: {
     flexDirection: "row",
     gap: 8,
     borderRadius: 12,
     padding: 12,
     alignItems: "flex-start",
   },
-  insightText: { flex: 1, fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 18 },
+  disclaimerText: { flex: 1, fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
 });
 
-function EntryRow({ item }: { item: CheckIn }) {
+const MOOD_EMOJIS = ["", "😞", "😟", "😐", "🙂", "😊"];
+
+function EntryRow({ item, isLast }: { item: CheckIn; isLast: boolean }) {
   const colors = useColors();
   const [expanded, setExpanded] = useState(false);
   const level = getRiskLevel(item.riskScore);
   const levelColor =
     level === "low" ? colors.riskLow : level === "moderate" ? colors.riskModerate : colors.riskHigh;
-
-  const moodEmojis = ["", "😞", "😟", "😐", "🙂", "😊"];
+  const levelLabel = level === "low" ? "Low" : level === "moderate" ? "Moderate" : "High Risk";
 
   return (
-    <TouchableOpacity
-      onPress={() => setExpanded((e) => !e)}
-      style={[entryStyles.row, { backgroundColor: colors.card }]}
-      activeOpacity={0.85}
-    >
-      <View style={entryStyles.top}>
-        <View style={entryStyles.left}>
-          <View style={[entryStyles.dot, { backgroundColor: levelColor }]} />
-          <View>
-            <Text style={[entryStyles.relDate, { color: colors.text }]}>
-              {formatRelative(item.date)}
-            </Text>
-            <Text style={[entryStyles.fullDate, { color: colors.mutedForeground }]}>
-              {formatDateLong(item.date)}
-            </Text>
-          </View>
-        </View>
-        <View style={entryStyles.right}>
-          <Text style={{ fontSize: 20 }}>{moodEmojis[item.mood] ?? "😐"}</Text>
-          <View style={[entryStyles.scorePill, { backgroundColor: levelColor + "20" }]}>
-            <Text style={[entryStyles.scoreText, { color: levelColor }]}>{item.riskScore}</Text>
-          </View>
-          <Feather
-            name={expanded ? "chevron-up" : "chevron-down"}
-            size={16}
-            color={colors.mutedForeground}
-          />
-        </View>
-      </View>
-
-      {expanded && (
-        <View style={entryStyles.detail}>
-          <View style={[entryStyles.divider, { backgroundColor: colors.border }]} />
-          <View style={entryStyles.metricsRow}>
-            {[
-              { label: "Mood", val: item.mood },
-              { label: "Sleep", val: item.sleep + "h" },
-              { label: "Anxiety", val: item.anxiety },
-              { label: "Appetite", val: item.appetite },
-              { label: "Bonding", val: item.bonding },
-              { label: "Support", val: item.support },
-            ].map((m) => (
-              <View key={m.label} style={entryStyles.metricChip}>
-                <Text style={[entryStyles.metricLabel, { color: colors.mutedForeground }]}>
-                  {m.label}
-                </Text>
-                <Text style={[entryStyles.metricVal, { color: colors.text }]}>{m.val}</Text>
-              </View>
-            ))}
-          </View>
-          {item.notes ? (
-            <View style={[entryStyles.notes, { backgroundColor: colors.muted }]}>
-              <Text style={[entryStyles.notesText, { color: colors.text }]}>{item.notes}</Text>
+    <View>
+      <View style={[entryStyles.timelineLine, { backgroundColor: colors.border }]} />
+      <View style={[entryStyles.timelineDot, { backgroundColor: levelColor }]} />
+      <TouchableOpacity
+        onPress={() => setExpanded((e) => !e)}
+        style={[entryStyles.row, { backgroundColor: colors.card }]}
+        activeOpacity={0.85}
+      >
+        <View style={entryStyles.rowTop}>
+          <View style={entryStyles.rowLeft}>
+            <Text style={{ fontSize: 22 }}>{MOOD_EMOJIS[item.mood] ?? "😐"}</Text>
+            <View>
+              <Text style={[entryStyles.relDate, { color: colors.text }]}>
+                {formatRelative(item.date)}
+              </Text>
+              <Text style={[entryStyles.fullDate, { color: colors.mutedForeground }]}>
+                {formatDateLong(item.date)}
+              </Text>
             </View>
-          ) : null}
+          </View>
+          <View style={entryStyles.rowRight}>
+            <View style={[entryStyles.scorePill, { backgroundColor: levelColor + "20" }]}>
+              <Text style={[entryStyles.scoreText, { color: levelColor }]}>
+                {item.riskScore} · {levelLabel}
+              </Text>
+            </View>
+            <Feather
+              name={expanded ? "chevron-up" : "chevron-down"}
+              size={15}
+              color={colors.mutedForeground}
+            />
+          </View>
         </View>
-      )}
-    </TouchableOpacity>
+
+        {item.notes ? (
+          <Text style={[entryStyles.notesPreview, { color: colors.mutedForeground }]} numberOfLines={expanded ? undefined : 1}>
+            💬 {item.notes}
+          </Text>
+        ) : null}
+
+        {expanded && (
+          <View style={entryStyles.detail}>
+            <View style={[entryStyles.divider, { backgroundColor: colors.border }]} />
+            <View style={entryStyles.metricsGrid}>
+              {[
+                { label: "Mood", val: item.mood, max: 5, invert: false },
+                { label: "Sleep", val: item.sleep + "h", raw: item.sleep, max: 12, invert: false, isStr: true },
+                { label: "Anxiety", val: item.anxiety, max: 5, invert: true },
+                { label: "Appetite", val: item.appetite, max: 5, invert: false },
+                { label: "Bonding", val: item.bonding, max: 5, invert: false },
+                { label: "Support", val: item.support, max: 5, invert: false },
+              ].map((m) => (
+                <View key={m.label} style={entryStyles.metricItem}>
+                  <Text style={[entryStyles.metricLabel, { color: colors.mutedForeground }]}>
+                    {m.label}
+                  </Text>
+                  <View style={[entryStyles.metricBarBg, { backgroundColor: colors.lavender }]}>
+                    <View
+                      style={[
+                        entryStyles.metricBarFill,
+                        {
+                          width: `${m.isStr ? (Number(m.raw ?? 0) / m.max) * 100 : pct(Number(m.val), m.max, m.invert)}%` as any,
+                          backgroundColor: m.invert
+                            ? Number(m.val) >= 4 ? colors.riskHigh : Number(m.val) === 3 ? colors.riskModerate : colors.riskLow
+                            : colors.primary,
+                        },
+                      ]}
+                    />
+                  </View>
+                  <Text style={[entryStyles.metricVal, { color: colors.text }]}>
+                    {m.isStr ? m.val : `${m.val}/5`}
+                  </Text>
+                </View>
+              ))}
+            </View>
+          </View>
+        )}
+      </TouchableOpacity>
+    </View>
   );
 }
 
 const entryStyles = StyleSheet.create({
-  row: { borderRadius: 16, padding: 14 },
-  top: {
+  timelineLine: {
+    position: "absolute",
+    left: 22,
+    top: 0,
+    bottom: 0,
+    width: 1.5,
+  },
+  timelineDot: {
+    position: "absolute",
+    left: 15,
+    top: 20,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    zIndex: 1,
+  },
+  row: {
+    borderRadius: 16,
+    padding: 14,
+    marginLeft: 36,
+    gap: 8,
+  },
+  rowTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  left: { flexDirection: "row", alignItems: "center", gap: 10 },
-  dot: { width: 10, height: 10, borderRadius: 5 },
+  rowLeft: { flexDirection: "row", alignItems: "center", gap: 10, flex: 1 },
   relDate: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   fullDate: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 1 },
-  right: { flexDirection: "row", alignItems: "center", gap: 8 },
-  scorePill: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  scoreText: { fontSize: 13, fontFamily: "Inter_700Bold" },
-  detail: { gap: 10, marginTop: 10 },
+  rowRight: { flexDirection: "row", alignItems: "center", gap: 8, flexShrink: 0 },
+  scorePill: { paddingHorizontal: 9, paddingVertical: 4, borderRadius: 10 },
+  scoreText: { fontSize: 11, fontFamily: "Inter_700Bold" },
+  notesPreview: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17 },
+  detail: { gap: 10 },
   divider: { height: 1 },
-  metricsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-  metricChip: {
-    alignItems: "center",
-    gap: 2,
-    minWidth: 60,
-  },
-  metricLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
-  metricVal: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  notes: { borderRadius: 10, padding: 10 },
-  notesText: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 18 },
+  metricsGrid: { gap: 8 },
+  metricItem: { flexDirection: "row", alignItems: "center", gap: 8 },
+  metricLabel: { fontSize: 11, fontFamily: "Inter_400Regular", width: 58 },
+  metricBarBg: { flex: 1, height: 6, borderRadius: 3, overflow: "hidden" },
+  metricBarFill: { height: "100%", borderRadius: 3 },
+  metricVal: { fontSize: 11, fontFamily: "Inter_600SemiBold", width: 36, textAlign: "right" },
 });
 
 export default function HistoryScreen() {
@@ -323,7 +515,9 @@ export default function HistoryScreen() {
     <FlatList
       data={checkIns}
       keyExtractor={(item) => item.id}
-      renderItem={({ item }) => <EntryRow item={item} />}
+      renderItem={({ item, index }) => (
+        <EntryRow item={item} isLast={index === checkIns.length - 1} />
+      )}
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[
         styles.list,
@@ -334,40 +528,31 @@ export default function HistoryScreen() {
       ]}
       showsVerticalScrollIndicator={false}
       ListHeaderComponent={
-        <View style={{ gap: 14 }}>
-          <Text style={[styles.pageTitle, { color: colors.foreground }]}>
-            Clinical Report
-          </Text>
+        <View style={{ gap: 14, marginBottom: 8 }}>
+          <Text style={[styles.pageTitle, { color: colors.foreground }]}>Clinical Report</Text>
           {checkIns.length > 0 && <SummarySection checkIns={checkIns} />}
-          <Text style={[styles.logTitle, { color: colors.foreground }]}>
-            Timeline of Events
-          </Text>
+          <Text style={[styles.logTitle, { color: colors.foreground }]}>Timeline of Events</Text>
         </View>
       }
       ListEmptyComponent={
         <View style={styles.empty}>
-          <Text style={{ fontSize: 44 }}>📋</Text>
+          <Text style={{ fontSize: 48 }}>📋</Text>
           <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No entries yet</Text>
           <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
             Complete your first check-in to see your clinical report here.
           </Text>
         </View>
       }
-      ItemSeparatorComponent={() => <View style={{ height: 8 }} />}
+      ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
     />
   );
 }
 
 const styles = StyleSheet.create({
-  list: { paddingHorizontal: 20, gap: 12 },
+  list: { paddingHorizontal: 20, gap: 0 },
   pageTitle: { fontSize: 24, fontFamily: "Inter_700Bold" },
   logTitle: { fontSize: 17, fontFamily: "Inter_700Bold", marginTop: 4 },
-  empty: {
-    paddingTop: 60,
-    alignItems: "center",
-    gap: 10,
-    paddingHorizontal: 40,
-  },
+  empty: { paddingTop: 60, alignItems: "center", gap: 10, paddingHorizontal: 40 },
   emptyTitle: { fontSize: 20, fontFamily: "Inter_700Bold" },
   emptySub: {
     fontSize: 14,

@@ -23,9 +23,17 @@ function NativeTabLayout() {
         <Icon sf={{ default: "doc.text", selected: "doc.text.fill" }} />
         <Label>Report</Label>
       </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="resources">
+        <Icon sf={{ default: "hands.and.sparkles", selected: "hands.and.sparkles.fill" }} />
+        <Label>Support</Label>
+      </NativeTabs.Trigger>
       <NativeTabs.Trigger name="insights">
         <Icon sf={{ default: "chart.line.uptrend.xyaxis", selected: "chart.line.uptrend.xyaxis" }} />
         <Label>Insights</Label>
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person", selected: "person.fill" }} />
+        <Label>Me</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -36,7 +44,6 @@ function ClassicTabLayout() {
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const isIOS = Platform.OS === "ios";
-  const isWeb = Platform.OS === "web";
 
   return (
     <Tabs
@@ -53,7 +60,7 @@ function ClassicTabLayout() {
           shadowColor: "#000",
           shadowOpacity: 0.06,
           shadowRadius: 12,
-          ...(isWeb ? { height: 84 } : {}),
+          ...(Platform.OS === "web" ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
           isIOS ? (
@@ -63,16 +70,11 @@ function ClassicTabLayout() {
               style={StyleSheet.absoluteFill}
             />
           ) : (
-            <View
-              style={[
-                StyleSheet.absoluteFill,
-                { backgroundColor: colors.card },
-              ]}
-            />
+            <View style={[StyleSheet.absoluteFill, { backgroundColor: colors.card }]} />
           ),
         tabBarLabelStyle: {
           fontFamily: "Inter_500Medium",
-          fontSize: 11,
+          fontSize: 10,
         },
       }}
     >
@@ -82,9 +84,9 @@ function ClassicTabLayout() {
           title: "Home",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house.fill" tintColor={color} size={22} />
+              <SymbolView name="house.fill" tintColor={color} size={21} />
             ) : (
-              <Feather name="home" size={22} color={color} />
+              <Feather name="home" size={21} color={color} />
             ),
         }}
       />
@@ -94,9 +96,9 @@ function ClassicTabLayout() {
           title: "Check-In",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="heart.fill" tintColor={color} size={22} />
+              <SymbolView name="heart.fill" tintColor={color} size={21} />
             ) : (
-              <Feather name="heart" size={22} color={color} />
+              <Feather name="heart" size={21} color={color} />
             ),
         }}
       />
@@ -106,9 +108,21 @@ function ClassicTabLayout() {
           title: "Report",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="doc.text.fill" tintColor={color} size={22} />
+              <SymbolView name="doc.text.fill" tintColor={color} size={21} />
             ) : (
-              <Feather name="file-text" size={22} color={color} />
+              <Feather name="file-text" size={21} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="resources"
+        options={{
+          title: "Support",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="heart.circle.fill" tintColor={color} size={21} />
+            ) : (
+              <Feather name="life-buoy" size={21} color={color} />
             ),
         }}
       />
@@ -118,9 +132,21 @@ function ClassicTabLayout() {
           title: "Insights",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={22} />
+              <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={21} />
             ) : (
-              <Feather name="trending-up" size={22} color={color} />
+              <Feather name="trending-up" size={21} color={color} />
+            ),
+        }}
+      />
+      <Tabs.Screen
+        name="profile"
+        options={{
+          title: "Me",
+          tabBarIcon: ({ color }) =>
+            isIOS ? (
+              <SymbolView name="person.fill" tintColor={color} size={21} />
+            ) : (
+              <Feather name="user" size={21} color={color} />
             ),
         }}
       />
