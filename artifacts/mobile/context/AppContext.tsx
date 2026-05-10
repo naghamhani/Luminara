@@ -80,6 +80,72 @@ export function getTodayString(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+function makeEntry(
+  date: string,
+  mood: number,
+  sleep: number,
+  anxiety: number,
+  appetite: number,
+  bonding: number,
+  support: number,
+  notes = ""
+): CheckIn {
+  const riskScore = calculateRiskScore({ mood, sleep, anxiety, appetite, bonding, support });
+  return {
+    id: date + "_seed",
+    date,
+    mood,
+    sleep,
+    anxiety,
+    appetite,
+    bonding,
+    support,
+    notes,
+    riskScore,
+    createdAt: date + "T09:00:00.000Z",
+  };
+}
+
+const SEED_PROFILE: UserProfile = {
+  name: "Nagham",
+  babyName: "Laila",
+  birthDate: "2025-08-06",
+  setupComplete: true,
+};
+
+const SEED_CHECKINS: CheckIn[] = [
+  makeEntry("2026-05-10", 4, 6.5, 2, 4, 5, 4, "Laila smiled at me today 🌸"),
+  makeEntry("2026-05-09", 3, 5.0, 3, 3, 4, 3, "Difficult night, woke up 3 times"),
+  makeEntry("2026-05-08", 4, 7.0, 2, 4, 5, 5),
+  makeEntry("2026-05-07", 3, 6.0, 3, 4, 4, 4),
+  makeEntry("2026-05-06", 4, 6.5, 2, 4, 5, 4),
+  makeEntry("2026-05-05", 5, 7.5, 1, 5, 5, 5, "Best day in weeks"),
+  makeEntry("2026-05-04", 3, 5.0, 4, 3, 4, 3),
+  makeEntry("2026-05-03", 4, 6.5, 2, 4, 5, 4),
+  makeEntry("2026-05-02", 3, 5.5, 3, 3, 4, 3),
+  makeEntry("2026-05-01", 4, 7.0, 2, 5, 5, 4, "Feeling more like myself again"),
+  makeEntry("2026-04-30", 2, 4.0, 4, 3, 4, 2),
+  makeEntry("2026-04-29", 3, 5.5, 3, 4, 4, 3),
+  makeEntry("2026-04-28", 4, 6.0, 2, 4, 5, 4),
+  makeEntry("2026-04-27", 3, 5.0, 3, 3, 4, 3),
+  makeEntry("2026-04-26", 4, 6.5, 2, 4, 4, 4),
+  makeEntry("2026-04-25", 2, 4.5, 4, 2, 3, 2, "Hard day. Cried a lot."),
+  makeEntry("2026-04-24", 3, 5.0, 3, 3, 4, 3),
+  makeEntry("2026-04-23", 4, 6.0, 2, 4, 5, 4),
+  makeEntry("2026-04-22", 3, 5.5, 3, 3, 4, 3),
+  makeEntry("2026-04-21", 2, 4.0, 4, 3, 3, 2),
+  makeEntry("2026-04-20", 3, 5.5, 3, 4, 4, 3),
+  makeEntry("2026-04-19", 4, 6.0, 2, 4, 5, 4),
+  makeEntry("2026-04-18", 3, 5.0, 3, 3, 4, 3, "Support group was helpful today"),
+  makeEntry("2026-04-17", 2, 4.5, 4, 2, 3, 2),
+  makeEntry("2026-04-16", 3, 5.5, 3, 3, 4, 3),
+  makeEntry("2026-04-15", 4, 6.5, 2, 4, 4, 4),
+  makeEntry("2026-04-14", 3, 5.0, 3, 3, 4, 3),
+  makeEntry("2026-04-13", 2, 4.0, 4, 2, 3, 2),
+  makeEntry("2026-04-12", 3, 5.5, 3, 3, 4, 3),
+  makeEntry("2026-04-11", 4, 6.0, 2, 4, 5, 3),
+];
+
 const AppContext = createContext<AppContextType | null>(null);
 
 const PROFILE_KEY = "@bloom_profile";
@@ -97,8 +163,20 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
           AsyncStorage.getItem(PROFILE_KEY),
           AsyncStorage.getItem(CHECKINS_KEY),
         ]);
-        if (profileData) setProfile(JSON.parse(profileData));
-        if (checkInsData) setCheckIns(JSON.parse(checkInsData));
+
+        if (profileData) {
+          setProfile(JSON.parse(profileData));
+        } else {
+          setProfile(SEED_PROFILE);
+          await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(SEED_PROFILE));
+        }
+
+        if (checkInsData) {
+          setCheckIns(JSON.parse(checkInsData));
+        } else {
+          setCheckIns(SEED_CHECKINS);
+          await AsyncStorage.setItem(CHECKINS_KEY, JSON.stringify(SEED_CHECKINS));
+        }
       } catch {
       } finally {
         setIsLoading(false);

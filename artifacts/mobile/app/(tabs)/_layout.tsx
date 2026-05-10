@@ -6,7 +6,6 @@ import { SymbolView } from "expo-symbols";
 import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
-
 import { useColors } from "@/hooks/useColors";
 
 function NativeTabLayout() {
@@ -21,8 +20,8 @@ function NativeTabLayout() {
         <Label>Check-In</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
-        <Icon sf={{ default: "calendar", selected: "calendar.fill" }} />
-        <Label>History</Label>
+        <Icon sf={{ default: "doc.text", selected: "doc.text.fill" }} />
+        <Label>Report</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="insights">
         <Icon sf={{ default: "chart.line.uptrend.xyaxis", selected: "chart.line.uptrend.xyaxis" }} />
@@ -47,10 +46,13 @@ function ClassicTabLayout() {
         headerShown: false,
         tabBarStyle: {
           position: "absolute",
-          backgroundColor: isIOS ? "transparent" : colors.background,
-          borderTopWidth: isWeb ? 1 : 0,
+          backgroundColor: isIOS ? "transparent" : colors.card,
+          borderTopWidth: 1,
           borderTopColor: colors.border,
           elevation: 0,
+          shadowColor: "#000",
+          shadowOpacity: 0.06,
+          shadowRadius: 12,
           ...(isWeb ? { height: 84 } : {}),
         },
         tabBarBackground: () =>
@@ -60,11 +62,18 @@ function ClassicTabLayout() {
               tint={isDark ? "dark" : "light"}
               style={StyleSheet.absoluteFill}
             />
-          ) : isWeb ? (
+          ) : (
             <View
-              style={[StyleSheet.absoluteFill, { backgroundColor: colors.background }]}
+              style={[
+                StyleSheet.absoluteFill,
+                { backgroundColor: colors.card },
+              ]}
             />
-          ) : null,
+          ),
+        tabBarLabelStyle: {
+          fontFamily: "Inter_500Medium",
+          fontSize: 11,
+        },
       }}
     >
       <Tabs.Screen
@@ -73,7 +82,7 @@ function ClassicTabLayout() {
           title: "Home",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="house" tintColor={color} size={24} />
+              <SymbolView name="house.fill" tintColor={color} size={22} />
             ) : (
               <Feather name="home" size={22} color={color} />
             ),
@@ -85,7 +94,7 @@ function ClassicTabLayout() {
           title: "Check-In",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="heart" tintColor={color} size={24} />
+              <SymbolView name="heart.fill" tintColor={color} size={22} />
             ) : (
               <Feather name="heart" size={22} color={color} />
             ),
@@ -94,12 +103,12 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: "History",
+          title: "Report",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="calendar" tintColor={color} size={24} />
+              <SymbolView name="doc.text.fill" tintColor={color} size={22} />
             ) : (
-              <Feather name="calendar" size={22} color={color} />
+              <Feather name="file-text" size={22} color={color} />
             ),
         }}
       />
@@ -109,7 +118,7 @@ function ClassicTabLayout() {
           title: "Insights",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={24} />
+              <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={22} />
             ) : (
               <Feather name="trending-up" size={22} color={color} />
             ),
@@ -120,8 +129,6 @@ function ClassicTabLayout() {
 }
 
 export default function TabLayout() {
-  if (isLiquidGlassAvailable()) {
-    return <NativeTabLayout />;
-  }
+  if (isLiquidGlassAvailable()) return <NativeTabLayout />;
   return <ClassicTabLayout />;
 }

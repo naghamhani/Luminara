@@ -14,133 +14,163 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp, getTodayString } from "@/context/AppContext";
-import { MoodScale, ScaleLabels } from "@/components/MoodScale";
 import { useColors } from "@/hooks/useColors";
 import { Feather } from "@expo/vector-icons";
 
-const STEPS = [
-  {
-    key: "mood" as const,
-    title: "How is your mood?",
-    subtitle: "Rate how you're feeling emotionally right now",
-    labels: ["Very low", "Low", "Neutral", "Good", "Great"],
-  },
-  {
-    key: "sleep" as const,
-    title: "How did you sleep?",
-    subtitle: "Rate the quality and amount of rest you got",
-    labels: ["Terrible", "Poor", "Fair", "Good", "Great"],
-    isSleep: true,
-  },
-  {
-    key: "anxiety" as const,
-    title: "Anxiety level",
-    subtitle: "How much anxiety or worry are you experiencing?",
-    labels: ["None", "Mild", "Moderate", "High", "Severe"],
-    isAnxiety: true,
-  },
-  {
-    key: "appetite" as const,
-    title: "How's your appetite?",
-    subtitle: "Have you been able to eat regular meals today?",
-    labels: ["No appetite", "Poor", "Fair", "Good", "Great"],
-  },
-  {
-    key: "bonding" as const,
-    title: "Connection with baby",
-    subtitle: "How connected do you feel to your baby today?",
-    labels: ["Disconnected", "Low", "Some", "Good", "Very close"],
-  },
-  {
-    key: "support" as const,
-    title: "Feeling supported",
-    subtitle: "Have you felt supported by people around you?",
-    labels: ["Not at all", "Barely", "Somewhat", "Mostly", "Very much"],
-  },
+const MOODS = [
+  { emoji: "😞", label: "Very low", value: 1 },
+  { emoji: "😟", label: "Low", value: 2 },
+  { emoji: "😐", label: "Okay", value: 3 },
+  { emoji: "🙂", label: "Good", value: 4 },
+  { emoji: "😊", label: "Great", value: 5 },
 ];
+
+const SLEEP_OPTIONS = [
+  { label: "< 3h", hours: 2 },
+  { label: "3–4h", hours: 3.5 },
+  { label: "4–5h", hours: 4.5 },
+  { label: "5–6h", hours: 5.5 },
+  { label: "6–7h", hours: 6.5 },
+  { label: "7–8h", hours: 7.5 },
+  { label: "8h+", hours: 9 },
+];
+
+function RatingRow({
+  label,
+  value,
+  onChange,
+  low,
+  high,
+  accentColor,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  low: string;
+  high: string;
+  accentColor?: string;
+}) {
+  const colors = useColors();
+  const color = accentColor ?? colors.primary;
+  return (
+    <View style={ratingStyles.container}>
+      <Text style={[ratingStyles.label, { color: colors.text }]}>{label}</Text>
+      <View style={ratingStyles.row}>
+        {[1, 2, 3, 4, 5].map((v) => {
+          const active = value >= v;
+          return (
+            <Pressable
+              key={v}
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                onChange(v);
+              }}
+              style={[
+                ratingStyles.dot,
+                {
+                  backgroundColor: active ? color : colors.lavender,
+                  width: active && value === v ? 30 : 22,
+                  height: active && value === v ? 30 : 22,
+                  borderRadius: active && value === v ? 15 : 11,
+                },
+              ]}
+            />
+          );
+        })}
+      </View>
+      <View style={ratingStyles.labels}>
+        <Text style={[ratingStyles.endLabel, { color: colors.mutedForeground }]}>{low}</Text>
+        <Text style={[ratingStyles.endLabel, { color: colors.mutedForeground }]}>{high}</Text>
+      </View>
+    </View>
+  );
+}
+
+const ratingStyles = StyleSheet.create({
+  container: { gap: 8 },
+  label: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+  },
+  dot: {
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  labels: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    paddingHorizontal: 2,
+  },
+  endLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
+});
 
 export default function CheckInScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addCheckIn, hasCheckedInToday, todayCheckIn } = useApp();
 
-  const [step, setStep] = useState(0);
-  const [values, setValues] = useState({
-    mood: 0,
-    sleep: 0,
-    anxiety: 0,
-    appetite: 0,
-    bonding: 0,
-    support: 0,
-  });
-  const [sleepHours, setSleepHours] = useState("6");
+  const [step, setStep] = useState<"mood" | "wellbeing" | "notes" | "done">(
+    hasCheckedInToday ? "done" : "mood"
+  );
+  const [mood, setMood] = useState(0);
+  const [sleepIdx, setSleepIdx] = useState(-1);
+  const [anxiety, setAnxiety] = useState(0);
+  const [appetite, setAppetite] = useState(0);
+  const [bonding, setBonding] = useState(0);
+  const [support, setSupport] = useState(0);
   const [notes, setNotes] = useState("");
-  const [done, setDone] = useState(false);
-  const slideAnim = useRef(new Animated.Value(0)).current;
+  const fadeAnim = useRef(new Animated.Value(1)).current;
 
-  const progress = (step / (STEPS.length + 1)) * 100;
-  const currentStep = STEPS[step];
-
-  const animateNext = (next: number) => {
+  const transition = (next: typeof step) => {
     Animated.sequence([
-      Animated.timing(slideAnim, { toValue: -30, duration: 150, useNativeDriver: true }),
-      Animated.timing(slideAnim, { toValue: 0, duration: 200, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 0, duration: 180, useNativeDriver: true }),
+      Animated.timing(fadeAnim, { toValue: 1, duration: 220, useNativeDriver: true }),
     ]).start();
-    setStep(next);
+    setTimeout(() => setStep(next), 180);
   };
 
-  const handleNext = async () => {
-    if (step < STEPS.length - 1) {
-      const key = currentStep.key;
-      if (values[key] === 0) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        return;
-      }
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      animateNext(step + 1);
-    } else if (step === STEPS.length - 1) {
-      const key = currentStep.key;
-      if (values[key] === 0) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
-        return;
-      }
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      animateNext(step + 1);
-    } else {
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      const hrs = parseFloat(sleepHours) || 6;
-      await addCheckIn({
-        date: getTodayString(),
-        mood: values.mood,
-        sleep: hrs,
-        anxiety: values.anxiety,
-        appetite: values.appetite,
-        bonding: values.bonding,
-        support: values.support,
-        notes,
-      });
-      setDone(true);
+  const handleMoodNext = async () => {
+    if (mood === 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    transition("wellbeing");
   };
 
-  const handleBack = () => {
-    if (step > 0) {
-      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-      animateNext(step - 1);
+  const handleWellbeingNext = async () => {
+    if (sleepIdx < 0 || anxiety === 0 || appetite === 0 || bonding === 0 || support === 0) {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      return;
     }
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    transition("notes");
   };
 
-  const setValue = (key: keyof typeof values, v: number) => {
-    setValues((prev) => ({ ...prev, [key]: v }));
+  const handleSubmit = async () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    const sleepHours = SLEEP_OPTIONS[sleepIdx]?.hours ?? 6;
+    await addCheckIn({
+      date: getTodayString(),
+      mood,
+      sleep: sleepHours,
+      anxiety,
+      appetite,
+      bonding,
+      support,
+      notes,
+    });
+    transition("done");
   };
 
-  if (done || (hasCheckedInToday && !done)) {
-    const score = todayCheckIn?.riskScore ?? 0;
-    const level =
-      score <= 35 ? "low" : score <= 65 ? "moderate" : "high";
-    const levelColor =
-      level === "low" ? colors.riskLow : level === "moderate" ? colors.riskModerate : colors.riskHigh;
+  const score = todayCheckIn?.riskScore ?? 0;
+  const level = score <= 35 ? "low" : score <= 65 ? "moderate" : "high";
+  const levelColor =
+    level === "low" ? colors.riskLow : level === "moderate" ? colors.riskModerate : colors.riskHigh;
 
+  if (step === "done") {
     return (
       <View
         style={[
@@ -152,22 +182,22 @@ export default function CheckInScreen() {
           },
         ]}
       >
-        <View style={[styles.doneIcon, { backgroundColor: colors.blush }]}>
-          <Text style={{ fontSize: 48 }}>🌸</Text>
+        <View style={[styles.doneCircle, { backgroundColor: colors.softGreen }]}>
+          <Text style={{ fontSize: 52 }}>✅</Text>
         </View>
         <Text style={[styles.doneTitle, { color: colors.foreground }]}>
-          {done ? "Check-in complete" : "Already checked in"}
+          Check-in complete
         </Text>
         <Text style={[styles.doneSub, { color: colors.mutedForeground }]}>
-          {done ? "You showed up for yourself today. That matters." : "You've already logged today. Come back tomorrow."}
+          {hasCheckedInToday
+            ? "You've already logged today. Come back tomorrow."
+            : "You showed up for yourself today. That matters."}
         </Text>
         {todayCheckIn && (
-          <View style={[styles.scoreBox, { backgroundColor: levelColor + "20" }]}>
-            <Text style={[styles.scoreBig, { color: levelColor }]}>
-              {todayCheckIn.riskScore}
-            </Text>
-            <Text style={[styles.scoreLabel, { color: levelColor }]}>
-              {level === "low" ? "Low Risk" : level === "moderate" ? "Moderate Risk" : "High Risk"}
+          <View style={[styles.scoreBox, { backgroundColor: levelColor + "18", borderColor: levelColor + "30", borderWidth: 1.5 }]}>
+            <Text style={[styles.scoreBig, { color: levelColor }]}>{todayCheckIn.riskScore}</Text>
+            <Text style={[styles.scoreSmall, { color: colors.mutedForeground }]}>
+              Risk Score · {level === "low" ? "Low Risk" : level === "moderate" ? "Moderate" : "High Risk"}
             </Text>
           </View>
         )}
@@ -175,13 +205,11 @@ export default function CheckInScreen() {
           onPress={() => router.push("/(tabs)")}
           style={[styles.doneBtn, { backgroundColor: colors.primary }]}
         >
-          <Text style={[styles.doneBtnText, { color: "#fff" }]}>Back to Home</Text>
+          <Text style={styles.doneBtnText}>Back to Home</Text>
         </Pressable>
       </View>
     );
   }
-
-  const isNotesStep = step === STEPS.length;
 
   return (
     <KeyboardAvoidingView
@@ -192,107 +220,208 @@ export default function CheckInScreen() {
         style={[
           styles.container,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 16),
+            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
             paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 16),
           },
         ]}
       >
         <View style={styles.topBar}>
-          {step > 0 ? (
-            <Pressable onPress={handleBack} style={styles.backBtn}>
+          {step !== "mood" ? (
+            <Pressable
+              onPress={() =>
+                transition(
+                  step === "notes" ? "wellbeing" : step === "wellbeing" ? "mood" : "mood"
+                )
+              }
+              style={styles.backBtn}
+            >
               <Feather name="arrow-left" size={20} color={colors.text} />
             </Pressable>
           ) : (
             <View style={{ width: 36 }} />
           )}
-          <Text style={[styles.stepCounter, { color: colors.mutedForeground }]}>
-            {isNotesStep ? "Almost done" : `${step + 1} of ${STEPS.length}`}
-          </Text>
+          <View style={[styles.stepDots, { gap: 6 }]}>
+            {(["mood", "wellbeing", "notes"] as const).map((s) => (
+              <View
+                key={s}
+                style={[
+                  styles.stepDot,
+                  {
+                    backgroundColor: s === step ? colors.primary : colors.lavender,
+                    width: s === step ? 20 : 8,
+                  },
+                ]}
+              />
+            ))}
+          </View>
           <View style={{ width: 36 }} />
         </View>
 
-        <View style={[styles.progressBarBg, { backgroundColor: colors.lavender }]}>
-          <View
-            style={[
-              styles.progressBarFill,
-              { width: `${progress}%` as any, backgroundColor: colors.primary },
-            ]}
-          />
-        </View>
-
         <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
+          contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
         >
-          <Animated.View style={{ transform: [{ translateX: slideAnim }] }}>
-            {!isNotesStep && currentStep ? (
+          <Animated.View style={{ opacity: fadeAnim, gap: 24 }}>
+            {step === "mood" && (
               <>
-                <Text style={[styles.title, { color: colors.foreground }]}>
-                  {currentStep.title}
-                </Text>
-                <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-                  {currentStep.subtitle}
-                </Text>
+                <View>
+                  <Text style={[styles.stepTitle, { color: colors.foreground }]}>
+                    How are you feeling today?
+                  </Text>
+                  <Text style={[styles.stepSub, { color: colors.mutedForeground }]}>
+                    Take a gentle moment to reflect on your day.
+                  </Text>
+                </View>
 
-                {currentStep.isSleep ? (
-                  <View style={styles.sleepSection}>
-                    <MoodScale
-                      value={values.sleep}
-                      onChange={(v) => setValue("sleep", v)}
-                      labels={currentStep.labels}
-                      activeColor={colors.primary}
-                    />
-                    <ScaleLabels labels={currentStep.labels} />
-                    <View style={styles.hoursRow}>
-                      <Text style={[styles.hoursLabel, { color: colors.mutedForeground }]}>
-                        Hours slept
-                      </Text>
-                      <TextInput
+                <View style={styles.moodGrid}>
+                  {MOODS.map((m) => {
+                    const active = mood === m.value;
+                    return (
+                      <Pressable
+                        key={m.value}
+                        onPress={() => {
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                          setMood(m.value);
+                        }}
                         style={[
-                          styles.hoursInput,
+                          styles.moodBtn,
                           {
-                            backgroundColor: colors.secondary,
-                            color: colors.text,
-                            borderColor: colors.border,
+                            backgroundColor: active ? colors.primary + "18" : colors.card,
+                            borderColor: active ? colors.primary : colors.border,
+                            borderWidth: active ? 2 : 1,
                           },
                         ]}
-                        value={sleepHours}
-                        onChangeText={setSleepHours}
-                        keyboardType="decimal-pad"
-                        placeholder="6"
-                        placeholderTextColor={colors.mutedForeground}
-                      />
-                    </View>
+                      >
+                        <Text style={styles.moodEmoji}>{m.emoji}</Text>
+                        <Text
+                          style={[
+                            styles.moodLabel,
+                            { color: active ? colors.primary : colors.mutedForeground },
+                          ]}
+                        >
+                          {m.label}
+                        </Text>
+                      </Pressable>
+                    );
+                  })}
+                </View>
+
+                {mood > 0 && (
+                  <View
+                    style={[
+                      styles.moodFeedback,
+                      { backgroundColor: colors.card, borderColor: colors.border, borderWidth: 1 },
+                    ]}
+                  >
+                    <Text style={[styles.moodFeedbackText, { color: colors.mutedForeground }]}>
+                      {mood <= 2
+                        ? "It's okay to have hard days. You're not alone."
+                        : mood === 3
+                        ? "Every day is different. You're doing your best."
+                        : "Wonderful — carry that energy forward."}
+                    </Text>
                   </View>
-                ) : (
-                  <>
-                    <MoodScale
-                      value={values[currentStep.key]}
-                      onChange={(v) => setValue(currentStep.key, v)}
-                      labels={currentStep.labels}
-                      activeColor={
-                        currentStep.isAnxiety
-                          ? values.anxiety >= 4
-                            ? colors.riskHigh
-                            : values.anxiety === 3
-                            ? colors.riskModerate
-                            : colors.primary
-                          : colors.primary
-                      }
-                    />
-                    <ScaleLabels labels={currentStep.labels} />
-                  </>
                 )}
               </>
-            ) : (
+            )}
+
+            {step === "wellbeing" && (
               <>
-                <Text style={[styles.title, { color: colors.foreground }]}>
-                  Any thoughts to add?
-                </Text>
-                <Text style={[styles.subtitle, { color: colors.mutedForeground }]}>
-                  Optional — write anything you want to remember about today
-                </Text>
+                <View>
+                  <Text style={[styles.stepTitle, { color: colors.foreground }]}>
+                    Your wellbeing today
+                  </Text>
+                  <Text style={[styles.stepSub, { color: colors.mutedForeground }]}>
+                    These signals help track your recovery and flag early changes.
+                  </Text>
+                </View>
+
+                <View>
+                  <Text style={[styles.subSection, { color: colors.text }]}>Sleep last night</Text>
+                  <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
+                    <View style={{ flexDirection: "row", gap: 8 }}>
+                      {SLEEP_OPTIONS.map((opt, i) => {
+                        const active = sleepIdx === i;
+                        return (
+                          <Pressable
+                            key={i}
+                            onPress={() => {
+                              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                              setSleepIdx(i);
+                            }}
+                            style={[
+                              styles.sleepChip,
+                              {
+                                backgroundColor: active ? colors.primary : colors.card,
+                                borderColor: active ? colors.primary : colors.border,
+                              },
+                            ]}
+                          >
+                            <Text
+                              style={[
+                                styles.sleepChipText,
+                                { color: active ? "#fff" : colors.text },
+                              ]}
+                            >
+                              {opt.label}
+                            </Text>
+                          </Pressable>
+                        );
+                      })}
+                    </View>
+                  </ScrollView>
+                </View>
+
+                <View style={styles.ratingsList}>
+                  <RatingRow
+                    label="Anxiety level"
+                    value={anxiety}
+                    onChange={setAnxiety}
+                    low="None"
+                    high="Severe"
+                    accentColor={anxiety >= 4 ? colors.riskHigh : anxiety === 3 ? colors.riskModerate : colors.primary}
+                  />
+                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  <RatingRow
+                    label="Appetite"
+                    value={appetite}
+                    onChange={setAppetite}
+                    low="None"
+                    high="Normal"
+                  />
+                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  <RatingRow
+                    label="Bond with baby"
+                    value={bonding}
+                    onChange={setBonding}
+                    low="Distant"
+                    high="Connected"
+                    accentColor={colors.teal}
+                  />
+                  <View style={[styles.divider, { backgroundColor: colors.border }]} />
+                  <RatingRow
+                    label="Feeling supported"
+                    value={support}
+                    onChange={setSupport}
+                    low="Alone"
+                    high="Very supported"
+                    accentColor={colors.purple}
+                  />
+                </View>
+              </>
+            )}
+
+            {step === "notes" && (
+              <>
+                <View>
+                  <Text style={[styles.stepTitle, { color: colors.foreground }]}>
+                    Anything to add?
+                  </Text>
+                  <Text style={[styles.stepSub, { color: colors.mutedForeground }]}>
+                    Optional — write anything you want to remember about today. Your reflections are private and secure.
+                  </Text>
+                </View>
                 <TextInput
                   style={[
                     styles.notesInput,
@@ -305,8 +434,7 @@ export default function CheckInScreen() {
                   value={notes}
                   onChangeText={setNotes}
                   multiline
-                  numberOfLines={5}
-                  placeholder="How was your day? Anything weighing on you?"
+                  placeholder="What's on your mind today?"
                   placeholderTextColor={colors.mutedForeground}
                   textAlignVertical="top"
                 />
@@ -316,30 +444,23 @@ export default function CheckInScreen() {
         </ScrollView>
 
         <Pressable
-          onPress={handleNext}
+          onPress={
+            step === "mood"
+              ? handleMoodNext
+              : step === "wellbeing"
+              ? handleWellbeingNext
+              : handleSubmit
+          }
           style={({ pressed }) => [
             styles.nextBtn,
             {
-              backgroundColor:
-                !isNotesStep && currentStep && values[currentStep.key as keyof typeof values] === 0
-                  ? colors.muted
-                  : colors.primary,
+              backgroundColor: colors.primary,
               opacity: pressed ? 0.85 : 1,
             },
           ]}
         >
-          <Text
-            style={[
-              styles.nextBtnText,
-              {
-                color:
-                  !isNotesStep && currentStep && values[currentStep.key as keyof typeof values] === 0
-                    ? colors.mutedForeground
-                    : "#fff",
-              },
-            ]}
-          >
-            {isNotesStep ? "Complete Check-In" : "Next"}
+          <Text style={styles.nextBtnText}>
+            {step === "notes" ? "Complete Check-In ✓" : "Continue →"}
           </Text>
         </Pressable>
       </View>
@@ -348,82 +469,65 @@ export default function CheckInScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    paddingHorizontal: 24,
-    gap: 16,
-  },
+  container: { flex: 1, paddingHorizontal: 22, gap: 16 },
   topBar: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  backBtn: {
-    width: 36,
-    height: 36,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  stepCounter: {
-    fontSize: 13,
-    fontFamily: "Inter_500Medium",
-  },
-  progressBarBg: {
-    height: 4,
-    borderRadius: 2,
-    overflow: "hidden",
-  },
-  progressBarFill: {
-    height: "100%",
-    borderRadius: 2,
-  },
-  content: {
-    flexGrow: 1,
-    paddingTop: 20,
-    paddingBottom: 16,
-    gap: 24,
-  },
-  title: {
-    fontSize: 24,
+  backBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  stepDots: { flexDirection: "row", alignItems: "center" },
+  stepDot: { height: 8, borderRadius: 4 },
+  scrollContent: { flexGrow: 1, paddingTop: 8, paddingBottom: 16 },
+  stepTitle: {
+    fontSize: 26,
     fontFamily: "Inter_700Bold",
-    marginBottom: 6,
+    marginBottom: 8,
+    lineHeight: 32,
   },
-  subtitle: {
+  stepSub: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
     lineHeight: 20,
-    marginBottom: 28,
   },
-  sleepSection: {
-    gap: 16,
-  },
-  hoursRow: {
-    flexDirection: "row",
+  moodGrid: { flexDirection: "row", gap: 8, flexWrap: "wrap" },
+  moodBtn: {
+    flex: 1,
+    minWidth: "18%",
     alignItems: "center",
-    justifyContent: "space-between",
-    paddingHorizontal: 4,
+    paddingVertical: 14,
+    borderRadius: 16,
+    gap: 6,
   },
-  hoursLabel: {
-    fontSize: 14,
+  moodEmoji: { fontSize: 30 },
+  moodLabel: { fontSize: 10, fontFamily: "Inter_500Medium", textAlign: "center" },
+  moodFeedback: {
+    borderRadius: 14,
+    padding: 14,
+  },
+  moodFeedbackText: {
+    fontSize: 13,
     fontFamily: "Inter_400Regular",
-  },
-  hoursInput: {
-    width: 70,
-    height: 44,
-    borderRadius: 12,
-    borderWidth: 1.5,
-    paddingHorizontal: 12,
-    fontSize: 18,
-    fontFamily: "Inter_600SemiBold",
+    lineHeight: 19,
     textAlign: "center",
   },
+  subSection: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  sleepChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1.5,
+  },
+  sleepChipText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  ratingsList: { gap: 16 },
+  divider: { height: 1 },
   notesInput: {
     borderWidth: 1.5,
     borderRadius: 16,
     padding: 16,
     fontSize: 15,
     fontFamily: "Inter_400Regular",
-    minHeight: 130,
+    minHeight: 150,
     lineHeight: 22,
   },
   nextBtn: {
@@ -433,10 +537,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  nextBtnText: {
-    fontSize: 16,
-    fontFamily: "Inter_600SemiBold",
-  },
+  nextBtnText: { color: "#fff", fontSize: 16, fontFamily: "Inter_600SemiBold" },
   doneContainer: {
     flex: 1,
     alignItems: "center",
@@ -444,7 +545,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 28,
     gap: 16,
   },
-  doneIcon: {
+  doneCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
@@ -452,34 +553,23 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  doneTitle: {
-    fontSize: 26,
-    fontFamily: "Inter_700Bold",
-    textAlign: "center",
-  },
+  doneTitle: { fontSize: 26, fontFamily: "Inter_700Bold", textAlign: "center" },
   doneSub: {
-    fontSize: 15,
+    fontSize: 14,
     fontFamily: "Inter_400Regular",
     textAlign: "center",
-    lineHeight: 22,
+    lineHeight: 21,
     maxWidth: 280,
   },
   scoreBox: {
     alignItems: "center",
-    paddingHorizontal: 32,
+    paddingHorizontal: 36,
     paddingVertical: 20,
     borderRadius: 20,
     gap: 4,
   },
-  scoreBig: {
-    fontSize: 52,
-    fontFamily: "Inter_700Bold",
-    lineHeight: 58,
-  },
-  scoreLabel: {
-    fontSize: 14,
-    fontFamily: "Inter_600SemiBold",
-  },
+  scoreBig: { fontSize: 52, fontFamily: "Inter_700Bold" },
+  scoreSmall: { fontSize: 13, fontFamily: "Inter_500Medium" },
   doneBtn: {
     height: 52,
     borderRadius: 16,
@@ -488,8 +578,5 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginTop: 8,
   },
-  doneBtnText: {
-    fontSize: 15,
-    fontFamily: "Inter_600SemiBold",
-  },
+  doneBtnText: { color: "#fff", fontSize: 15, fontFamily: "Inter_600SemiBold" },
 });
