@@ -80,6 +80,12 @@ export function getTodayString(): string {
   return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 }
 
+function daysAgo(n: number): string {
+  const d = new Date();
+  d.setDate(d.getDate() - n);
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
 function makeEntry(
   date: string,
   mood: number,
@@ -113,43 +119,47 @@ const SEED_PROFILE: UserProfile = {
   setupComplete: true,
 };
 
-const SEED_CHECKINS: CheckIn[] = [
-  makeEntry("2026-05-10", 4, 6.5, 2, 4, 5, 4, "Laila smiled at me today 🌸"),
-  makeEntry("2026-05-09", 3, 5.0, 3, 3, 4, 3, "Difficult night, woke up 3 times"),
-  makeEntry("2026-05-08", 4, 7.0, 2, 4, 5, 5),
-  makeEntry("2026-05-07", 3, 6.0, 3, 4, 4, 4),
-  makeEntry("2026-05-06", 4, 6.5, 2, 4, 5, 4),
-  makeEntry("2026-05-05", 5, 7.5, 1, 5, 5, 5, "Best day in weeks"),
-  makeEntry("2026-05-04", 3, 5.0, 4, 3, 4, 3),
-  makeEntry("2026-05-03", 4, 6.5, 2, 4, 5, 4),
-  makeEntry("2026-05-02", 3, 5.5, 3, 3, 4, 3),
-  makeEntry("2026-05-01", 4, 7.0, 2, 5, 5, 4, "Feeling more like myself again"),
-  makeEntry("2026-04-30", 2, 4.0, 4, 3, 4, 2),
-  makeEntry("2026-04-29", 3, 5.5, 3, 4, 4, 3),
-  makeEntry("2026-04-28", 4, 6.0, 2, 4, 5, 4),
-  makeEntry("2026-04-27", 3, 5.0, 3, 3, 4, 3),
-  makeEntry("2026-04-26", 4, 6.5, 2, 4, 4, 4),
-  makeEntry("2026-04-25", 2, 4.5, 4, 2, 3, 2, "Hard day. Cried a lot."),
-  makeEntry("2026-04-24", 3, 5.0, 3, 3, 4, 3),
-  makeEntry("2026-04-23", 4, 6.0, 2, 4, 5, 4),
-  makeEntry("2026-04-22", 3, 5.5, 3, 3, 4, 3),
-  makeEntry("2026-04-21", 2, 4.0, 4, 3, 3, 2),
-  makeEntry("2026-04-20", 3, 5.5, 3, 4, 4, 3),
-  makeEntry("2026-04-19", 4, 6.0, 2, 4, 5, 4),
-  makeEntry("2026-04-18", 3, 5.0, 3, 3, 4, 3, "Support group was helpful today"),
-  makeEntry("2026-04-17", 2, 4.5, 4, 2, 3, 2),
-  makeEntry("2026-04-16", 3, 5.5, 3, 3, 4, 3),
-  makeEntry("2026-04-15", 4, 6.5, 2, 4, 4, 4),
-  makeEntry("2026-04-14", 3, 5.0, 3, 3, 4, 3),
-  makeEntry("2026-04-13", 2, 4.0, 4, 2, 3, 2),
-  makeEntry("2026-04-12", 3, 5.5, 3, 3, 4, 3),
-  makeEntry("2026-04-11", 4, 6.0, 2, 4, 5, 3),
-];
+function buildSeedCheckIns(): CheckIn[] {
+  return [
+    makeEntry(daysAgo(1),  4, 6.5, 2, 4, 5, 4, "Laila smiled at me today 🌸"),
+    makeEntry(daysAgo(2),  3, 5.0, 3, 3, 4, 3, "Difficult night, woke up 3 times"),
+    makeEntry(daysAgo(3),  4, 7.0, 2, 4, 5, 5),
+    makeEntry(daysAgo(4),  3, 6.0, 3, 4, 4, 4),
+    makeEntry(daysAgo(5),  4, 6.5, 2, 4, 5, 4),
+    makeEntry(daysAgo(6),  5, 7.5, 1, 5, 5, 5, "Best day in weeks"),
+    makeEntry(daysAgo(7),  3, 5.0, 4, 3, 4, 3),
+    makeEntry(daysAgo(8),  4, 6.5, 2, 4, 5, 4),
+    makeEntry(daysAgo(9),  3, 5.5, 3, 3, 4, 3),
+    makeEntry(daysAgo(10), 4, 7.0, 2, 5, 5, 4, "Feeling more like myself again"),
+    makeEntry(daysAgo(11), 2, 4.0, 4, 3, 4, 2),
+    makeEntry(daysAgo(12), 3, 5.5, 3, 4, 4, 3),
+    makeEntry(daysAgo(13), 4, 6.0, 2, 4, 5, 4),
+    makeEntry(daysAgo(14), 3, 5.0, 3, 3, 4, 3),
+    makeEntry(daysAgo(15), 4, 6.5, 2, 4, 4, 4),
+    makeEntry(daysAgo(16), 2, 4.5, 4, 2, 3, 2, "Hard day. Cried a lot."),
+    makeEntry(daysAgo(17), 3, 5.0, 3, 3, 4, 3),
+    makeEntry(daysAgo(18), 4, 6.0, 2, 4, 5, 4),
+    makeEntry(daysAgo(19), 3, 5.5, 3, 3, 4, 3),
+    makeEntry(daysAgo(20), 2, 4.0, 4, 3, 3, 2),
+    makeEntry(daysAgo(21), 3, 5.5, 3, 4, 4, 3),
+    makeEntry(daysAgo(22), 4, 6.0, 2, 4, 5, 4),
+    makeEntry(daysAgo(23), 3, 5.0, 3, 3, 4, 3, "Support group was helpful today"),
+    makeEntry(daysAgo(24), 2, 4.5, 4, 2, 3, 2),
+    makeEntry(daysAgo(25), 3, 5.5, 3, 3, 4, 3),
+    makeEntry(daysAgo(26), 4, 6.5, 2, 4, 4, 4),
+    makeEntry(daysAgo(27), 3, 5.0, 3, 3, 4, 3),
+    makeEntry(daysAgo(28), 2, 4.0, 4, 2, 3, 2),
+    makeEntry(daysAgo(29), 3, 5.5, 3, 3, 4, 3),
+    makeEntry(daysAgo(30), 4, 6.0, 2, 4, 5, 3),
+  ];
+}
 
 const AppContext = createContext<AppContextType | null>(null);
 
 const PROFILE_KEY = "@bloom_profile";
 const CHECKINS_KEY = "@bloom_checkins";
+const SEED_VERSION_KEY = "@bloom_seed_version";
+const SEED_VERSION = "v3"; // bump this to force a fresh re-seed
 
 export function AppProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -159,6 +169,22 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     (async () => {
       try {
+        const seedVersion = await AsyncStorage.getItem(SEED_VERSION_KEY);
+        const needsReseed = seedVersion !== SEED_VERSION;
+
+        if (needsReseed) {
+          // Clear old data and re-seed with fresh relative dates
+          const fresh = buildSeedCheckIns();
+          await AsyncStorage.multiSet([
+            [PROFILE_KEY, JSON.stringify(SEED_PROFILE)],
+            [CHECKINS_KEY, JSON.stringify(fresh)],
+            [SEED_VERSION_KEY, SEED_VERSION],
+          ]);
+          setProfile(SEED_PROFILE);
+          setCheckIns(fresh);
+          return;
+        }
+
         const [profileData, checkInsData] = await Promise.all([
           AsyncStorage.getItem(PROFILE_KEY),
           AsyncStorage.getItem(CHECKINS_KEY),
@@ -174,8 +200,9 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         if (checkInsData) {
           setCheckIns(JSON.parse(checkInsData));
         } else {
-          setCheckIns(SEED_CHECKINS);
-          await AsyncStorage.setItem(CHECKINS_KEY, JSON.stringify(SEED_CHECKINS));
+          const fresh = buildSeedCheckIns();
+          setCheckIns(fresh);
+          await AsyncStorage.setItem(CHECKINS_KEY, JSON.stringify(fresh));
         }
       } catch {
       } finally {
