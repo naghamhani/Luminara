@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useMemo } from "react";
 import {
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -123,8 +122,8 @@ export default function HomeScreen() {
       contentContainerStyle={[
         styles.scroll,
         {
-          paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 100),
+          paddingTop: insets.top + 20,
+          paddingBottom: insets.bottom + 100,
         },
       ]}
       showsVerticalScrollIndicator={false}

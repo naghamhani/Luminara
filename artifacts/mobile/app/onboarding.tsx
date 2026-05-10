@@ -112,8 +112,8 @@ export default function OnboardingScreen() {
         style={[
           styles.container,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 24),
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 32),
+            paddingTop: insets.top + 24,
+            paddingBottom: insets.bottom + 32,
           },
         ]}
       >

@@ -555,8 +555,8 @@ export default function HistoryScreen() {
       contentContainerStyle={[
         styles.list,
         {
-          paddingTop: insets.top + (Platform.OS === "web" ? 67 : 16),
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 100),
+          paddingTop: insets.top + 16,
+          paddingBottom: insets.bottom + 100,
         },
       ]}
       showsVerticalScrollIndicator={false}

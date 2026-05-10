@@ -236,7 +236,7 @@ export default function InsightsScreen() {
           styles.empty,
           {
             backgroundColor: colors.background,
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
+            paddingTop: insets.top + 20,
           },
         ]}
       >
@@ -255,8 +255,8 @@ export default function InsightsScreen() {
       contentContainerStyle={[
         styles.scroll,
         {
-          paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
-          paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 100),
+          paddingTop: insets.top + 20,
+          paddingBottom: insets.bottom + 100,
         },
       ]}
       showsVerticalScrollIndicator={false}

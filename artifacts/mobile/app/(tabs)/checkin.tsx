@@ -177,8 +177,8 @@ export default function CheckInScreen() {
           styles.doneContainer,
           {
             backgroundColor: colors.background,
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 40),
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 40),
+            paddingTop: insets.top + 40,
+            paddingBottom: insets.bottom + 40,
           },
         ]}
       >
@@ -220,8 +220,8 @@ export default function CheckInScreen() {
         style={[
           styles.container,
           {
-            paddingTop: insets.top + (Platform.OS === "web" ? 67 : 20),
-            paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 16),
+            paddingTop: insets.top + 20,
+            paddingBottom: insets.bottom + 84,
           },
         ]}
       >
