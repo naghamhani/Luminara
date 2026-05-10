@@ -1,8 +1,13 @@
 import { Feather } from "@expo/vector-icons";
-import React, { useMemo } from "react";
+import * as Print from "expo-print";
+import * as Sharing from "expo-sharing";
+import React, { useMemo, useState } from "react";
 import {
+  ActivityIndicator,
+  Alert,
   FlatList,
   Platform,
+  Pressable,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -11,7 +16,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp, getRiskLevel, CheckIn } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
-import { useState } from "react";
+import { generateReportHtml } from "@/utils/generateReport";
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -509,7 +514,35 @@ const entryStyles = StyleSheet.create({
 export default function HistoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { checkIns } = useApp();
+  const { checkIns, profile } = useApp();
+  const [sharing, setSharing] = useState(false);
+
+  async function handleSharePdf() {
+    if (!profile) return;
+    if (Platform.OS === "web") {
+      Alert.alert("Not supported", "PDF export is available on iOS and Android only.");
+      return;
+    }
+    try {
+      setSharing(true);
+      const html = generateReportHtml(profile, checkIns);
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Share Clinical Wellness Report",
+          UTI: "com.adobe.pdf",
+        });
+      } else {
+        Alert.alert("Sharing unavailable", "Your device does not support file sharing.");
+      }
+    } catch {
+      Alert.alert("Error", "Could not generate the report. Please try again.");
+    } finally {
+      setSharing(false);
+    }
+  }
 
   return (
     <FlatList
@@ -529,7 +562,25 @@ export default function HistoryScreen() {
       showsVerticalScrollIndicator={false}
       ListHeaderComponent={
         <View style={{ gap: 14, marginBottom: 8 }}>
-          <Text style={[styles.pageTitle, { color: colors.foreground }]}>Clinical Report</Text>
+          <View style={styles.titleRow}>
+            <Text style={[styles.pageTitle, { color: colors.foreground }]}>Clinical Report</Text>
+            {checkIns.length > 0 && (
+              <Pressable
+                onPress={handleSharePdf}
+                disabled={sharing}
+                style={[styles.shareBtn, { backgroundColor: colors.primary }]}
+              >
+                {sharing ? (
+                  <ActivityIndicator size={14} color="#fff" />
+                ) : (
+                  <Feather name="share-2" size={14} color="#fff" />
+                )}
+                <Text style={styles.shareBtnText}>
+                  {sharing ? "Generating…" : "Share PDF"}
+                </Text>
+              </Pressable>
+            )}
+          </View>
           {checkIns.length > 0 && <SummarySection checkIns={checkIns} />}
           <Text style={[styles.logTitle, { color: colors.foreground }]}>Timeline of Events</Text>
         </View>
@@ -550,7 +601,25 @@ export default function HistoryScreen() {
 
 const styles = StyleSheet.create({
   list: { paddingHorizontal: 20, gap: 0 },
+  titleRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+  },
   pageTitle: { fontSize: 24, fontFamily: "Inter_700Bold" },
+  shareBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+  },
+  shareBtnText: {
+    color: "#fff",
+    fontSize: 13,
+    fontFamily: "Inter_600SemiBold",
+  },
   logTitle: { fontSize: 17, fontFamily: "Inter_700Bold", marginTop: 4 },
   empty: { paddingTop: 60, alignItems: "center", gap: 10, paddingHorizontal: 40 },
   emptyTitle: { fontSize: 20, fontFamily: "Inter_700Bold" },

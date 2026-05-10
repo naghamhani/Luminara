@@ -2,7 +2,6 @@ import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
-  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -16,9 +15,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
-
-// eslint-disable-next-line @typescript-eslint/no-require-imports
-const LUMINARA_LOGO = require("../../assets/luminara-logo.png");
 
 function getDaysSince(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -156,7 +152,6 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
-        <Image source={LUMINARA_LOGO} style={styles.profileLogo} resizeMode="contain" />
         <View style={[styles.avatar, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
           <Text style={styles.avatarText}>
             {profile?.name?.charAt(0)?.toUpperCase() ?? "N"}
@@ -302,11 +297,6 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     gap: 12,
-  },
-  profileLogo: {
-    width: 110,
-    height: 80,
-    marginBottom: -4,
   },
   avatar: {
     width: 72,
