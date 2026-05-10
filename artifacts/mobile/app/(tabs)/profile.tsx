@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
   Alert,
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -15,6 +16,9 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const LUMINARA_LOGO = require("../../assets/luminara-logo.png");
 
 function getDaysSince(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -152,6 +156,7 @@ export default function ProfileScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
+        <Image source={LUMINARA_LOGO} style={styles.profileLogo} resizeMode="contain" />
         <View style={[styles.avatar, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
           <Text style={styles.avatarText}>
             {profile?.name?.charAt(0)?.toUpperCase() ?? "N"}
@@ -264,7 +269,7 @@ export default function ProfileScreen() {
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="info"
-          label="About Bloom"
+          label="About Luminara Health"
           subtitle="Version 1.0.0"
           onPress={() => {}}
         />
@@ -284,7 +289,7 @@ export default function ProfileScreen() {
       </Pressable>
 
       <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-        Bloom is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider.
+        Luminara Health is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider.
       </Text>
     </ScrollView>
   );
@@ -297,6 +302,11 @@ const styles = StyleSheet.create({
     padding: 20,
     alignItems: "center",
     gap: 12,
+  },
+  profileLogo: {
+    width: 110,
+    height: 80,
+    marginBottom: -4,
   },
   avatar: {
     width: 72,

@@ -2,6 +2,7 @@ import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useMemo } from "react";
 import {
+  Image,
   Platform,
   Pressable,
   ScrollView,
@@ -12,6 +13,9 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp, getRiskLevel } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const LUMINARA_LOGO = require("../../assets/luminara-logo.png");
 
 function getDaysSince(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -130,17 +134,18 @@ export default function HomeScreen() {
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <View>
-          <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-            {getGreeting()}
-          </Text>
-          <Text style={[styles.name, { color: colors.foreground }]}>
-            {profile?.name ?? "Mama"} 🌸
-          </Text>
-        </View>
+        <Image source={LUMINARA_LOGO} style={styles.headerLogo} resizeMode="contain" />
         <View style={[styles.notifBtn, { backgroundColor: colors.card }]}>
           <Feather name="bell" size={18} color={colors.text} />
         </View>
+      </View>
+      <View>
+        <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
+          {getGreeting()}
+        </Text>
+        <Text style={[styles.name, { color: colors.foreground }]}>
+          {profile?.name ?? "Mama"} 🌸
+        </Text>
       </View>
 
       <View
@@ -337,8 +342,12 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: "row",
     justifyContent: "space-between",
-    alignItems: "flex-start",
-    marginBottom: 4,
+    alignItems: "center",
+    marginBottom: 0,
+  },
+  headerLogo: {
+    width: 120,
+    height: 44,
   },
   greeting: { fontSize: 13, fontFamily: "Inter_400Regular", marginBottom: 2 },
   name: { fontSize: 26, fontFamily: "Inter_700Bold" },

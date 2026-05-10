@@ -3,6 +3,7 @@ import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   Animated,
+  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -16,6 +17,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { Feather } from "@expo/vector-icons";
+
+const LUMINARA_LOGO = require("../assets/luminara-logo.png");
 
 const MOODS = [
   { emoji: "😞", label: "Very low" },
@@ -162,10 +165,11 @@ export default function OnboardingScreen() {
 
             {step === 0 && (
               <View style={styles.splashContent}>
-                <View style={[styles.logoCircle, { backgroundColor: colors.secondary }]}>
-                  <Text style={{ fontSize: 52 }}>🌸</Text>
-                </View>
-                <Text style={[styles.brandName, { color: colors.primary }]}>Bloom</Text>
+                <Image
+                  source={LUMINARA_LOGO}
+                  style={styles.logoImage}
+                  resizeMode="contain"
+                />
                 <Text style={[styles.splashTitle, { color: colors.foreground }]}>
                   A safe space{"\n"}for your mind.
                 </Text>
@@ -192,7 +196,7 @@ export default function OnboardingScreen() {
               <View style={{ gap: 24 }}>
                 <View style={[styles.onbHeader, { backgroundColor: colors.blush }]}>
                   <Text style={[styles.onbTitleSmall, { color: colors.primary }]}>
-                    Luminara · Step 01
+                    Luminara Health · Step 01
                   </Text>
                   <Text style={[styles.onbTitle, { color: colors.foreground }]}>
                     How are you,{"\n"}radiant mama?
@@ -408,13 +412,13 @@ export default function OnboardingScreen() {
         >
           <Text style={styles.nextBtnText}>
             {step === 0
-              ? "Get Started"
+              ? "Begin Your Journey"
               : step === 2
               ? "Next →"
               : step === 3
               ? "Next →"
               : step === 5
-              ? "Start My Journey 🌸"
+              ? "Start with Luminara 🌸"
               : "Continue →"}
           </Text>
         </Pressable>
@@ -448,14 +452,10 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingTop: 12, paddingBottom: 8 },
 
   splashContent: { alignItems: "center", gap: 20, paddingTop: 8 },
-  logoCircle: {
-    width: 90,
-    height: 90,
-    borderRadius: 45,
-    alignItems: "center",
-    justifyContent: "center",
+  logoImage: {
+    width: 180,
+    height: 140,
   },
-  brandName: { fontSize: 28, fontFamily: "Inter_700Bold", letterSpacing: 1 },
   splashTitle: {
     fontSize: 32,
     fontFamily: "Inter_700Bold",

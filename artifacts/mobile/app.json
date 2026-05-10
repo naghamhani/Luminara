@@ -1,24 +1,24 @@
 {
   "expo": {
-    "name": "Bloom — Postpartum Wellness",
+    "name": "Luminara Health",
     "slug": "mobile",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/images/icon.png",
+    "icon": "./assets/luminara-logo.png",
     "scheme": "mobile",
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "splash": {
-      "image": "./assets/images/icon.png",
+      "image": "./assets/luminara-logo.png",
       "resizeMode": "contain",
-      "backgroundColor": "#FDF8F5"
+      "backgroundColor": "#F4F6FD"
     },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.bloom.postpartumwellness"
+      "bundleIdentifier": "com.luminara.health"
     },
     "android": {
-      "package": "com.bloom.postpartumwellness"
+      "package": "com.luminara.health"
     },
     "web": {
       "favicon": "./assets/images/icon.png"
