@@ -555,7 +555,7 @@ export default function HistoryScreen() {
       contentContainerStyle={[
         styles.list,
         {
-          paddingTop: insets.top + 16,
+          paddingTop: insets.top + 56,
           paddingBottom: insets.bottom + 100,
         },
       ]}

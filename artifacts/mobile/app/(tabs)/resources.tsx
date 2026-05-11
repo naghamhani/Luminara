@@ -3,12 +3,14 @@ import React, { useState } from "react";
 import {
   Alert,
   Linking,
+  Modal,
   Platform,
   Pressable,
   ScrollView,
   StyleSheet,
   Text,
   TextInput,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -18,42 +20,62 @@ const KNOWLEDGE = [
   {
     emoji: "🧠",
     title: "Understanding Postpartum Changes",
-    sub: "Navigating the complex emotional and physical landscape after birth requires patience and the right...",
+    sub: "Navigating the complex emotional and physical landscape after birth requires patience and the right support.",
     time: "5 min read",
     tag: "Education",
     tagColor: "#5168B4",
+    topics: ["Anxiety", "Baby Blues"],
+    content: `After giving birth, your body and mind go through profound changes. Hormones like estrogen and progesterone drop sharply, which can trigger mood shifts, tearfulness, and anxiety.\n\n**What's normal:**\nMild "baby blues" lasting 1–2 weeks, feeling overwhelmed, difficulty sleeping, emotional sensitivity.\n\n**When to seek help:**\nIf low mood, numbness, or anxiety persists beyond 2 weeks — or feels severe at any point — please speak with your OB, midwife, or a mental health professional.\n\n**Remember:** Postpartum depression affects 1 in 5 new mothers. You are not alone, and with support, recovery is possible.\n\nThis app is here to help you track how you're feeling day by day. Small patterns matter — that's the power of daily check-ins.`,
   },
   {
     emoji: "👶",
     title: "The Baby Blues: What They Are and What's Normal",
-    sub: "Many new mothers experience emotional swings in the first two weeks after birth...",
+    sub: "Many new mothers experience emotional swings in the first two weeks after birth.",
     time: "4 min read",
     tag: "Wellbeing",
     tagColor: "#3AAFA9",
+    topics: ["Baby Blues", "Anxiety"],
+    content: `Baby blues is a common, temporary condition that affects up to 80% of new mothers. It typically starts 2–3 days after delivery and resolves on its own within two weeks.\n\n**Signs of baby blues:**\n• Crying for no clear reason\n• Mood swings\n• Irritability\n• Trouble sleeping\n• Feeling overwhelmed\n\n**What helps:**\n• Accept help from others\n• Rest when the baby rests\n• Stay hydrated and nourished\n• Talk about your feelings\n• Gentle outdoor walks\n\n**Important distinction:**\nBaby blues vs. postpartum depression differs primarily in duration and severity. If symptoms persist beyond 2 weeks or feel unmanageable, please reach out to a healthcare provider. This is not weakness — it's wisdom.`,
   },
   {
     emoji: "🌙",
     title: "Sleep Strategies for New Moms",
-    sub: "Evidence-based approaches to getting more rest even when your baby wakes frequently...",
+    sub: "Evidence-based approaches to getting more rest even when your baby wakes frequently.",
     time: "6 min read",
     tag: "Sleep",
     tagColor: "#7C5CBF",
+    topics: ["Sleep", "Self-Care"],
+    content: `Sleep deprivation is one of the hardest parts of new motherhood — and it directly impacts your mood, resilience, and risk of PPD.\n\n**Evidence-based strategies:**\n\n🌙 **Sleep when the baby sleeps**\nEven 20-minute naps accumulate into meaningful rest.\n\n🤝 **Share night duties**\nIf you have a partner, alternate nighttime wake-ups so each of you gets a longer stretch.\n\n📵 **Limit screens before sleep**\nBlue light delays melatonin. Wind down with dim lighting and calm activity.\n\n🛁 **Establish a short wind-down routine**\nEven 10 minutes of a calming ritual signals your nervous system to prepare for sleep.\n\n☕ **Limit caffeine after noon**\nCaffeine has a half-life of 5–7 hours and can disrupt sleep quality even if you fall asleep.\n\n**Track it:**\nYour daily sleep check-in in Luminara helps us identify patterns. Consistent low sleep is an early signal worth attention.`,
   },
   {
     emoji: "💬",
     title: "Talking to Your Partner About PPD",
-    sub: "How to communicate your needs and share the emotional load during the postpartum period...",
+    sub: "How to communicate your needs and share the emotional load during the postpartum period.",
     time: "5 min read",
     tag: "Relationships",
     tagColor: "#F2A65A",
+    topics: ["Family", "Stress"],
+    content: `Postpartum depression doesn't just affect the mother — it affects the whole family. Communicating openly with your partner is one of the most powerful protective factors.\n\n**Starting the conversation:**\nChoose a calm moment (not during a conflict or feeding). Start with "I" statements: "I've been feeling…" rather than "You never…"\n\n**What partners can do:**\n• Take the baby for 1–2 hours so you can sleep\n• Handle a specific task (cooking, laundry, groceries)\n• Simply listen without offering solutions unless asked\n• Attend a doctor's appointment with you\n\n**What to say if you're struggling:**\n*"I'm not feeling like myself, and I need support. I'm not asking you to fix it — I just need you to know."*\n\n**Remember:** Asking for help is strength. No one should navigate the postpartum period alone.`,
   },
   {
     emoji: "🍽️",
     title: "Nutrition for Postpartum Recovery",
-    sub: "Your body is healing. These foods support mood, energy, and milk production...",
+    sub: "Your body is healing. These foods support mood, energy, and milk production.",
     time: "4 min read",
     tag: "Health",
     tagColor: "#3DAD7A",
+    topics: ["Recovery", "Self-Care", "Feeding"],
+    content: `Your body has just done something extraordinary. Nutrition plays a direct role in hormone regulation, energy, mood stability, and if you're breastfeeding, milk quality.\n\n**Key nutrients for new moms:**\n\n🐟 **Omega-3 fatty acids** (salmon, sardines, walnuts)\nLinked to reduced PPD risk. Support brain health and mood regulation.\n\n🌿 **Iron** (lean red meat, spinach, lentils)\nPostpartum blood loss can deplete iron, causing fatigue and low mood.\n\n☀️ **Vitamin D** (sunlight, fortified foods, supplements)\nDeficiency is common and associated with depressive symptoms.\n\n🥚 **Protein** (eggs, chicken, legumes)\nStabilizes blood sugar and energy levels throughout the day.\n\n💧 **Hydration**\nAim for 8–10 glasses daily, especially if breastfeeding.\n\n**Simple tip:** Keep easy-to-grab snacks visible — nuts, fruit, boiled eggs. When you're running on low sleep, accessible nutrition matters more than perfection.`,
+  },
+  {
+    emoji: "🧘",
+    title: "Mindfulness for Postpartum Anxiety",
+    sub: "Simple grounding techniques that take under 5 minutes and genuinely help calm the nervous system.",
+    time: "4 min read",
+    tag: "Mindfulness",
+    tagColor: "#7C5CBF",
+    topics: ["Anxiety", "Mindfulness", "Self-Care"],
+    content: `You don't need meditation experience. These techniques work for anxious moments right now.\n\n**5-4-3-2-1 Grounding:**\nName 5 things you see → 4 you can touch → 3 you hear → 2 you smell → 1 you taste.\nThis anchors your nervous system in the present moment.\n\n**Box Breathing (4 counts each):**\nInhale for 4 → Hold for 4 → Exhale for 4 → Hold for 4.\nRepeat 4 times. Activates the parasympathetic nervous system.\n\n**Body Scan:**\nStart at your feet and slowly move awareness up through your body. Notice sensations without judgment.\n\n**One-minute reset:**\nPlace both hands on your heart. Feel it beating. Take 3 slow breaths. Remind yourself: *"I am doing enough. I am enough."*\n\nThese tools are not replacements for therapy when anxiety is severe. If anxiety is persistent or disrupting your daily function, please speak with a healthcare provider.`,
   },
 ];
 
@@ -72,19 +94,128 @@ const TOPICS = [
   { emoji: "🩺", label: "Therapy" },
 ];
 
+const TOPIC_DESCRIPTIONS: Record<string, string> = {
+  "Baby Care": "Feeding schedules, sleep training, colic, and developmental milestones — all the basics for caring for your newborn.",
+  Bonding: "Skin-to-skin contact, eye contact, and responsive caregiving build your bond. It's okay if it takes time — this is normal.",
+  Stress: "New parenthood is inherently stressful. Identifying your stress triggers and building micro-recovery moments can make a meaningful difference.",
+  Therapy: "Cognitive Behavioural Therapy (CBT) and Interpersonal Therapy (IPT) have strong evidence for PPD. Ask your GP for a referral.",
+  Family: "Involving family members in your support network — and clearly communicating your needs — is one of the most effective protective factors.",
+};
+
+type Article = (typeof KNOWLEDGE)[0];
+
+function ArticleModal({
+  article,
+  onClose,
+}: {
+  article: Article;
+  onClose: () => void;
+}) {
+  const colors = useColors();
+  const insets = useSafeAreaInsets();
+  const paragraphs = article.content.split("\n\n");
+
+  return (
+    <Modal animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+      <View style={{ flex: 1, backgroundColor: colors.background }}>
+        <View
+          style={[
+            articleModalStyles.header,
+            { paddingTop: insets.top + 16, borderBottomColor: colors.border },
+          ]}
+        >
+          <TouchableOpacity onPress={onClose} style={articleModalStyles.closeBtn}>
+            <Feather name="x" size={20} color={colors.text} />
+          </TouchableOpacity>
+          <View style={[articleModalStyles.tagPill, { backgroundColor: article.tagColor + "18" }]}>
+            <Text style={[articleModalStyles.tagPillText, { color: article.tagColor }]}>
+              {article.tag}
+            </Text>
+          </View>
+          <Text style={[articleModalStyles.readTime, { color: colors.mutedForeground }]}>
+            {article.time}
+          </Text>
+        </View>
+        <ScrollView
+          contentContainerStyle={[
+            articleModalStyles.scroll,
+            { paddingBottom: insets.bottom + 40 },
+          ]}
+          showsVerticalScrollIndicator={false}
+        >
+          <Text style={{ fontSize: 28 }}>{article.emoji}</Text>
+          <Text style={[articleModalStyles.title, { color: colors.foreground }]}>
+            {article.title}
+          </Text>
+          {paragraphs.map((para, i) => {
+            const isBold = para.startsWith("**") && para.includes(":**");
+            const cleanPara = para.replace(/\*\*(.*?)\*\*/g, "$1");
+            return (
+              <Text
+                key={i}
+                style={[
+                  articleModalStyles.body,
+                  { color: isBold ? colors.foreground : colors.text },
+                  isBold && { fontFamily: "Inter_600SemiBold", marginTop: 8 },
+                ]}
+              >
+                {cleanPara}
+              </Text>
+            );
+          })}
+          <View
+            style={[
+              articleModalStyles.disclaimer,
+              { backgroundColor: colors.lavender, borderRadius: 12 },
+            ]}
+          >
+            <Text style={[articleModalStyles.disclaimerText, { color: colors.primary }]}>
+              🔒 This content is for informational purposes only and does not replace professional medical advice.
+            </Text>
+          </View>
+        </ScrollView>
+      </View>
+    </Modal>
+  );
+}
+
+const articleModalStyles = StyleSheet.create({
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10,
+    paddingHorizontal: 20,
+    paddingBottom: 14,
+    borderBottomWidth: 1,
+  },
+  closeBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
+  tagPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
+  tagPillText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+  readTime: { fontSize: 12, fontFamily: "Inter_400Regular", marginLeft: "auto" },
+  scroll: { paddingHorizontal: 24, paddingTop: 24, gap: 14 },
+  title: { fontSize: 24, fontFamily: "Inter_700Bold", lineHeight: 30 },
+  body: { fontSize: 15, fontFamily: "Inter_400Regular", lineHeight: 24 },
+  disclaimer: { padding: 14, marginTop: 8 },
+  disclaimerText: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 18 },
+});
+
 export default function ResourcesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
   const [email, setEmail] = useState("");
   const [subscribed, setSubscribed] = useState(false);
+  const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
+  const [activeTopic, setActiveTopic] = useState<string | null>(null);
 
-  const filtered = KNOWLEDGE.filter(
-    (a) =>
+  const filtered = KNOWLEDGE.filter((a) => {
+    const matchesSearch =
       !search ||
       a.title.toLowerCase().includes(search.toLowerCase()) ||
-      a.tag.toLowerCase().includes(search.toLowerCase())
-  );
+      a.tag.toLowerCase().includes(search.toLowerCase());
+    const matchesTopic = !activeTopic || a.topics.includes(activeTopic);
+    return matchesSearch && matchesTopic;
+  });
 
   const callCrisisLine = () => {
     Linking.openURL("tel:988").catch(() =>
@@ -92,193 +223,297 @@ export default function ResourcesScreen() {
     );
   };
 
-  return (
-    <ScrollView
-      style={{ backgroundColor: colors.background }}
-      contentContainerStyle={[
-        styles.scroll,
+  const handleTopicPress = (label: string) => {
+    if (TOPIC_DESCRIPTIONS[label]) {
+      Alert.alert(label, TOPIC_DESCRIPTIONS[label], [
         {
-          paddingTop: insets.top + 20,
-          paddingBottom: insets.bottom + 100,
+          text: `Show ${label} articles`,
+          onPress: () => setActiveTopic(label === activeTopic ? null : label),
         },
-      ]}
-      showsVerticalScrollIndicator={false}
-      keyboardShouldPersistTaps="handled"
-    >
-      <Text style={[styles.pageTitle, { color: colors.foreground }]}>
-        Resources & Support
-      </Text>
-      <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>
-        Find the guidance and care you need, wherever you are in your journey.
-      </Text>
+        { text: "Close", style: "cancel" },
+      ]);
+    } else {
+      setActiveTopic(label === activeTopic ? null : label);
+    }
+  };
 
-      <View style={[styles.searchRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <Feather name="search" size={16} color={colors.mutedForeground} />
-        <TextInput
-          style={[styles.searchInput, { color: colors.text }]}
-          placeholder="Search articles, specialists, or guides..."
-          placeholderTextColor={colors.mutedForeground}
-          value={search}
-          onChangeText={setSearch}
-        />
-        {search.length > 0 && (
-          <Pressable onPress={() => setSearch("")}>
-            <Feather name="x" size={16} color={colors.mutedForeground} />
-          </Pressable>
-        )}
-      </View>
-
-      <View style={[styles.urgentCard, { backgroundColor: "#FDECEC" }]}>
-        <View style={styles.urgentHeader}>
-          <View style={[styles.urgentDot, { backgroundColor: colors.riskHigh }]} />
-          <Text style={[styles.urgentTitle, { color: "#9A1010" }]}>Immediate Support</Text>
-        </View>
-        <Text style={[styles.urgentDesc, { color: "#C03030" }]}>
-          If you are experiencing a mental health emergency or need someone to talk to, please reach out immediately.
+  return (
+    <>
+      {selectedArticle && (
+        <ArticleModal article={selectedArticle} onClose={() => setSelectedArticle(null)} />
+      )}
+      <ScrollView
+        style={{ backgroundColor: colors.background }}
+        contentContainerStyle={[
+          styles.scroll,
+          {
+            paddingTop: insets.top + 20,
+            paddingBottom: insets.bottom + 100,
+          },
+        ]}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text style={[styles.pageTitle, { color: colors.foreground }]}>
+          Resources & Support
         </Text>
-        <Pressable
-          onPress={callCrisisLine}
-          style={[styles.crisisBtn, { backgroundColor: colors.riskHigh }]}
-        >
-          <Feather name="phone" size={15} color="#fff" />
-          <Text style={styles.crisisBtnText}>Call 988 Crisis Line</Text>
-        </Pressable>
-        <Pressable
-          onPress={() =>
-            Linking.openURL("sms:741741").catch(() =>
-              Alert.alert("Text a Counselor", "Text HELLO to 741741 (Crisis Text Line).")
-            )
-          }
-          style={[styles.textCounselorBtn, { borderColor: colors.riskHigh }]}
-        >
-          <Feather name="message-square" size={15} color={colors.riskHigh} />
-          <Text style={[styles.textCounselorText, { color: colors.riskHigh }]}>
-            Text a Counselor
-          </Text>
-        </Pressable>
-      </View>
+        <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>
+          Find the guidance and care you need, wherever you are in your journey.
+        </Text>
 
-      <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <View style={styles.cardHeaderRow}>
-          <View>
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Find a Specialist</Text>
-            <Text style={[styles.cardSub, { color: colors.mutedForeground }]}>
-              Connect with postpartum mental health specialists.
+        <View style={[styles.searchRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
+          <Feather name="search" size={16} color={colors.mutedForeground} />
+          <TextInput
+            style={[styles.searchInput, { color: colors.text }]}
+            placeholder="Search articles, specialists, or guides..."
+            placeholderTextColor={colors.mutedForeground}
+            value={search}
+            onChangeText={(t) => { setSearch(t); setActiveTopic(null); }}
+          />
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch("")}>
+              <Feather name="x" size={16} color={colors.mutedForeground} />
+            </Pressable>
+          )}
+        </View>
+
+        {/* Crisis Support */}
+        <View style={[styles.urgentCard, { backgroundColor: "#FDECEC" }]}>
+          <View style={styles.urgentHeader}>
+            <View style={[styles.urgentDot, { backgroundColor: colors.riskHigh }]} />
+            <Text style={[styles.urgentTitle, { color: "#9A1010" }]}>Immediate Support</Text>
+          </View>
+          <Text style={[styles.urgentDesc, { color: "#C03030" }]}>
+            If you are experiencing a mental health emergency or need someone to talk to, please reach out immediately.
+          </Text>
+          <Pressable
+            onPress={callCrisisLine}
+            style={[styles.crisisBtn, { backgroundColor: colors.riskHigh }]}
+          >
+            <Feather name="phone" size={15} color="#fff" />
+            <Text style={styles.crisisBtnText}>Call 988 Crisis Line</Text>
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              Linking.openURL("sms:741741?body=HELLO").catch(() =>
+                Alert.alert("Text a Counselor", "Text HELLO to 741741 for free, 24/7 crisis support via text.")
+              )
+            }
+            style={[styles.textCounselorBtn, { borderColor: colors.riskHigh }]}
+          >
+            <Feather name="message-square" size={15} color={colors.riskHigh} />
+            <Text style={[styles.textCounselorText, { color: colors.riskHigh }]}>
+              Text a Counselor (741741)
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={() =>
+              Linking.openURL("https://chat.741741.org").catch(() =>
+                Alert.alert("Crisis Chat", "Visit chat.741741.org to chat live with a crisis counselor.")
+              )
+            }
+            style={[styles.chatBtn, { borderColor: "#C03030", backgroundColor: "rgba(255,255,255,0.6)" }]}
+          >
+            <Feather name="message-circle" size={15} color="#9A1010" />
+            <Text style={[styles.chatBtnText, { color: "#9A1010" }]}>
+              Live Chat with Counselor
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Find a Specialist */}
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <View style={styles.cardHeaderRow}>
+            <View>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>Find a Specialist</Text>
+              <Text style={[styles.cardSub, { color: colors.mutedForeground }]}>
+                Connect with postpartum mental health specialists near you.
+              </Text>
+            </View>
+            <Feather name="shield" size={24} color={colors.primary} />
+          </View>
+          <Pressable
+            style={[styles.directoryBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+            onPress={() =>
+              Linking.openURL("https://www.postpartum.net/get-help/find-a-psi-member/").catch(() =>
+                Alert.alert("PSI Directory", "Visit postpartum.net/get-help to find certified specialists.")
+              )
+            }
+          >
+            <Feather name="external-link" size={14} color={colors.primary} />
+            <Text style={[styles.directoryBtnText, { color: colors.primary }]}>
+              Browse PSI Directory
+            </Text>
+          </Pressable>
+          <Pressable
+            style={[styles.directoryBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
+            onPress={() =>
+              Linking.openURL("https://www.psychologytoday.com/us/therapists/postpartum-depression").catch(() =>
+                Alert.alert("Psychology Today", "Visit psychologytoday.com to search for therapists by location and specialty.")
+              )
+            }
+          >
+            <Feather name="external-link" size={14} color={colors.primary} />
+            <Text style={[styles.directoryBtnText, { color: colors.primary }]}>
+              Search Psychology Today
+            </Text>
+          </Pressable>
+          <View style={[styles.psiBadge, { backgroundColor: colors.lavender }]}>
+            <Feather name="check-circle" size={12} color={colors.primary} />
+            <Text style={[styles.psiBadgeText, { color: colors.primary }]}>
+              PSI Certified · Telehealth available
             </Text>
           </View>
-          <Feather name="shield" size={24} color={colors.primary} />
         </View>
-        <Pressable
-          style={[styles.directoryBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
-          onPress={() =>
-            Linking.openURL("https://www.postpartum.net/get-help/find-a-psi-member/").catch(() => {})
-          }
-        >
-          <Text style={[styles.directoryBtnText, { color: colors.primary }]}>
-            Browse Directory →
-          </Text>
-        </Pressable>
-        <View style={[styles.psiBadge, { backgroundColor: colors.lavender }]}>
-          <Feather name="check-circle" size={12} color={colors.primary} />
-          <Text style={[styles.psiBadgeText, { color: colors.primary }]}>
-            PSI Certified Providers
-          </Text>
-        </View>
-      </View>
 
-      <View style={{ gap: 12 }}>
-        <View style={styles.sectionHeader}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Knowledge Library
-          </Text>
-          <Text style={[styles.viewAll, { color: colors.primary }]}>View All</Text>
-        </View>
-        {filtered.map((article, i) => (
-          <Pressable
-            key={i}
-            style={[styles.articleCard, { backgroundColor: colors.card }]}
-            onPress={() => {}}
-          >
-            <View style={[styles.articleEmoji, { backgroundColor: colors.muted }]}>
-              <Text style={{ fontSize: 22 }}>{article.emoji}</Text>
+        {/* Knowledge Library */}
+        <View style={{ gap: 12 }}>
+          <View style={styles.sectionHeader}>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
+              Knowledge Library
+            </Text>
+            {activeTopic ? (
+              <Pressable onPress={() => setActiveTopic(null)}>
+                <Text style={[styles.viewAll, { color: colors.riskHigh }]}>Clear filter ✕</Text>
+              </Pressable>
+            ) : (
+              <Text style={[styles.viewAll, { color: colors.mutedForeground }]}>
+                {KNOWLEDGE.length} articles
+              </Text>
+            )}
+          </View>
+          {filtered.length === 0 ? (
+            <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
+              <Text style={{ fontSize: 32 }}>🔍</Text>
+              <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
+                No articles match "{activeTopic ?? search}"
+              </Text>
+              <Pressable onPress={() => { setSearch(""); setActiveTopic(null); }}>
+                <Text style={[styles.viewAll, { color: colors.primary }]}>Clear filter</Text>
+              </Pressable>
             </View>
-            <View style={{ flex: 1, gap: 4 }}>
-              <View style={styles.tagRow}>
-                <View style={[styles.tag, { backgroundColor: article.tagColor + "18" }]}>
-                  <Text style={[styles.tagText, { color: article.tagColor }]}>
-                    {article.tag}
+          ) : (
+            filtered.map((article, i) => (
+              <Pressable
+                key={i}
+                style={[styles.articleCard, { backgroundColor: colors.card }]}
+                onPress={() => setSelectedArticle(article)}
+              >
+                <View style={[styles.articleEmoji, { backgroundColor: colors.muted }]}>
+                  <Text style={{ fontSize: 22 }}>{article.emoji}</Text>
+                </View>
+                <View style={{ flex: 1, gap: 4 }}>
+                  <View style={styles.tagRow}>
+                    <View style={[styles.tag, { backgroundColor: article.tagColor + "18" }]}>
+                      <Text style={[styles.tagText, { color: article.tagColor }]}>
+                        {article.tag}
+                      </Text>
+                    </View>
+                    <Text style={[styles.articleTime, { color: colors.mutedForeground }]}>
+                      {article.time}
+                    </Text>
+                  </View>
+                  <Text style={[styles.articleTitle, { color: colors.foreground }]} numberOfLines={2}>
+                    {article.title}
+                  </Text>
+                  <Text style={[styles.articleSub, { color: colors.mutedForeground }]} numberOfLines={2}>
+                    {article.sub}
                   </Text>
                 </View>
-                <Text style={[styles.articleTime, { color: colors.mutedForeground }]}>
-                  {article.time}
-                </Text>
-              </View>
-              <Text style={[styles.articleTitle, { color: colors.foreground }]} numberOfLines={2}>
-                {article.title}
-              </Text>
-              <Text style={[styles.articleSub, { color: colors.mutedForeground }]} numberOfLines={2}>
-                {article.sub}
+                <Feather name="chevron-right" size={16} color={colors.mutedForeground} style={{ alignSelf: "center" }} />
+              </Pressable>
+            ))
+          )}
+        </View>
+
+        {/* Explore Topics */}
+        <View style={{ gap: 12 }}>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Explore Topics</Text>
+          <View style={styles.topicsGrid}>
+            {TOPICS.map((topic, i) => {
+              const active = activeTopic === topic.label;
+              return (
+                <Pressable
+                  key={i}
+                  style={[
+                    styles.topicChip,
+                    {
+                      backgroundColor: active ? colors.primary + "18" : colors.card,
+                      borderColor: active ? colors.primary : colors.border,
+                      borderWidth: active ? 2 : 1,
+                    },
+                  ]}
+                  onPress={() => handleTopicPress(topic.label)}
+                >
+                  <Text style={{ fontSize: 20 }}>{topic.emoji}</Text>
+                  <Text
+                    style={[
+                      styles.topicLabel,
+                      { color: active ? colors.primary : colors.text },
+                    ]}
+                  >
+                    {topic.label}
+                  </Text>
+                </Pressable>
+              );
+            })}
+          </View>
+          {activeTopic && (
+            <View style={[styles.topicBanner, { backgroundColor: colors.lavender }]}>
+              <Text style={[styles.topicBannerText, { color: colors.primary }]}>
+                Showing articles tagged "{activeTopic}"
               </Text>
             </View>
-          </Pressable>
-        ))}
-      </View>
-
-      <View style={{ gap: 12 }}>
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Explore Topics</Text>
-        <View style={styles.topicsGrid}>
-          {TOPICS.map((topic, i) => (
-            <Pressable
-              key={i}
-              style={[styles.topicChip, { backgroundColor: colors.card, borderColor: colors.border }]}
-              onPress={() => {}}
-            >
-              <Text style={{ fontSize: 20 }}>{topic.emoji}</Text>
-              <Text style={[styles.topicLabel, { color: colors.text }]}>{topic.label}</Text>
-            </Pressable>
-          ))}
+          )}
         </View>
-      </View>
 
-      <View style={[styles.weeklyCard, { backgroundColor: colors.primary }]}>
-        <View style={styles.weeklyHeader}>
-          <View>
-            <Text style={styles.weeklyTitle}>Join our Weekly Circle</Text>
-            <Text style={styles.weeklySub}>
-              Expert insights and community stories delivered safely to your inbox every Sunday morning.
-            </Text>
+        {/* Weekly Circle */}
+        <View style={[styles.weeklyCard, { backgroundColor: colors.primary }]}>
+          <View style={styles.weeklyHeader}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.weeklyTitle}>Join our Weekly Circle</Text>
+              <Text style={styles.weeklySub}>
+                Expert insights and community stories delivered safely to your inbox every Sunday morning.
+              </Text>
+            </View>
+            <Text style={{ fontSize: 28 }}>💌</Text>
           </View>
-          <Text style={{ fontSize: 28 }}>💌</Text>
+          {subscribed ? (
+            <View style={[styles.subscribedBadge, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+              <Feather name="check" size={14} color="#fff" />
+              <Text style={styles.subscribedText}>You're subscribed! See you Sunday ☀️</Text>
+            </View>
+          ) : (
+            <View style={styles.emailRow}>
+              <TextInput
+                style={[styles.emailInput, { backgroundColor: "rgba(255,255,255,0.15)" }]}
+                placeholder="your@email.com"
+                placeholderTextColor="rgba(255,255,255,0.5)"
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+              <Pressable
+                style={[
+                  styles.subscribeBtn,
+                  { backgroundColor: email.includes("@") ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)" },
+                ]}
+                onPress={() => {
+                  if (email.includes("@")) {
+                    setSubscribed(true);
+                  } else {
+                    Alert.alert("Email required", "Please enter a valid email address to subscribe.");
+                  }
+                }}
+              >
+                <Text style={styles.subscribeBtnText}>Subscribe</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
-        {subscribed ? (
-          <View style={[styles.subscribedBadge, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
-            <Feather name="check" size={14} color="#fff" />
-            <Text style={styles.subscribedText}>You're subscribed!</Text>
-          </View>
-        ) : (
-          <View style={styles.emailRow}>
-            <TextInput
-              style={[styles.emailInput, { backgroundColor: "rgba(255,255,255,0.15)" }]}
-              placeholder="your@email.com"
-              placeholderTextColor="rgba(255,255,255,0.5)"
-              value={email}
-              onChangeText={setEmail}
-              keyboardType="email-address"
-              autoCapitalize="none"
-              placeholderText="rgba(255,255,255,0.5)"
-            />
-            <Pressable
-              style={[styles.subscribeBtn, { backgroundColor: "rgba(255,255,255,0.25)" }]}
-              onPress={() => {
-                if (email.includes("@")) setSubscribed(true);
-              }}
-            >
-              <Text style={styles.subscribeBtnText}>Subscribe</Text>
-            </Pressable>
-          </View>
-        )}
-      </View>
-    </ScrollView>
+      </ScrollView>
+    </>
   );
 }
 
@@ -295,12 +530,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 11,
   },
-  searchInput: {
-    flex: 1,
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-  },
-  urgentCard: { borderRadius: 20, padding: 18, gap: 12 },
+  searchInput: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular" },
+  urgentCard: { borderRadius: 20, padding: 18, gap: 10 },
   urgentHeader: { flexDirection: "row", alignItems: "center", gap: 8 },
   urgentDot: { width: 10, height: 10, borderRadius: 5 },
   urgentTitle: { fontSize: 16, fontFamily: "Inter_700Bold" },
@@ -324,6 +555,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   textCounselorText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  chatBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 44,
+    borderRadius: 14,
+    borderWidth: 1.5,
+  },
+  chatBtnText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   card: { borderRadius: 20, padding: 18, gap: 12 },
   cardHeaderRow: {
     flexDirection: "row",
@@ -338,6 +579,8 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     alignItems: "center",
     justifyContent: "center",
+    flexDirection: "row",
+    gap: 8,
   },
   directoryBtnText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   psiBadge: {
@@ -362,6 +605,7 @@ const styles = StyleSheet.create({
     gap: 12,
     borderRadius: 16,
     padding: 14,
+    alignItems: "flex-start",
   },
   articleEmoji: {
     width: 52,
@@ -377,21 +621,29 @@ const styles = StyleSheet.create({
   articleTime: { fontSize: 10, fontFamily: "Inter_400Regular" },
   articleTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", lineHeight: 18 },
   articleSub: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
-  topicsGrid: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  emptyState: {
+    borderRadius: 16,
+    padding: 24,
+    alignItems: "center",
     gap: 8,
   },
+  emptyText: { fontSize: 14, fontFamily: "Inter_400Regular", textAlign: "center" },
+  topicsGrid: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   topicChip: {
     width: "22%",
     aspectRatio: 1,
     borderRadius: 14,
-    borderWidth: 1,
     alignItems: "center",
     justifyContent: "center",
     gap: 4,
   },
   topicLabel: { fontSize: 10, fontFamily: "Inter_500Medium", textAlign: "center" },
+  topicBanner: {
+    borderRadius: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  topicBannerText: { fontSize: 13, fontFamily: "Inter_500Medium" },
   weeklyCard: { borderRadius: 20, padding: 20, gap: 16 },
   weeklyHeader: {
     flexDirection: "row",
@@ -405,7 +657,6 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "Inter_400Regular",
     lineHeight: 19,
-    maxWidth: 240,
   },
   emailRow: { flexDirection: "row", gap: 8 },
   emailInput: {
