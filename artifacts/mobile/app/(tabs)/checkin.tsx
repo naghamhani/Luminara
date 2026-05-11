@@ -536,6 +536,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     marginBottom: 8,
+    marginHorizontal: 12,
   },
   nextBtnText: { color: "#fff", fontSize: 16, fontFamily: "Inter_600SemiBold" },
   doneContainer: {
