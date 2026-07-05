@@ -31,7 +31,7 @@ pnpm run build                            # typecheck + build all packages
 
 ## How it works
 
-The PPD risk score (0–100) is computed from six daily factors: mood, sleep, anxiety, appetite, bonding, and support. Risk levels are Low (0–35), Moderate (36–65), and High (66+), based on EPDS principles. The app is frontend-only — all data is stored locally via AsyncStorage, with no backend required.
+The PPD risk score (0–100) is computed from six daily factors: mood, sleep, anxiety, appetite, bonding, and support. Risk levels are Low (0–35), Moderate (36–65), and High (66+), based on EPDS principles. The app is frontend-only — the backend is still being developed and enhanced this is for the concept.
 
 ## License
 
