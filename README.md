@@ -2,6 +2,8 @@
 
 A mobile app that helps new mothers track postpartum depression indicators daily and predicts their PPD risk level using a wellness score algorithm.
 
+it is a reproductive-healthcare-solution that placed 1st place at the Najahna entrepreneurial-health competition — a reproductive-healthcare solution judged best in the country in Jordan.
+
 ## Stack
 
 - pnpm workspaces, Node.js 24, TypeScript 5.9
