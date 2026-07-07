@@ -1,8 +1,9 @@
 import * as Haptics from "expo-haptics";
 import { router } from "expo-router";
-import React, { useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import {
   Animated,
+  AppState,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -53,7 +54,13 @@ function RatingRow({
   const colors = useColors();
   const color = accentColor ?? colors.primary;
   return (
-    <View style={ratingStyles.container}>
+    <View
+      style={ratingStyles.container}
+      accessibilityRole="adjustable"
+      accessibilityLabel={label}
+      accessibilityValue={{ min: 1, max: 5, now: value || undefined }}
+      accessibilityState={{ selected: value > 0 }}
+    >
       <Text style={[ratingStyles.label, { color: colors.text }]}>{label}</Text>
       <View style={ratingStyles.row}>
         {[1, 2, 3, 4, 5].map((v) => {
@@ -65,6 +72,9 @@ function RatingRow({
                 Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                 onChange(v);
               }}
+              accessibilityRole="button"
+              accessibilityLabel={`${label}: ${v} of 5${v === 1 ? `, ${low}` : v === 5 ? `, ${high}` : ""}`}
+              accessibilityState={{ selected: value === v }}
               style={[
                 ratingStyles.dot,
                 {
@@ -122,7 +132,25 @@ export default function CheckInScreen() {
   const [bonding, setBonding] = useState(0);
   const [support, setSupport] = useState(0);
   const [notes, setNotes] = useState("");
+  const [justCompleted, setJustCompleted] = useState(false);
+  const [moodError, setMoodError] = useState(false);
+  const [wellbeingError, setWellbeingError] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
+
+  // Re-sync the step whenever the app returns to the foreground so a
+  // midnight rollover (day change while the screen stayed mounted) is
+  // reflected instead of showing a stale "done" state for the wrong day.
+  useEffect(() => {
+    const subscription = AppState.addEventListener("change", (nextState) => {
+      if (nextState === "active") {
+        if (!hasCheckedInToday) {
+          setJustCompleted(false);
+          setStep((prev) => (prev === "done" ? "mood" : prev));
+        }
+      }
+    });
+    return () => subscription.remove();
+  }, [hasCheckedInToday]);
 
   const transition = (next: typeof step) => {
     Animated.sequence([
@@ -135,8 +163,10 @@ export default function CheckInScreen() {
   const handleMoodNext = async () => {
     if (mood === 0) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      setMoodError(true);
       return;
     }
+    setMoodError(false);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     transition("wellbeing");
   };
@@ -144,8 +174,10 @@ export default function CheckInScreen() {
   const handleWellbeingNext = async () => {
     if (sleepIdx < 0 || anxiety === 0 || appetite === 0 || bonding === 0 || support === 0) {
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+      setWellbeingError(true);
       return;
     }
+    setWellbeingError(false);
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     transition("notes");
   };
@@ -163,6 +195,7 @@ export default function CheckInScreen() {
       support,
       notes,
     });
+    setJustCompleted(true);
     transition("done");
   };
 
@@ -190,9 +223,9 @@ export default function CheckInScreen() {
           Check-in complete
         </Text>
         <Text style={[styles.doneSub, { color: colors.mutedForeground }]}>
-          {hasCheckedInToday
-            ? "You've already logged today. Come back tomorrow."
-            : "You showed up for yourself today. That matters."}
+          {justCompleted
+            ? "Your check-in is saved. You showed up for yourself today — that matters."
+            : "You've already logged today. Come back tomorrow."}
         </Text>
         {todayCheckIn && (
           <View style={[styles.scoreBox, { backgroundColor: levelColor + "18", borderColor: levelColor + "30", borderWidth: 1.5 }]}>
@@ -202,6 +235,21 @@ export default function CheckInScreen() {
             </Text>
           </View>
         )}
+        <Pressable
+          onPress={() => router.push("/cycle/log")}
+          style={({ pressed }) => [
+            styles.nextStepCard,
+            { backgroundColor: colors.card, opacity: pressed ? 0.9 : 1 },
+          ]}
+        >
+          <View style={[styles.nextStepIcon, { backgroundColor: colors.blush }]}>
+            <Feather name="droplet" size={16} color={colors.purple} />
+          </View>
+          <Text style={[styles.nextStepText, { color: colors.text }]}>
+            Complete the picture — log today's cycle & biomarkers
+          </Text>
+          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+        </Pressable>
         <Pressable
           onPress={() => router.push("/(tabs)")}
           style={[styles.doneBtn, { backgroundColor: colors.primary }]}
@@ -234,6 +282,8 @@ export default function CheckInScreen() {
                   step === "notes" ? "wellbeing" : step === "wellbeing" ? "mood" : "mood"
                 )
               }
+              accessibilityRole="button"
+              accessibilityLabel="Go back"
               style={styles.backBtn}
             >
               <Feather name="arrow-left" size={20} color={colors.text} />
@@ -241,7 +291,13 @@ export default function CheckInScreen() {
           ) : (
             <View style={{ width: 36 }} />
           )}
-          <View style={[styles.stepDots, { gap: 6 }]}>
+          <View
+            style={[styles.stepDots, { gap: 6 }]}
+            accessibilityRole="text"
+            accessibilityLabel={`Step ${
+              step === "mood" ? 1 : step === "wellbeing" ? 2 : 3
+            } of 3`}
+          >
             {(["mood", "wellbeing", "notes"] as const).map((s) => (
               <View
                 key={s}
@@ -275,7 +331,11 @@ export default function CheckInScreen() {
                   </Text>
                 </View>
 
-                <View style={styles.moodGrid}>
+                <View
+                  style={styles.moodGrid}
+                  accessibilityRole="radiogroup"
+                  accessibilityLabel="Mood"
+                >
                   {MOODS.map((m) => {
                     const active = mood === m.value;
                     return (
@@ -284,7 +344,11 @@ export default function CheckInScreen() {
                         onPress={() => {
                           Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                           setMood(m.value);
+                          setMoodError(false);
                         }}
+                        accessibilityRole="radio"
+                        accessibilityLabel={`Mood: ${m.label}, ${m.value} of 5`}
+                        accessibilityState={{ selected: active }}
                         style={[
                           styles.moodBtn,
                           {
@@ -324,6 +388,15 @@ export default function CheckInScreen() {
                     </Text>
                   </View>
                 )}
+
+                {moodError && mood === 0 && (
+                  <Text
+                    style={[styles.validationText, { color: colors.riskHigh }]}
+                    accessibilityRole="alert"
+                  >
+                    Please select a mood to continue.
+                  </Text>
+                )}
               </>
             )}
 
@@ -341,7 +414,11 @@ export default function CheckInScreen() {
                 <View>
                   <Text style={[styles.subSection, { color: colors.text }]}>Sleep last night</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
-                    <View style={{ flexDirection: "row", gap: 8 }}>
+                    <View
+                      style={{ flexDirection: "row", gap: 8 }}
+                      accessibilityRole="radiogroup"
+                      accessibilityLabel="Sleep last night"
+                    >
                       {SLEEP_OPTIONS.map((opt, i) => {
                         const active = sleepIdx === i;
                         return (
@@ -350,7 +427,11 @@ export default function CheckInScreen() {
                             onPress={() => {
                               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                               setSleepIdx(i);
+                              setWellbeingError(false);
                             }}
+                            accessibilityRole="radio"
+                            accessibilityLabel={`Sleep last night: ${opt.label}`}
+                            accessibilityState={{ selected: active }}
                             style={[
                               styles.sleepChip,
                               {
@@ -378,7 +459,10 @@ export default function CheckInScreen() {
                   <RatingRow
                     label="Anxiety level"
                     value={anxiety}
-                    onChange={setAnxiety}
+                    onChange={(v) => {
+                      setAnxiety(v);
+                      setWellbeingError(false);
+                    }}
                     low="None"
                     high="Severe"
                     accentColor={anxiety >= 4 ? colors.riskHigh : anxiety === 3 ? colors.riskModerate : colors.primary}
@@ -387,7 +471,10 @@ export default function CheckInScreen() {
                   <RatingRow
                     label="Appetite"
                     value={appetite}
-                    onChange={setAppetite}
+                    onChange={(v) => {
+                      setAppetite(v);
+                      setWellbeingError(false);
+                    }}
                     low="None"
                     high="Normal"
                   />
@@ -395,7 +482,10 @@ export default function CheckInScreen() {
                   <RatingRow
                     label="Bond with baby"
                     value={bonding}
-                    onChange={setBonding}
+                    onChange={(v) => {
+                      setBonding(v);
+                      setWellbeingError(false);
+                    }}
                     low="Distant"
                     high="Connected"
                     accentColor={colors.teal}
@@ -404,12 +494,24 @@ export default function CheckInScreen() {
                   <RatingRow
                     label="Feeling supported"
                     value={support}
-                    onChange={setSupport}
+                    onChange={(v) => {
+                      setSupport(v);
+                      setWellbeingError(false);
+                    }}
                     low="Alone"
                     high="Very supported"
                     accentColor={colors.purple}
                   />
                 </View>
+
+                {wellbeingError && (
+                  <Text
+                    style={[styles.validationText, { color: colors.riskHigh }]}
+                    accessibilityRole="alert"
+                  >
+                    Please rate all fields above to continue.
+                  </Text>
+                )}
               </>
             )}
 
@@ -452,6 +554,8 @@ export default function CheckInScreen() {
               ? handleWellbeingNext
               : handleSubmit
           }
+          accessibilityRole="button"
+          accessibilityLabel={step === "notes" ? "Complete Check-In" : "Continue"}
           style={({ pressed }) => [
             styles.nextBtn,
             {
@@ -510,6 +614,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontFamily: "Inter_400Regular",
     lineHeight: 19,
+    textAlign: "center",
+  },
+  validationText: {
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
     textAlign: "center",
   },
   subSection: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
@@ -581,4 +690,30 @@ const styles = StyleSheet.create({
     marginTop: 8,
   },
   doneBtnText: { color: "#fff", fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  nextStepCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderRadius: 16,
+    padding: 14,
+    width: "100%",
+    maxWidth: 340,
+    shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  nextStepIcon: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  nextStepText: {
+    flex: 1,
+    fontSize: 13,
+    fontFamily: "Inter_500Medium",
+    lineHeight: 18,
+  },
 });

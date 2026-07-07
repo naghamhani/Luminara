@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 440 130" width="440" height="130" role="img" aria-label="Luminara Health logo lockup">
+  <title>Luminara Health — horizontal lockup</title>
+  <!-- NOTE: text is set in Fraunces with a serif fallback. For production
+       press/store use, convert the <text> to outlines so it renders without
+       the font installed. -->
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0" stop-color="#FFC97A" stop-opacity="0.5"/>
+      <stop offset="1" stop-color="#FFC97A" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- badge -->
+  <g transform="translate(8,15) scale(1.0)">
+    <rect width="100" height="100" rx="24" fill="#5168B4"/>
+    <circle cx="50" cy="48" r="34" fill="url(#glow)"/>
+    <path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/>
+    <path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z" fill="#FFE7BE" opacity="0.92"/>
+    <path d="M24,72 C34,90 66,90 76,72" fill="none" stroke="#F4F6FD" stroke-width="5.5" stroke-linecap="round"/>
+  </g>
+
+  <!-- wordmark -->
+  <text x="126" y="70" font-family="Fraunces, Georgia, serif" font-size="52" font-weight="600" letter-spacing="-0.5" fill="#1C2236">Luminara</text>
+  <text x="128" y="98" font-family="Manrope, system-ui, sans-serif" font-size="17" font-weight="700" letter-spacing="6" fill="#57628A">HEALTH</text>
+</svg>

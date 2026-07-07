@@ -1,7 +1,7 @@
 import { Feather } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React, { useState } from "react";
 import {
-  Alert,
   Linking,
   Modal,
   Platform,
@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
+import { showAlert } from "@/utils/dialog";
 
 const KNOWLEDGE = [
   {
@@ -203,8 +204,6 @@ export default function ResourcesScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
-  const [email, setEmail] = useState("");
-  const [subscribed, setSubscribed] = useState(false);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
   const [activeTopic, setActiveTopic] = useState<string | null>(null);
 
@@ -218,14 +217,28 @@ export default function ResourcesScreen() {
   });
 
   const callCrisisLine = () => {
+    if (Platform.OS === "web") {
+      showAlert("Call 988", "Please dial 988 on your phone for immediate mental health support.");
+      return;
+    }
     Linking.openURL("tel:988").catch(() =>
-      Alert.alert("Call 988", "Please dial 988 for immediate mental health support.")
+      showAlert("Call 988", "Please dial 988 for immediate mental health support.")
+    );
+  };
+
+  const textCrisisLine = () => {
+    if (Platform.OS === "web") {
+      showAlert("Text a Counselor", "Please text HELLO to 741741 from your phone for free, 24/7 crisis support via text.");
+      return;
+    }
+    Linking.openURL("sms:741741?body=HELLO").catch(() =>
+      showAlert("Text a Counselor", "Text HELLO to 741741 for free, 24/7 crisis support via text.")
     );
   };
 
   const handleTopicPress = (label: string) => {
     if (TOPIC_DESCRIPTIONS[label]) {
-      Alert.alert(label, TOPIC_DESCRIPTIONS[label], [
+      showAlert(label, TOPIC_DESCRIPTIONS[label], [
         {
           text: `Show ${label} articles`,
           onPress: () => setActiveTopic(label === activeTopic ? null : label),
@@ -277,6 +290,39 @@ export default function ResourcesScreen() {
           )}
         </View>
 
+        {/* Companion chatbot + PPD risk check */}
+        <Pressable
+          onPress={() => router.push("/chat" as never)}
+          style={[styles.featureCard, { backgroundColor: colors.primary }]}
+        >
+          <View style={[styles.featureIcon, { backgroundColor: "#ffffff33" }]}>
+            <Feather name="message-circle" size={20} color="#fff" />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={styles.featureTitle}>Talk to Luna</Text>
+            <Text style={styles.featureSub}>
+              A private, anonymous companion for how you&apos;re feeling — anytime.
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={20} color="#ffffffcc" />
+        </Pressable>
+
+        <Pressable
+          onPress={() => router.push("/ppd-risk" as never)}
+          style={[styles.featureCard, { backgroundColor: colors.card, borderWidth: 1, borderColor: colors.border }]}
+        >
+          <View style={[styles.featureIcon, { backgroundColor: colors.primary + "1A" }]}>
+            <Feather name="activity" size={20} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.featureTitle, { color: colors.foreground }]}>Postpartum risk check</Text>
+            <Text style={[styles.featureSub, { color: colors.mutedForeground }]}>
+              A research-informed mood screen (EPDS) with a personalized, non-diagnostic risk estimate.
+            </Text>
+          </View>
+          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+        </Pressable>
+
         {/* Crisis Support */}
         <View style={[styles.urgentCard, { backgroundColor: "#FDECEC" }]}>
           <View style={styles.urgentHeader}>
@@ -294,11 +340,7 @@ export default function ResourcesScreen() {
             <Text style={styles.crisisBtnText}>Call 988 Crisis Line</Text>
           </Pressable>
           <Pressable
-            onPress={() =>
-              Linking.openURL("sms:741741?body=HELLO").catch(() =>
-                Alert.alert("Text a Counselor", "Text HELLO to 741741 for free, 24/7 crisis support via text.")
-              )
-            }
+            onPress={textCrisisLine}
             style={[styles.textCounselorBtn, { borderColor: colors.riskHigh }]}
           >
             <Feather name="message-square" size={15} color={colors.riskHigh} />
@@ -306,19 +348,9 @@ export default function ResourcesScreen() {
               Text a Counselor (741741)
             </Text>
           </Pressable>
-          <Pressable
-            onPress={() =>
-              Linking.openURL("https://chat.741741.org").catch(() =>
-                Alert.alert("Crisis Chat", "Visit chat.741741.org to chat live with a crisis counselor.")
-              )
-            }
-            style={[styles.chatBtn, { borderColor: "#C03030", backgroundColor: "rgba(255,255,255,0.6)" }]}
-          >
-            <Feather name="message-circle" size={15} color="#9A1010" />
-            <Text style={[styles.chatBtnText, { color: "#9A1010" }]}>
-              Live Chat with Counselor
-            </Text>
-          </Pressable>
+          <Text style={[styles.urgentNumbers, { color: "#9A1010" }]}>
+            Call 988 · Text HELLO to 741741{"\n"}Available 24/7, free and confidential.
+          </Text>
         </View>
 
         {/* Find a Specialist */}
@@ -336,7 +368,7 @@ export default function ResourcesScreen() {
             style={[styles.directoryBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
             onPress={() =>
               Linking.openURL("https://www.postpartum.net/get-help/find-a-psi-member/").catch(() =>
-                Alert.alert("PSI Directory", "Visit postpartum.net/get-help to find certified specialists.")
+                showAlert("PSI Directory", "Visit postpartum.net/get-help to find certified specialists.")
               )
             }
           >
@@ -349,7 +381,7 @@ export default function ResourcesScreen() {
             style={[styles.directoryBtn, { backgroundColor: colors.secondary, borderColor: colors.border }]}
             onPress={() =>
               Linking.openURL("https://www.psychologytoday.com/us/therapists/postpartum-depression").catch(() =>
-                Alert.alert("Psychology Today", "Visit psychologytoday.com to search for therapists by location and specialty.")
+                showAlert("Psychology Today", "Visit psychologytoday.com to search for therapists by location and specialty.")
               )
             }
           >
@@ -361,7 +393,7 @@ export default function ResourcesScreen() {
           <View style={[styles.psiBadge, { backgroundColor: colors.lavender }]}>
             <Feather name="check-circle" size={12} color={colors.primary} />
             <Text style={[styles.psiBadgeText, { color: colors.primary }]}>
-              PSI Certified · Telehealth available
+              PSI directory · Telehealth options available
             </Text>
           </View>
         </View>
@@ -471,46 +503,17 @@ export default function ResourcesScreen() {
         <View style={[styles.weeklyCard, { backgroundColor: colors.primary }]}>
           <View style={styles.weeklyHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.weeklyTitle}>Join our Weekly Circle</Text>
+              <Text style={styles.weeklyTitle}>Weekly Circle</Text>
               <Text style={styles.weeklySub}>
-                Expert insights and community stories delivered safely to your inbox every Sunday morning.
+                Expert insights and community stories, delivered to your inbox. Coming soon.
               </Text>
             </View>
             <Text style={{ fontSize: 28 }}>💌</Text>
           </View>
-          {subscribed ? (
-            <View style={[styles.subscribedBadge, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
-              <Feather name="check" size={14} color="#fff" />
-              <Text style={styles.subscribedText}>You're subscribed! See you Sunday ☀️</Text>
-            </View>
-          ) : (
-            <View style={styles.emailRow}>
-              <TextInput
-                style={[styles.emailInput, { backgroundColor: "rgba(255,255,255,0.15)" }]}
-                placeholder="your@email.com"
-                placeholderTextColor="rgba(255,255,255,0.5)"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-              <Pressable
-                style={[
-                  styles.subscribeBtn,
-                  { backgroundColor: email.includes("@") ? "rgba(255,255,255,0.35)" : "rgba(255,255,255,0.15)" },
-                ]}
-                onPress={() => {
-                  if (email.includes("@")) {
-                    setSubscribed(true);
-                  } else {
-                    Alert.alert("Email required", "Please enter a valid email address to subscribe.");
-                  }
-                }}
-              >
-                <Text style={styles.subscribeBtnText}>Subscribe</Text>
-              </Pressable>
-            </View>
-          )}
+          <View style={[styles.comingSoonBadge, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
+            <Feather name="clock" size={14} color="#fff" />
+            <Text style={styles.comingSoonText}>Not available yet</Text>
+          </View>
         </View>
       </ScrollView>
     </>
@@ -536,6 +539,24 @@ const styles = StyleSheet.create({
   urgentDot: { width: 10, height: 10, borderRadius: 5 },
   urgentTitle: { fontSize: 16, fontFamily: "Inter_700Bold" },
   urgentDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
+  urgentNumbers: { fontSize: 12, fontFamily: "Inter_500Medium", lineHeight: 17, textAlign: "center" },
+  featureCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 18,
+    padding: 16,
+    marginBottom: 12,
+  },
+  featureIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 21,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  featureTitle: { color: "#fff", fontSize: 15, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
+  featureSub: { color: "#ffffffdd", fontSize: 12, lineHeight: 17, fontFamily: "Inter_400Regular" },
   crisisBtn: {
     flexDirection: "row",
     alignItems: "center",
@@ -555,16 +576,6 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   textCounselorText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
-  chatBtn: {
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-    height: 44,
-    borderRadius: 14,
-    borderWidth: 1.5,
-  },
-  chatBtnText: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   card: { borderRadius: 20, padding: 18, gap: 12 },
   cardHeaderRow: {
     flexDirection: "row",
@@ -658,25 +669,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     lineHeight: 19,
   },
-  emailRow: { flexDirection: "row", gap: 8 },
-  emailInput: {
-    flex: 1,
-    height: 44,
-    borderRadius: 12,
-    paddingHorizontal: 14,
-    color: "#fff",
-    fontSize: 14,
-    fontFamily: "Inter_400Regular",
-  },
-  subscribeBtn: {
-    height: 44,
-    borderRadius: 12,
-    paddingHorizontal: 16,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  subscribeBtnText: { color: "#fff", fontSize: 13, fontFamily: "Inter_600SemiBold" },
-  subscribedBadge: {
+  comingSoonBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
@@ -685,5 +678,5 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
   },
-  subscribedText: { color: "#fff", fontSize: 13, fontFamily: "Inter_500Medium" },
+  comingSoonText: { color: "#fff", fontSize: 13, fontFamily: "Inter_500Medium" },
 });

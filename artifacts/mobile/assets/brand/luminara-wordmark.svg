@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 360 90" width="360" height="90" role="img" aria-label="Luminara wordmark">
+  <title>Luminara — wordmark with flame tittle</title>
+  <!-- The dot of the "i" is replaced by the flame mark, so the icon and the
+       word are one system. "ı" (U+0131, dotless i) is used so the font's own
+       tittle doesn't collide with the flame. Convert to outlines for production
+       and nudge the flame x-position to sit exactly over the stem. -->
+  <text x="6" y="66" font-family="Fraunces, Georgia, serif" font-size="62" font-weight="600" letter-spacing="-0.5" fill="#1C2236">Lum&#x131;nara</text>
+  <!-- flame tittle over the dotless i (approximate placement) -->
+  <g transform="translate(138,6) scale(0.30)">
+    <path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/>
+    <path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z" fill="#FFE7BE" opacity="0.92"/>
+  </g>
+</svg>

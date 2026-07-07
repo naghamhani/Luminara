@@ -1,22 +1,27 @@
 import { Feather } from "@expo/vector-icons";
 import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
-import React, { useMemo, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Alert,
   FlatList,
   Platform,
   Pressable,
   StyleSheet,
+  Switch,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useApp, getRiskLevel, CheckIn } from "@/context/AppContext";
+import { useApp, getRiskLevel, CheckIn, UserProfile } from "@/context/AppContext";
+import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
-import { generateReportHtml } from "@/utils/generateReport";
+import type { ShareLogEntry } from "@/types/health";
+import { showAlert } from "@/utils/dialog";
+import { generateProviderReportHtml, generateReportHtml } from "@/utils/generateReport";
+import { addShareLogEntry, clearShareLog, generateShareCode, listShareLog } from "@/utils/shareLog";
+import { calculateWellnessScore, detectPhase, predictCycle } from "@/utils/wellnessAlgorithm";
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -42,6 +47,30 @@ function formatRelative(dateStr: string): string {
 function pct(val: number, max = 5, invert = false): number {
   const p = ((val - 1) / (max - 1)) * 100;
   return invert ? 100 - p : p;
+}
+
+/**
+ * Web has no expo-print/expo-sharing equivalent, so on web we save the
+ * generated report HTML as a downloadable file via a Blob + hidden anchor
+ * (works reliably across browsers, unlike window.open which can be blocked
+ * as a popup). Returns false if the download could not be initiated so the
+ * caller can surface a visible error instead of silently doing nothing.
+ */
+function downloadHtmlOnWeb(html: string, filename: string): boolean {
+  try {
+    const blob = new Blob([html], { type: "text/html" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function avg(arr: number[]) {
@@ -511,21 +540,368 @@ const entryStyles = StyleSheet.create({
   metricVal: { fontSize: 11, fontFamily: "Inter_600SemiBold", width: 36, textAlign: "right" },
 });
 
+type SectionKey = "cycle" | "labs" | "medications" | "records" | "partner";
+
+const SECTION_META: { key: SectionKey; label: string; icon: keyof typeof Feather.glyphMap }[] = [
+  { key: "cycle", label: "Cycle summary", icon: "calendar" },
+  { key: "labs", label: "Lab results", icon: "file-text" },
+  { key: "medications", label: "Medications & supplements", icon: "package" },
+  { key: "records", label: "Medical records index", icon: "folder" },
+  { key: "partner", label: "Partner perspective", icon: "users" },
+];
+
+function SectionToggleRow({
+  icon,
+  label,
+  value,
+  onValueChange,
+}: {
+  icon: keyof typeof Feather.glyphMap;
+  label: string;
+  value: boolean;
+  onValueChange: (v: boolean) => void;
+}) {
+  const colors = useColors();
+  return (
+    <View style={toggleStyles.row}>
+      <View style={[toggleStyles.iconWrap, { backgroundColor: colors.secondary }]}>
+        <Feather name={icon} size={15} color={colors.primary} />
+      </View>
+      <Text style={[toggleStyles.label, { color: colors.text }]}>{label}</Text>
+      <Switch
+        value={value}
+        onValueChange={onValueChange}
+        trackColor={{ true: colors.primary, false: colors.lavender }}
+      />
+    </View>
+  );
+}
+
+const toggleStyles = StyleSheet.create({
+  row: { flexDirection: "row", alignItems: "center", gap: 10, paddingVertical: 8 },
+  iconWrap: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  label: { flex: 1, fontSize: 13, fontFamily: "Inter_500Medium" },
+});
+
+function ProviderReportBuilder({
+  checkIns,
+  profile,
+  onShared,
+}: {
+  checkIns: CheckIn[];
+  profile: UserProfile;
+  onShared: () => void;
+}) {
+  const colors = useColors();
+  const health = useHealth();
+  const { partnerSettings } = health;
+  const [sections, setSections] = useState<Record<SectionKey, boolean>>({
+    cycle: true,
+    labs: true,
+    medications: true,
+    records: true,
+    partner: false,
+  });
+  const [generating, setGenerating] = useState(false);
+
+  const partnerVisible = partnerSettings.enabled && partnerSettings.userCanViewObservations;
+
+  const visibleMeta = useMemo(
+    () => SECTION_META.filter((s) => s.key !== "partner" || partnerVisible),
+    [partnerVisible]
+  );
+
+  function toggle(key: SectionKey) {
+    setSections((prev) => ({ ...prev, [key]: !prev[key] }));
+  }
+
+  async function handleBuildReport() {
+    if (!profile) return;
+    try {
+      setGenerating(true);
+      const snapshot = health.buildSnapshot();
+      const phase = detectPhase({
+        birthDate: profile.birthDate,
+        cycleEntries: snapshot.cycleEntries,
+      });
+      const prediction = predictCycle(snapshot.cycleEntries);
+      const activeMeds = snapshot.medications.filter((m) => m.active);
+      const sharedPartnerObs = snapshot.partnerObservations.filter((o) => o.sharedWithUser);
+      const recentSymptoms = snapshot.cycleEntries.slice(0, 14).flatMap((e) => e.symptoms);
+      const recentLabMarkers = snapshot.labResults.slice(0, 5).flatMap((l) => l.markers);
+
+      const last7 = checkIns.slice(0, 7);
+      const factors =
+        last7.length > 0
+          ? {
+              mood: last7.reduce((a, c) => a + c.mood, 0) / last7.length,
+              sleep: last7.reduce((a, c) => a + c.sleep, 0) / last7.length,
+              anxiety: last7.reduce((a, c) => a + c.anxiety, 0) / last7.length,
+              appetite: last7.reduce((a, c) => a + c.appetite, 0) / last7.length,
+              bonding: last7.reduce((a, c) => a + c.bonding, 0) / last7.length,
+              support: last7.reduce((a, c) => a + c.support, 0) / last7.length,
+            }
+          : undefined;
+
+      const wellness = calculateWellnessScore({
+        factors,
+        phase,
+        labMarkers: recentLabMarkers,
+        activeMedications: activeMeds,
+        partnerObservations: partnerVisible ? sharedPartnerObs : undefined,
+        recentSymptoms,
+      });
+
+      const includedSections = {
+        cycle: sections.cycle,
+        labs: sections.labs,
+        medications: sections.medications,
+        records: sections.records,
+        partner: partnerVisible && sections.partner,
+      };
+
+      const code = generateShareCode();
+      const html = generateProviderReportHtml({
+        profile,
+        checkIns,
+        snapshot,
+        phase,
+        prediction,
+        wellness,
+        sections: includedSections,
+        verificationCode: code,
+      });
+
+      const includedNames = SECTION_META.filter((s) => includedSections[s.key]).map((s) => s.label);
+
+      if (Platform.OS === "web") {
+        const opened = downloadHtmlOnWeb(html, "provider-report.html");
+        if (!opened) {
+          showAlert("Download unavailable", "Your browser blocked the report download. Please try again.");
+          return;
+        }
+        await addShareLogEntry({ code, sections: includedNames });
+        onShared();
+        return;
+      }
+
+      const { uri } = await Print.printToFileAsync({ html, base64: false });
+      const canShare = await Sharing.isAvailableAsync();
+      if (canShare) {
+        await Sharing.shareAsync(uri, {
+          mimeType: "application/pdf",
+          dialogTitle: "Share Provider Report",
+          UTI: "com.adobe.pdf",
+        });
+        await addShareLogEntry({ code, sections: includedNames });
+        onShared();
+      } else {
+        showAlert("Sharing unavailable", "Your device does not support file sharing.");
+      }
+    } catch {
+      showAlert("Error", "Could not generate the provider report. Please try again.");
+    } finally {
+      setGenerating(false);
+    }
+  }
+
+  return (
+    <View style={[builderStyles.card, { backgroundColor: colors.card }]}>
+      <View style={builderStyles.header}>
+        <View style={[builderStyles.iconWrap, { backgroundColor: colors.softGreen }]}>
+          <Feather name="clipboard" size={16} color={colors.riskLow} />
+        </View>
+        <View style={{ flex: 1 }}>
+          <Text style={[builderStyles.title, { color: colors.foreground }]}>Build provider report</Text>
+          <Text style={[builderStyles.sub, { color: colors.mutedForeground }]}>
+            Choose what to include, then generate a PDF to bring to your appointment.
+          </Text>
+        </View>
+      </View>
+
+      <View style={[builderStyles.divider, { backgroundColor: colors.border }]} />
+
+      <View>
+        {visibleMeta.map((s) => (
+          <SectionToggleRow
+            key={s.key}
+            icon={s.icon}
+            label={s.label}
+            value={sections[s.key]}
+            onValueChange={() => toggle(s.key)}
+          />
+        ))}
+      </View>
+
+      <Pressable
+        onPress={handleBuildReport}
+        disabled={generating || !profile}
+        style={[builderStyles.buildBtn, { backgroundColor: colors.primary, opacity: generating ? 0.7 : 1 }]}
+      >
+        {generating ? (
+          <ActivityIndicator size={14} color="#fff" />
+        ) : (
+          <Feather name="share-2" size={14} color="#fff" />
+        )}
+        <Text style={builderStyles.buildBtnText}>
+          {generating ? "Generating…" : "Generate & Share Report"}
+        </Text>
+      </Pressable>
+
+      <Text style={[builderStyles.privacyNote, { color: colors.mutedForeground }]}>
+        Private by design — your data stays on this device. Sharing only happens when you choose to export a PDF.
+      </Text>
+    </View>
+  );
+}
+
+const builderStyles = StyleSheet.create({
+  card: { borderRadius: 20, padding: 18, gap: 14 },
+  header: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
+  iconWrap: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  title: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  sub: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2, lineHeight: 17 },
+  divider: { height: 1 },
+  buildBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 8,
+    height: 48,
+    borderRadius: 14,
+  },
+  buildBtnText: { color: "#fff", fontSize: 14, fontFamily: "Inter_600SemiBold" },
+  privacyNote: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16, textAlign: "center" },
+});
+
+function ShareHistorySection({ refreshToken }: { refreshToken: number }) {
+  const colors = useColors();
+  const [entries, setEntries] = useState<ShareLogEntry[]>([]);
+  const [loaded, setLoaded] = useState(false);
+
+  const refresh = useCallback(async () => {
+    const list = await listShareLog();
+    setEntries(list);
+    setLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh, refreshToken]);
+
+  async function handleClear() {
+    showAlert(
+      "Clear share history?",
+      "This removes the on-device record of past report shares. It does not un-share anything already sent.",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Clear",
+          style: "destructive",
+          onPress: async () => {
+            await clearShareLog();
+            refresh();
+          },
+        },
+      ]
+    );
+  }
+
+  if (!loaded) return null;
+
+  return (
+    <View style={[shareHistoryStyles.card, { backgroundColor: colors.card }]}>
+      <View style={shareHistoryStyles.header}>
+        <View style={{ flex: 1 }}>
+          <Text style={[shareHistoryStyles.title, { color: colors.foreground }]}>Share history</Text>
+          <Text style={[shareHistoryStyles.sub, { color: colors.mutedForeground }]}>
+            An audit trail of provider reports that have left this device.
+          </Text>
+        </View>
+        {entries.length > 0 && (
+          <Pressable onPress={handleClear} hitSlop={8}>
+            <Feather name="trash-2" size={16} color={colors.mutedForeground} />
+          </Pressable>
+        )}
+      </View>
+
+      {entries.length === 0 ? (
+        <Text style={[shareHistoryStyles.emptyText, { color: colors.mutedForeground }]}>
+          No reports have been shared yet.
+        </Text>
+      ) : (
+        <View style={{ gap: 10 }}>
+          {entries.map((entry) => (
+            <View key={entry.id} style={[shareHistoryStyles.entry, { borderColor: colors.border }]}>
+              <View style={shareHistoryStyles.entryTop}>
+                <Text style={[shareHistoryStyles.code, { color: colors.primary }]}>{entry.code}</Text>
+                <Text style={[shareHistoryStyles.date, { color: colors.mutedForeground }]}>
+                  {formatDateLong(entry.createdAt.slice(0, 10))}
+                </Text>
+              </View>
+              <View style={shareHistoryStyles.chipsRow}>
+                {entry.sections.map((s) => (
+                  <View key={s} style={[shareHistoryStyles.chip, { backgroundColor: colors.secondary }]}>
+                    <Text style={[shareHistoryStyles.chipText, { color: colors.primary }]}>{s}</Text>
+                  </View>
+                ))}
+              </View>
+            </View>
+          ))}
+        </View>
+      )}
+    </View>
+  );
+}
+
+const shareHistoryStyles = StyleSheet.create({
+  card: { borderRadius: 20, padding: 18, gap: 12 },
+  header: { flexDirection: "row", alignItems: "flex-start", gap: 10 },
+  title: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  sub: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2, lineHeight: 17 },
+  emptyText: { fontSize: 12, fontFamily: "Inter_400Regular" },
+  entry: { borderWidth: 1, borderRadius: 14, padding: 12, gap: 8 },
+  entryTop: { flexDirection: "row", justifyContent: "space-between", alignItems: "center" },
+  code: { fontSize: 13, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  date: { fontSize: 11, fontFamily: "Inter_400Regular" },
+  chipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 6 },
+  chip: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 8 },
+  chipText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
+});
+
 export default function HistoryScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { checkIns, profile } = useApp();
   const [sharing, setSharing] = useState(false);
+  const [shareHistoryRefreshToken, setShareHistoryRefreshToken] = useState(0);
 
   async function handleSharePdf() {
     if (!profile) return;
-    if (Platform.OS === "web") {
-      Alert.alert("Not supported", "PDF export is available on iOS and Android only.");
-      return;
-    }
     try {
       setSharing(true);
       const html = generateReportHtml(profile, checkIns);
+
+      if (Platform.OS === "web") {
+        const opened = downloadHtmlOnWeb(html, "clinical-wellness-report.html");
+        if (!opened) {
+          showAlert("Download unavailable", "Your browser blocked the report download. Please try again.");
+        }
+        return;
+      }
+
       const { uri } = await Print.printToFileAsync({ html, base64: false });
       const canShare = await Sharing.isAvailableAsync();
       if (canShare) {
@@ -535,10 +911,10 @@ export default function HistoryScreen() {
           UTI: "com.adobe.pdf",
         });
       } else {
-        Alert.alert("Sharing unavailable", "Your device does not support file sharing.");
+        showAlert("Sharing unavailable", "Your device does not support file sharing.");
       }
     } catch {
-      Alert.alert("Error", "Could not generate the report. Please try again.");
+      showAlert("Error", "Could not generate the report. Please try again.");
     } finally {
       setSharing(false);
     }
@@ -593,6 +969,18 @@ export default function HistoryScreen() {
             Complete your first check-in to see your clinical report here.
           </Text>
         </View>
+      }
+      ListFooterComponent={
+        profile ? (
+          <View style={{ gap: 14, marginTop: 20 }}>
+            <ProviderReportBuilder
+              checkIns={checkIns}
+              profile={profile}
+              onShared={() => setShareHistoryRefreshToken((t) => t + 1)}
+            />
+            <ShareHistorySection refreshToken={shareHistoryRefreshToken} />
+          </View>
+        ) : null
       }
       ItemSeparatorComponent={() => <View style={{ height: 12 }} />}
     />

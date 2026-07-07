@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Luminara — icon PNG generator</title>
+<style>
+  body { font-family: system-ui, sans-serif; background: #F4F6FD; color: #1C2236; margin: 0; padding: 2rem; }
+  h1 { font-weight: 700; }
+  .row { display: flex; gap: 1.5rem; flex-wrap: wrap; margin-top: 1.5rem; }
+  .card { background: #fff; border: 1px solid #E4E8F5; border-radius: 16px; padding: 1rem; text-align: center; }
+  canvas { image-rendering: auto; border-radius: 12px; box-shadow: 0 8px 20px rgba(28,34,54,0.12); }
+  button { margin-top: 0.8rem; display: block; width: 100%; background: #5168B4; color: #fff; border: none; border-radius: 999px; padding: 0.6rem 1rem; font-weight: 700; cursor: pointer; }
+  code { background: #EEF0FB; padding: 0.15em 0.4em; border-radius: 6px; }
+  p.note { max-width: 640px; color: #57628A; line-height: 1.5; }
+</style>
+</head>
+<body>
+<h1>Luminara — store icon &amp; splash generator</h1>
+<p class="note">Zero-dependency rasteriser: draws the “Kept Flame” mark to a canvas and downloads production PNGs.
+Open this file in any browser, click the buttons, and drop the files into <code>assets/</code>
+(<code>luminara-logo.png</code> is what <code>app.json</code> points to for both icon and splash).</p>
+
+<div class="row" id="cards"></div>
+
+<script>
+// Geometry — identical to components/LuminaraLogo.tsx and assets/brand/*.svg
+const FLAME  = "M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z";
+const SPARK  = "M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z";
+const CRADLE = "M24,72 C34,90 66,90 76,72";
+const AMBER="#F6A94C", SPARK_LIGHT="#FFE7BE", INDIGO="#5168B4", CREAM="#F4F6FD";
+
+function draw(canvas, size, opts) {
+  const ctx = canvas.getContext("2d");
+  canvas.width = size; canvas.height = size;
+  ctx.clearRect(0,0,size,size);
+  const s = size / 100;
+  ctx.save(); ctx.scale(s, s);
+
+  // background
+  if (opts.bg) { ctx.fillStyle = opts.bg; ctx.fillRect(0,0,100,100); }
+
+  // warm glow
+  if (opts.glow) {
+    const g = ctx.createRadialGradient(50,48,0,50,48,34);
+    g.addColorStop(0, "rgba(255,201,122,0.5)");
+    g.addColorStop(1, "rgba(255,201,122,0)");
+    ctx.fillStyle = g; ctx.beginPath(); ctx.arc(50,48,34,0,Math.PI*2); ctx.fill();
+  }
+
+  ctx.fillStyle = opts.flame || AMBER; ctx.fill(new Path2D(FLAME));
+  if (!opts.mono) { ctx.globalAlpha = 0.92; ctx.fillStyle = SPARK_LIGHT; ctx.fill(new Path2D(SPARK)); ctx.globalAlpha = 1; }
+  ctx.strokeStyle = opts.cradle || INDIGO; ctx.lineWidth = 5.5; ctx.lineCap = "round";
+  ctx.stroke(new Path2D(CRADLE));
+  ctx.restore();
+}
+
+const targets = [
+  { title: "App icon (1024, opaque)", file: "luminara-logo.png", size: 1024, opts: { bg: INDIGO, flame: AMBER, cradle: CREAM, glow: true } },
+  { title: "Mark (1024, transparent)", file: "luminara-mark.png", size: 1024, opts: { flame: AMBER, cradle: INDIGO, glow: true } },
+  { title: "Favicon (96, transparent)", file: "icon.png", size: 96, opts: { flame: AMBER, cradle: INDIGO, glow: true } },
+];
+
+const wrap = document.getElementById("cards");
+targets.forEach(t => {
+  const card = document.createElement("div"); card.className = "card";
+  const c = document.createElement("canvas"); c.style.width = "160px"; c.style.height = "160px";
+  draw(c, t.size, t.opts);
+  const label = document.createElement("div"); label.textContent = t.title; label.style.marginTop = "0.6rem"; label.style.fontSize = "0.8rem";
+  const btn = document.createElement("button"); btn.textContent = "Download " + t.file;
+  btn.onclick = () => { const a = document.createElement("a"); a.download = t.file; a.href = c.toDataURL("image/png"); a.click(); };
+  card.append(c, label, btn); wrap.appendChild(card);
+});
+</script>
+</body>
+</html>

@@ -1,249 +1,320 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useMemo } from "react";
-import {
-  Platform,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useApp, getRiskLevel, CheckIn } from "@/context/AppContext";
+
+import ContributionBars from "@/components/charts/ContributionBars";
+import BBTChart from "@/components/charts/BBTChart";
+import PhaseRibbon from "@/components/charts/PhaseRibbon";
+import SelfVsPartnerBars from "@/components/charts/SelfVsPartnerBars";
+import { useApp, type CheckIn } from "@/context/AppContext";
+import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
+import {
+  REPRODUCTIVE_PHASE_LABELS,
+  daysBetween,
+  type LabMarker,
+  type Recommendation,
+} from "@/types/health";
+import {
+  calculateWellnessScore,
+  correlateWithPartner,
+  detectPhase,
+  getRecommendations,
+  predictCycle,
+  predictRiskWindows,
+} from "@/utils/wellnessAlgorithm";
 
 function avg(arr: number[]): number {
   if (!arr.length) return 0;
   return parseFloat((arr.reduce((a, b) => a + b, 0) / arr.length).toFixed(1));
 }
 
-function HBar({
-  label,
-  value,
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + "T12:00:00");
+  return d.toLocaleDateString("en-US", { month: "short", day: "numeric" });
+}
+
+const CATEGORY_ICONS: Record<Recommendation["category"], keyof typeof Feather.glyphMap> = {
+  nutrition: "coffee",
+  exercise: "activity",
+  mindfulness: "wind",
+  medical: "heart",
+  sleep: "moon",
+  support: "users",
+};
+
+const PRIORITY_LABELS: Record<1 | 2 | 3, string> = {
+  1: "Priority",
+  2: "Worth trying",
+  3: "Gentle ideas",
+};
+
+// ---------------------------------------------------------------------------
+// Small shared pieces
+// ---------------------------------------------------------------------------
+
+function SectionHeader({ title, icon }: { title: string; icon?: keyof typeof Feather.glyphMap }) {
+  const colors = useColors();
+  return (
+    <View style={styles.sectionHeaderRow}>
+      {icon ? <Feather name={icon} size={15} color={colors.mutedForeground} /> : null}
+      <Text style={[styles.sectionHeader, { color: colors.foreground }]}>{title}</Text>
+    </View>
+  );
+}
+
+function TrendMiniBars({
+  checkIns,
+  selectField,
   max,
   color,
-  badge,
-  unit,
 }: {
-  label: string;
-  value: number;
+  checkIns: CheckIn[];
+  selectField: (c: CheckIn) => number;
   max: number;
   color: string;
-  badge?: string;
-  unit?: string;
 }) {
   const colors = useColors();
-  const pct = Math.max(0, Math.min(1, value / max));
-  return (
-    <View style={hBarStyles.container}>
-      <View style={hBarStyles.header}>
-        <Text style={[hBarStyles.label, { color: colors.text }]}>{label}</Text>
-        {badge ? (
-          <View style={[hBarStyles.badge, { backgroundColor: color + "20" }]}>
-            <Text style={[hBarStyles.badgeText, { color }]}>{badge}</Text>
-          </View>
-        ) : null}
-      </View>
-      <View style={hBarStyles.barRow}>
-        <View style={[hBarStyles.track, { backgroundColor: colors.lavender }]}>
-          <View
-            style={[
-              hBarStyles.fill,
-              { width: `${pct * 100}%` as any, backgroundColor: color },
-            ]}
-          />
-        </View>
-        <Text style={[hBarStyles.val, { color: colors.mutedForeground }]}>
-          {typeof value === "number" && !Number.isInteger(value) ? value.toFixed(1) : value}
-          {unit ?? ""}
-        </Text>
-      </View>
-    </View>
-  );
-}
-
-const hBarStyles = StyleSheet.create({
-  container: { gap: 6 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  label: { fontSize: 13, fontFamily: "Inter_500Medium" },
-  badge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
-  badgeText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  barRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  track: { flex: 1, height: 8, borderRadius: 4, overflow: "hidden" },
-  fill: { height: "100%", borderRadius: 4 },
-  val: { fontSize: 12, fontFamily: "Inter_600SemiBold", minWidth: 36, textAlign: "right" },
-});
-
-function SleepResonance({ checkIns }: { checkIns: CheckIn[] }) {
-  const colors = useColors();
-  const last7 = checkIns.slice(0, 7).reverse();
-
-  if (last7.length === 0) return null;
+  const last14 = useMemo(() => [...checkIns].slice(0, 14).reverse(), [checkIns]);
 
   return (
-    <View style={[sleepStyles.container, { backgroundColor: colors.card }]}>
-      <View style={sleepStyles.header}>
-        <Text style={[sleepStyles.title, { color: colors.foreground }]}>Sleep Resonance</Text>
-        <Feather name="moon" size={16} color={colors.purple} />
-      </View>
-      <Text style={[sleepStyles.sub, { color: colors.mutedForeground }]}>
-        Your nightly rest pattern over the past week
-      </Text>
-      <View style={sleepStyles.rows}>
-        {last7.map((entry, i) => {
-          const d = new Date(entry.date + "T12:00:00");
-          const dayNum = d.getDate();
-          const sleepH = entry.sleep;
-          const maxSleep = 10;
-          const pct = Math.min(1, sleepH / maxSleep);
-          const quality =
-            sleepH >= 7 ? colors.riskLow : sleepH >= 5 ? colors.primary : colors.riskModerate;
-          const hrs = Math.floor(sleepH);
-          const mins = Math.round((sleepH - hrs) * 60);
-          const timeStr = mins > 0 ? `${hrs}h ${mins}m` : `${hrs}h`;
-
-          return (
-            <View key={entry.id} style={sleepStyles.row}>
-              <Text style={[sleepStyles.day, { color: colors.mutedForeground }]}>
-                {dayNum}
-              </Text>
-              <View style={[sleepStyles.barBg, { backgroundColor: colors.lavender }]}>
-                <View
-                  style={[
-                    sleepStyles.barFill,
-                    { width: `${pct * 100}%` as any, backgroundColor: quality },
-                  ]}
-                />
-              </View>
-              <Text style={[sleepStyles.duration, { color: colors.text }]}>{timeStr}</Text>
+    <View style={trendStyles.row}>
+      {last14.map((c) => {
+        const v = selectField(c);
+        const pct = Math.max(0.06, Math.min(1, v / max));
+        const d = new Date(c.date + "T12:00:00");
+        return (
+          <View key={c.id} style={trendStyles.col}>
+            <View style={[trendStyles.track, { height: 40 }]}>
+              <View
+                style={[
+                  trendStyles.fill,
+                  { height: `${pct * 100}%` as any, backgroundColor: color },
+                ]}
+              />
             </View>
-          );
-        })}
-      </View>
-      <View style={sleepStyles.legend}>
-        {[
-          { color: colors.riskLow, label: "7h+ (Good)" },
-          { color: colors.primary, label: "5–7h (Fair)" },
-          { color: colors.riskModerate, label: "<5h (Low)" },
-        ].map((l) => (
-          <View key={l.label} style={sleepStyles.legendItem}>
-            <View style={[sleepStyles.legendDot, { backgroundColor: l.color }]} />
-            <Text style={[sleepStyles.legendLabel, { color: colors.mutedForeground }]}>
-              {l.label}
+            <Text style={[trendStyles.dayLabel, { color: colors.mutedForeground }]}>
+              {d.getDate()}
             </Text>
           </View>
-        ))}
-      </View>
+        );
+      })}
     </View>
   );
 }
 
-const sleepStyles = StyleSheet.create({
-  container: { borderRadius: 20, padding: 18, gap: 12 },
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  title: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
-  sub: { fontSize: 12, fontFamily: "Inter_400Regular", marginTop: -6 },
-  rows: { gap: 10 },
-  row: { flexDirection: "row", alignItems: "center", gap: 10 },
-  day: { fontSize: 13, fontFamily: "Inter_600SemiBold", width: 26, textAlign: "right" },
-  barBg: {
-    flex: 1,
-    height: 10,
-    borderRadius: 5,
+const trendStyles = StyleSheet.create({
+  row: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-end", gap: 3 },
+  col: { flex: 1, alignItems: "center", gap: 4 },
+  track: {
+    width: "100%",
+    maxWidth: 14,
+    backgroundColor: "#E4E8F5",
+    borderRadius: 4,
+    justifyContent: "flex-end",
     overflow: "hidden",
   },
-  barFill: { height: "100%", borderRadius: 5 },
-  duration: { fontSize: 12, fontFamily: "Inter_600SemiBold", width: 46, textAlign: "right" },
-  legend: { flexDirection: "row", gap: 12, flexWrap: "wrap", marginTop: 4 },
-  legendItem: { flexDirection: "row", alignItems: "center", gap: 5 },
-  legendDot: { width: 8, height: 8, borderRadius: 4 },
-  legendLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
+  fill: { width: "100%", borderRadius: 4 },
+  dayLabel: { fontSize: 8, fontFamily: "Inter_500Medium" },
 });
 
-const TIPS = [
-  { emoji: "🌬️", tip: "Box breathing: inhale 4s, hold 4s, exhale 4s, hold 4s." },
-  { emoji: "🚶", tip: "A 10-minute walk outside can meaningfully reduce cortisol." },
-  { emoji: "🤝", tip: "Say yes to help — it takes a village to raise a baby." },
-  { emoji: "😴", tip: "Sleep when your baby sleeps, even 20-minute naps help." },
-  { emoji: "💬", tip: "Naming your feelings out loud calms the nervous system." },
-  { emoji: "📔", tip: "Journaling for 5 minutes before bed helps process the day." },
-  { emoji: "🍵", tip: "Chamomile or oat straw tea can support postpartum calming." },
-];
+// ---------------------------------------------------------------------------
+// Screen
+// ---------------------------------------------------------------------------
 
 export default function InsightsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { checkIns, weeklyRiskTrend, averageRiskScore, riskLevel } = useApp();
+  const { checkIns, profile } = useApp();
+  const {
+    cycleEntries,
+    labResults,
+    medications,
+    partnerObservations,
+    partnerSettings,
+    careProfile,
+  } = useHealth();
 
-  const stats = useMemo(() => {
-    if (!checkIns.length) return null;
-    const last7 = checkIns.slice(0, 7);
-    const wellness = Math.max(0, 100 - averageRiskScore);
+  const today = useMemo(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(
+      d.getDate()
+    ).padStart(2, "0")}`;
+  }, []);
 
-    const moodHarmony = avg(last7.map((c) => c.mood)) / 5;
-    const restfulEnergy = Math.min(1, avg(last7.map((c) => c.sleep)) / 8);
-    const bondingScore = avg(last7.map((c) => c.bonding)) / 5;
-    const anxietyResilience = 1 - (avg(last7.map((c) => c.anxiety)) - 1) / 4;
-    const supportScore = avg(last7.map((c) => c.support)) / 5;
-    const mindfulMinutes = Math.round(moodHarmony * 60);
-    const avgSleep = avg(last7.map((c) => c.sleep));
+  const phase = useMemo(
+    () =>
+      detectPhase({
+        birthDate: profile?.birthDate ?? null,
+        cycleEntries,
+        today,
+      }),
+    [profile?.birthDate, cycleEntries, today]
+  );
 
-    const trendDir =
-      last7.length >= 2
-        ? last7[0].riskScore < last7[last7.length - 1].riskScore
-          ? "improving"
-          : last7[0].riskScore > last7[last7.length - 1].riskScore
-          ? "worsening"
-          : "stable"
-        : "stable";
+  const cyclePrediction = useMemo(() => predictCycle(cycleEntries, today), [cycleEntries, today]);
 
-    return {
-      moodHarmony,
-      restfulEnergy,
-      bondingScore,
-      anxietyResilience,
-      supportScore,
-      wellness,
-      trendDir,
-      mindfulMinutes,
-      avgSleep,
-      totalEntries: checkIns.length,
-    };
-  }, [checkIns, averageRiskScore]);
+  const latestCheckIn = checkIns[0] ?? null;
 
-  const riskColor =
-    riskLevel === "low"
+  // Partner visibility gate: shared observations from last 7 days, only when
+  // both userCanViewObservations is on AND the entries were shared.
+  const partnerVisible = partnerSettings.userCanViewObservations;
+
+  const recentPartnerObservations = useMemo(() => {
+    if (!partnerVisible) return [];
+    return partnerObservations.filter(
+      (o) => o.sharedWithUser && daysBetween(o.date, today) <= 7 && daysBetween(o.date, today) >= 0
+    );
+  }, [partnerObservations, partnerVisible, today]);
+
+  const recentLabMarkers: LabMarker[] = useMemo(() => {
+    const cutoffLabs = labResults.filter((l) => daysBetween(l.date, today) <= 90 && daysBetween(l.date, today) >= 0);
+    return cutoffLabs.flatMap((l) => l.markers);
+  }, [labResults, today]);
+
+  const activeMedications = useMemo(() => medications.filter((m) => m.active), [medications]);
+
+  const recentSymptoms = useMemo(() => {
+    const recentEntries = cycleEntries.filter(
+      (e) => daysBetween(e.date, today) <= 14 && daysBetween(e.date, today) >= 0
+    );
+    return recentEntries.flatMap((e) => e.symptoms);
+  }, [cycleEntries, today]);
+
+  const recentHeavyFlowDays = useMemo(
+    () =>
+      cycleEntries.filter(
+        (e) =>
+          (e.flow === "heavy" || e.flow === "medium") &&
+          daysBetween(e.date, today) <= 60 &&
+          daysBetween(e.date, today) >= 0
+      ).length,
+    [cycleEntries, today]
+  );
+
+  const wellnessInput = useMemo(
+    () => ({
+      factors: latestCheckIn
+        ? {
+            mood: latestCheckIn.mood,
+            sleep: latestCheckIn.sleep,
+            anxiety: latestCheckIn.anxiety,
+            appetite: latestCheckIn.appetite,
+            bonding: latestCheckIn.bonding,
+            support: latestCheckIn.support,
+          }
+        : undefined,
+      phase,
+      labMarkers: recentLabMarkers,
+      activeMedications,
+      partnerObservations: recentPartnerObservations,
+      recentSymptoms,
+      careProfile,
+      recentHeavyFlowDays,
+    }),
+    [latestCheckIn, phase, recentLabMarkers, activeMedications, recentPartnerObservations, recentSymptoms, careProfile, recentHeavyFlowDays]
+  );
+
+  const wellnessResult = useMemo(() => calculateWellnessScore(wellnessInput), [wellnessInput]);
+
+  const wellnessPct = Math.max(0, 100 - wellnessResult.score);
+  const levelColor =
+    wellnessResult.level === "low"
       ? colors.riskLow
-      : riskLevel === "moderate"
+      : wellnessResult.level === "moderate"
       ? colors.riskModerate
       : colors.riskHigh;
 
-  const todayTip = useMemo(() => {
-    return TIPS[new Date().getDate() % TIPS.length];
-  }, []);
+  // --- BBT & biomarker stats -------------------------------------------------
+  const bbtStats = useMemo(() => {
+    const withBbt = cycleEntries.filter((e) => typeof e.bbt === "number");
+    if (withBbt.length === 0) return null;
 
-  if (!checkIns.length) {
+    // Split into follicular vs luteal using the current prediction's
+    // ovulation date when available (entries before it = follicular, on/after
+    // = luteal). This is a coarse approximation across whatever cycles are
+    // logged, not a per-cycle classification.
+    let follicular: number[] = [];
+    let luteal: number[] = [];
+    if (cyclePrediction.ovulationDate) {
+      const ovulationDate = cyclePrediction.ovulationDate;
+      follicular = withBbt.filter((e) => e.date < ovulationDate).map((e) => e.bbt!);
+      luteal = withBbt.filter((e) => e.date >= ovulationDate).map((e) => e.bbt!);
+    }
+
+    const mucusPeakDays = cycleEntries.filter((e) => e.cervicalMucus === "eggwhite").length;
+    const positiveOvulationTests = cycleEntries.filter((e) => e.ovulationTest === "positive").length;
+    const positivePregnancyTests = cycleEntries.filter((e) => e.pregnancyTest === "positive").length;
+
+    return {
+      avgFollicular: follicular.length ? avg(follicular) : null,
+      avgLuteal: luteal.length ? avg(luteal) : null,
+      mucusPeakDays,
+      positiveOvulationTests,
+      positivePregnancyTests,
+    };
+  }, [cycleEntries, cyclePrediction]);
+
+  // --- Lab flags (last 180 days) ---------------------------------------------
+  const flaggedLabs = useMemo(() => {
+    const cutoff = labResults.filter(
+      (l) => daysBetween(l.date, today) <= 180 && daysBetween(l.date, today) >= 0
+    );
+    const flagged: { marker: LabMarker; testName: string; date: string }[] = [];
+    for (const l of cutoff) {
+      for (const m of l.markers) {
+        if (m.flag !== "normal") flagged.push({ marker: m, testName: l.testName, date: l.date });
+      }
+    }
+    return flagged;
+  }, [labResults, today]);
+
+  // --- Risk windows -----------------------------------------------------------
+  const riskWindows = useMemo(
+    () => predictRiskWindows(checkIns, cycleEntries, today),
+    [checkIns, cycleEntries, today]
+  );
+
+  // --- Recommendations ---------------------------------------------------------
+  const recommendations = useMemo(
+    () => getRecommendations({ ...wellnessInput, result: wellnessResult }),
+    [wellnessInput, wellnessResult]
+  );
+
+  const groupedRecommendations = useMemo(() => {
+    const groups: Record<1 | 2 | 3, Recommendation[]> = { 1: [], 2: [], 3: [] };
+    for (const r of recommendations) groups[r.priority].push(r);
+    return groups;
+  }, [recommendations]);
+
+  // --- Self vs partner correlation ---------------------------------------------
+  const partnerCorrelations = useMemo(
+    () => correlateWithPartner(checkIns, partnerObservations),
+    [checkIns, partnerObservations]
+  );
+
+  const hasComparableCorrelation = partnerCorrelations.some(
+    (c) => c.agreement !== "insufficient_data"
+  );
+
+  const showPartnerSection = partnerVisible && hasComparableCorrelation;
+  const showPartnerOffNotice =
+    partnerSettings.enabled && !partnerSettings.userCanViewObservations;
+
+  if (!checkIns.length && cycleEntries.length === 0) {
     return (
       <View
         style={[
           styles.empty,
-          {
-            backgroundColor: colors.background,
-            paddingTop: insets.top + 20,
-          },
+          { backgroundColor: colors.background, paddingTop: insets.top + 20 },
         ]}
       >
         <Text style={{ fontSize: 52 }}>🔭</Text>
         <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No insights yet</Text>
         <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
-          Complete a few daily check-ins to unlock personalized wellness insights.
+          Complete a few daily check-ins or log a cycle entry to unlock personalized wellness
+          insights.
         </Text>
       </View>
     );
@@ -254,215 +325,308 @@ export default function InsightsScreen() {
       style={{ backgroundColor: colors.background }}
       contentContainerStyle={[
         styles.scroll,
-        {
-          paddingTop: insets.top + 20,
-          paddingBottom: insets.bottom + 100,
-        },
+        { paddingTop: insets.top + 20, paddingBottom: insets.bottom + 100 },
       ]}
       showsVerticalScrollIndicator={false}
     >
+      {/* Header */}
       <View style={styles.heroRow}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>WEEKLY OVERVIEW</Text>
+          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>YOUR INSIGHTS</Text>
           <Text style={[styles.heroTitle, { color: colors.foreground }]}>
-            Your Gentle{"\n"}Reflection
+            Whole-Picture{"\n"}Wellness
           </Text>
           <Text style={[styles.heroSub, { color: colors.mutedForeground }]}>
-            Based on your data from the past few days.
+            Drawing on check-ins, cycle logs, labs, and support around you.
           </Text>
         </View>
-        <View style={[styles.wellnessOrb, { backgroundColor: riskColor + "18", borderColor: riskColor + "50" }]}>
-          <Text style={[styles.orbPct, { color: riskColor }]}>{stats?.wellness ?? 0}%</Text>
+        <View
+          style={[styles.wellnessOrb, { backgroundColor: levelColor + "18", borderColor: levelColor + "50" }]}
+        >
+          <Text style={[styles.orbPct, { color: levelColor }]}>{wellnessPct}%</Text>
           <Text style={[styles.orbLabel, { color: colors.mutedForeground }]}>Wellness</Text>
         </View>
       </View>
 
-      {stats && (
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Wellness Signals</Text>
-          <View style={styles.barList}>
-            <HBar
-              label="Mood Harmony"
-              value={stats.moodHarmony}
-              max={1}
-              color={colors.primary}
-              badge={
-                stats.moodHarmony >= 0.7 ? "STABLE!" : stats.moodHarmony >= 0.5 ? "Variable" : "Low"
-              }
-            />
-            <HBar
-              label="Restful Energy"
-              value={stats.restfulEnergy}
-              max={1}
-              color={colors.teal}
-              badge={
-                stats.restfulEnergy >= 0.75 ? "Good" : stats.restfulEnergy >= 0.5 ? "Fair" : "Poor"
-              }
-            />
-            <HBar
-              label="Baby Bonding"
-              value={stats.bondingScore}
-              max={1}
-              color={colors.purple}
-              badge={stats.bondingScore >= 0.7 ? "Strong" : "Growing"}
-            />
-            <HBar
-              label="Anxiety Resilience"
-              value={stats.anxietyResilience}
-              max={1}
-              color={colors.warm}
-              badge={stats.anxietyResilience >= 0.7 ? "Managed" : "Elevated"}
-            />
-            <HBar
-              label="Social Support"
-              value={stats.supportScore}
-              max={1}
-              color="#6B89D4"
-              badge={stats.supportScore >= 0.7 ? "Felt" : "Seeking"}
-            />
-          </View>
-        </View>
-      )}
-
-      {stats && (
-        <View style={[styles.minutesCard, { backgroundColor: colors.primary }]}>
-          <View style={styles.minutesRow}>
-            <View>
-              <Text style={styles.minutesLabel}>Mindful Minutes</Text>
-              <Text style={styles.minutesNum}>{stats.mindfulMinutes}</Text>
-              <Text style={styles.minutesSub}>minutes of wellness today</Text>
-            </View>
-            <Text style={{ fontSize: 44 }}>🧘</Text>
-          </View>
-        </View>
-      )}
-
-      <SleepResonance checkIns={checkIns} />
-
-      {weeklyRiskTrend.length >= 2 && (
-        <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <View style={styles.cardHeaderRow}>
-            <Text style={[styles.cardTitle, { color: colors.foreground }]}>Risk Trend</Text>
-            <View
-              style={[
-                styles.trendBadge,
-                {
-                  backgroundColor:
-                    stats?.trendDir === "improving"
-                      ? colors.softGreen
-                      : stats?.trendDir === "worsening"
-                      ? colors.softRed
-                      : colors.muted,
-                },
-              ]}
-            >
-              <Feather
-                name={
-                  stats?.trendDir === "improving"
-                    ? "trending-down"
-                    : stats?.trendDir === "worsening"
-                    ? "trending-up"
-                    : "minus"
-                }
-                size={13}
-                color={
-                  stats?.trendDir === "improving"
-                    ? colors.riskLow
-                    : stats?.trendDir === "worsening"
-                    ? colors.riskHigh
-                    : colors.mutedForeground
-                }
-              />
-              <Text
-                style={[
-                  styles.trendText,
-                  {
-                    color:
-                      stats?.trendDir === "improving"
-                        ? colors.riskLow
-                        : stats?.trendDir === "worsening"
-                        ? colors.riskHigh
-                        : colors.mutedForeground,
-                  },
-                ]}
-              >
-                {stats?.trendDir === "improving"
-                  ? "Improving"
-                  : stats?.trendDir === "worsening"
-                  ? "Rising"
-                  : "Stable"}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.trendBars}>
-            {weeklyRiskTrend.map((item) => {
-              const level = getRiskLevel(item.score);
-              const barColor =
-                level === "low"
-                  ? colors.riskLow
-                  : level === "moderate"
-                  ? colors.riskModerate
-                  : colors.riskHigh;
-              const d = new Date(item.date + "T12:00:00");
-              const day = d.toLocaleDateString("en-US", { weekday: "short" }).slice(0, 3);
-              const barH = Math.max(6, (item.score / 100) * 56);
-              return (
-                <View key={item.date} style={styles.trendBarCol}>
-                  <View style={[styles.trendBarBg, { height: 56 }]}>
-                    <View style={[styles.trendBarFill, { height: barH, backgroundColor: barColor }]} />
-                  </View>
-                  <Text style={[styles.trendBarDay, { color: colors.mutedForeground }]}>{day}</Text>
-                </View>
-              );
-            })}
-          </View>
-        </View>
-      )}
-
+      {/* 1. Wellness overview */}
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-          PPD Risk Assessment
-        </Text>
+        <SectionHeader title="Wellness Overview" icon="activity" />
         <View
           style={[
-            styles.riskAssessment,
-            {
-              backgroundColor: riskColor + "12",
-              borderColor: riskColor + "30",
-              borderWidth: 1.5,
-            },
+            styles.wellnessSummary,
+            { backgroundColor: levelColor + "12", borderColor: levelColor + "30" },
           ]}
         >
-          <View style={styles.riskAssessmentHeader}>
-            <Text style={[styles.riskAssessmentScore, { color: riskColor }]}>
-              {averageRiskScore}/100
+          <Text style={[styles.wellnessScore, { color: levelColor }]}>{wellnessPct}%</Text>
+          <View style={{ flex: 1 }}>
+            <Text style={[styles.wellnessLevelText, { color: colors.foreground }]}>
+              {wellnessResult.level === "low"
+                ? "Looking steady"
+                : wellnessResult.level === "moderate"
+                ? "Some signals to watch"
+                : "Elevated signals"}
             </Text>
-            <View style={[styles.riskBadge, { backgroundColor: riskColor }]}>
-              <Text style={styles.riskBadgeText}>
-                {riskLevel === "low" ? "Low Risk" : riskLevel === "moderate" ? "Moderate" : "High Risk"}
+            <Text style={[styles.wellnessLevelSub, { color: colors.mutedForeground }]}>
+              Blended from check-ins, phase, labs, medications, partner input, and cycle
+              symptoms.
+            </Text>
+          </View>
+        </View>
+        <ContributionBars contributions={wellnessResult.contributions} />
+        {!latestCheckIn && (
+          <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
+            Complete a daily check-in to include mood, sleep, and support in this score.
+          </Text>
+        )}
+      </View>
+
+      {/* 2. Phase & cycle */}
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <SectionHeader title="Phase & Cycle" icon="calendar" />
+        <View style={styles.phaseChipRow}>
+          <View style={[styles.phaseChip, { backgroundColor: colors.blush }]}>
+            <Text style={[styles.phaseChipText, { color: colors.purple }]}>
+              {REPRODUCTIVE_PHASE_LABELS[phase]}
+            </Text>
+          </View>
+          {cyclePrediction.currentCycleDay ? (
+            <Text style={[styles.cycleDayText, { color: colors.mutedForeground }]}>
+              Cycle day {cyclePrediction.currentCycleDay}
+            </Text>
+          ) : null}
+        </View>
+
+        <PhaseRibbon
+          phase={phase}
+          currentCycleDay={cyclePrediction.currentCycleDay}
+          avgCycleLength={cyclePrediction.avgCycleLength}
+        />
+
+        {cyclePrediction.confidence !== "none" ? (
+          <View style={styles.predictionGrid}>
+            <View style={styles.predictionItem}>
+              <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
+                Next period
+              </Text>
+              <Text style={[styles.predictionValue, { color: colors.foreground }]}>
+                {cyclePrediction.nextPeriodStart ? formatDate(cyclePrediction.nextPeriodStart) : "—"}
+              </Text>
+            </View>
+            <View style={styles.predictionItem}>
+              <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
+                Fertile window
+              </Text>
+              <Text style={[styles.predictionValue, { color: colors.foreground }]}>
+                {cyclePrediction.fertileWindowStart && cyclePrediction.fertileWindowEnd
+                  ? `${formatDate(cyclePrediction.fertileWindowStart)} – ${formatDate(
+                      cyclePrediction.fertileWindowEnd
+                    )}`
+                  : "—"}
+              </Text>
+            </View>
+            <View style={styles.predictionItem}>
+              <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
+                Avg cycle length
+              </Text>
+              <Text style={[styles.predictionValue, { color: colors.foreground }]}>
+                {cyclePrediction.avgCycleLength ? `${cyclePrediction.avgCycleLength}d` : "—"}
+              </Text>
+            </View>
+            <View style={styles.predictionItem}>
+              <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
+                Confidence
+              </Text>
+              <Text style={[styles.predictionValue, { color: colors.foreground }]}>
+                {cyclePrediction.confidence.charAt(0).toUpperCase() + cyclePrediction.confidence.slice(1)}
               </Text>
             </View>
           </View>
-          <Text style={[styles.riskDesc, { color: colors.mutedForeground }]}>
-            {riskLevel === "low"
-              ? "Your 7-day indicators are within the low-risk range. Keep nurturing yourself."
-              : riskLevel === "moderate"
-              ? "Moderate postpartum stress detected. Sleep, connection, and support are key."
-              : "Elevated risk — please speak with your healthcare provider as soon as possible."}
+        ) : (
+          <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
+            Log a few cycle entries (flow, BBT, or tests) to unlock predictions.
           </Text>
-        </View>
-        <Text style={[styles.totalEntries, { color: colors.mutedForeground }]}>
-          Based on {stats?.totalEntries} check-ins
-        </Text>
+        )}
       </View>
 
-      <View style={[styles.tipCard, { backgroundColor: colors.blush }]}>
-        <View style={styles.tipHeader}>
-          <Text style={[styles.tipEyebrow, { color: colors.purple }]}>GENTLE MORNINGS</Text>
-          <Text style={{ fontSize: 26 }}>{todayTip.emoji}</Text>
-        </View>
-        <Text style={[styles.tipText, { color: colors.foreground }]}>{todayTip.tip}</Text>
+      {/* 3. BBT & biomarkers */}
+      <View style={[styles.card, { backgroundColor: colors.card }]}>
+        <SectionHeader title="BBT & Biomarkers" icon="thermometer" />
+        <BBTChart
+          cycleEntries={cycleEntries}
+          fertileWindowStart={cyclePrediction.fertileWindowStart}
+          fertileWindowEnd={cyclePrediction.fertileWindowEnd}
+        />
+        {bbtStats && (
+          <View style={styles.statChipsRow}>
+            <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
+              <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
+                Follicular avg
+              </Text>
+              <Text style={[styles.statChipValue, { color: colors.foreground }]}>
+                {bbtStats.avgFollicular !== null ? `${bbtStats.avgFollicular}°C` : "—"}
+              </Text>
+            </View>
+            <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
+              <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
+                Luteal avg
+              </Text>
+              <Text style={[styles.statChipValue, { color: colors.foreground }]}>
+                {bbtStats.avgLuteal !== null ? `${bbtStats.avgLuteal}°C` : "—"}
+              </Text>
+            </View>
+            <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
+              <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
+                Mucus peak days
+              </Text>
+              <Text style={[styles.statChipValue, { color: colors.foreground }]}>
+                {bbtStats.mucusPeakDays}
+              </Text>
+            </View>
+            <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
+              <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
+                Positive OPKs
+              </Text>
+              <Text style={[styles.statChipValue, { color: colors.foreground }]}>
+                {bbtStats.positiveOvulationTests}
+              </Text>
+            </View>
+            {bbtStats.positivePregnancyTests > 0 && (
+              <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
+                <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
+                  Positive pregnancy tests
+                </Text>
+                <Text style={[styles.statChipValue, { color: colors.foreground }]}>
+                  {bbtStats.positivePregnancyTests}
+                </Text>
+              </View>
+            )}
+          </View>
+        )}
       </View>
+
+      {/* 4. Factor trends */}
+      {checkIns.length > 0 && (
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <SectionHeader title="Factor Trends" icon="trending-up" />
+          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>Mood (last 14 days)</Text>
+          <TrendMiniBars checkIns={checkIns} selectField={(c) => c.mood} max={5} color={colors.primary} />
+          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>Sleep hours</Text>
+          <TrendMiniBars checkIns={checkIns} selectField={(c) => c.sleep} max={10} color={colors.teal} />
+          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>Anxiety</Text>
+          <TrendMiniBars checkIns={checkIns} selectField={(c) => c.anxiety} max={5} color={colors.warm} />
+        </View>
+      )}
+
+      {/* 5. Self vs Partner */}
+      {showPartnerSection && (
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <SectionHeader title="Self vs. Partner" icon="users" />
+          <SelfVsPartnerBars correlations={partnerCorrelations} />
+          <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
+            Differences here are conversation starters, not verdicts — everyone experiences days
+            differently.
+          </Text>
+        </View>
+      )}
+      {!showPartnerSection && showPartnerOffNotice && (
+        <View style={[styles.quietNoticeCard, { backgroundColor: colors.secondary }]}>
+          <Text style={[styles.quietNoticeText, { color: colors.mutedForeground }]}>
+            Partner insights are turned off in settings.
+          </Text>
+        </View>
+      )}
+
+      {/* 6. Lab flags */}
+      {flaggedLabs.length > 0 && (
+        <View style={[styles.card, { backgroundColor: colors.softRed }]}>
+          <SectionHeader title="Lab Flags" icon="flag" />
+          <View style={styles.flagList}>
+            {flaggedLabs.map((f, i) => (
+              <View key={`${f.testName}-${f.marker.name}-${i}`} style={styles.flagRow}>
+                <View style={[styles.flagDot, { backgroundColor: colors.riskHigh }]} />
+                <View style={{ flex: 1 }}>
+                  <Text style={[styles.flagName, { color: colors.foreground }]}>
+                    {f.marker.name} — {f.marker.value} {f.marker.unit}
+                  </Text>
+                  <Text style={[styles.flagMeta, { color: colors.mutedForeground }]}>
+                    {f.marker.flag === "high" ? "Above" : "Below"} reference range ·{" "}
+                    {formatDate(f.date)}
+                  </Text>
+                </View>
+              </View>
+            ))}
+          </View>
+          <Text style={[styles.disclaimer, { color: "#9A5010" }]}>
+            Not a diagnosis — review these results with your healthcare provider.
+          </Text>
+        </View>
+      )}
+
+      {/* 7. Risk windows ahead */}
+      {riskWindows.length > 0 && (
+        <View style={styles.riskWindowsSection}>
+          <SectionHeader title="Risk Windows Ahead" icon="alert-circle" />
+          {riskWindows.map((w, i) => {
+            const tint = w.severity === "elevated" ? colors.riskModerate : colors.primary;
+            return (
+              <View
+                key={i}
+                style={[
+                  styles.riskWindowCard,
+                  { backgroundColor: colors.card, borderLeftColor: tint, borderLeftWidth: 4 },
+                ]}
+              >
+                <View style={styles.riskWindowHeader}>
+                  <Text style={[styles.riskWindowDate, { color: colors.foreground }]}>
+                    {w.start === w.end ? formatDate(w.start) : `${formatDate(w.start)} – ${formatDate(w.end)}`}
+                  </Text>
+                  <View style={[styles.riskWindowBadge, { backgroundColor: tint + "1A" }]}>
+                    <Text style={[styles.riskWindowBadgeText, { color: tint }]}>
+                      {w.severity === "elevated" ? "Gentle heads-up" : "Worth noticing"}
+                    </Text>
+                  </View>
+                </View>
+                <Text style={[styles.riskWindowReason, { color: colors.mutedForeground }]}>
+                  {w.reason}
+                </Text>
+                <Text style={[styles.riskWindowSuggestion, { color: colors.mutedForeground }]}>
+                  Consider lining up extra rest or support around these days.
+                </Text>
+              </View>
+            );
+          })}
+        </View>
+      )}
+
+      {/* 8. Suggestions for you */}
+      {recommendations.length > 0 && (
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <SectionHeader title="Suggestions For You" icon="sun" />
+          {([1, 2, 3] as const).map((priority) =>
+            groupedRecommendations[priority].length > 0 ? (
+              <View key={priority} style={styles.recGroup}>
+                <Text style={[styles.recGroupLabel, { color: colors.mutedForeground }]}>
+                  {PRIORITY_LABELS[priority].toUpperCase()}
+                </Text>
+                {groupedRecommendations[priority].map((r) => (
+                  <View key={r.id} style={styles.recRow}>
+                    <View style={[styles.recIcon, { backgroundColor: colors.secondary }]}>
+                      <Feather name={CATEGORY_ICONS[r.category]} size={15} color={colors.primary} />
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={[styles.recTitle, { color: colors.foreground }]}>{r.title}</Text>
+                      <Text style={[styles.recBody, { color: colors.mutedForeground }]}>{r.body}</Text>
+                    </View>
+                  </View>
+                ))}
+              </View>
+            ) : null
+          )}
+          <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
+            Educational suggestions, not medical advice.
+          </Text>
+        </View>
+      )}
     </ScrollView>
   );
 }
@@ -512,63 +676,78 @@ const styles = StyleSheet.create({
     padding: 18,
     gap: 14,
     shadowColor: "#000",
+    shadowOpacity: 0.06,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  sectionHeaderRow: { flexDirection: "row", alignItems: "center", gap: 8 },
+  sectionHeader: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  wellnessSummary: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 16,
+    borderWidth: 1.5,
+    padding: 14,
+  },
+  wellnessScore: { fontSize: 30, fontFamily: "Inter_700Bold" },
+  wellnessLevelText: { fontSize: 14, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
+  wellnessLevelSub: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 15 },
+  disclaimer: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },
+  phaseChipRow: { flexDirection: "row", alignItems: "center", gap: 10 },
+  phaseChip: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 14 },
+  phaseChipText: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  cycleDayText: { fontSize: 12, fontFamily: "Inter_500Medium" },
+  predictionGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 12,
+  },
+  predictionItem: { width: "47%", gap: 2 },
+  predictionLabel: { fontSize: 10, fontFamily: "Inter_500Medium" },
+  predictionValue: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  statChipsRow: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  statChip: { flexGrow: 1, minWidth: "23%", borderRadius: 12, padding: 10, gap: 2 },
+  statChipLabel: { fontSize: 9, fontFamily: "Inter_500Medium" },
+  statChipValue: { fontSize: 14, fontFamily: "Inter_700Bold" },
+  trendGroupLabel: { fontSize: 12, fontFamily: "Inter_600SemiBold", marginTop: 2 },
+  quietNoticeCard: { borderRadius: 16, padding: 14 },
+  quietNoticeText: { fontSize: 12, fontFamily: "Inter_400Regular", textAlign: "center" },
+  flagList: { gap: 10 },
+  flagRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
+  flagDot: { width: 8, height: 8, borderRadius: 4, marginTop: 5 },
+  flagName: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
+  flagMeta: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 1 },
+  riskWindowsSection: { gap: 10 },
+  riskWindowCard: {
+    borderRadius: 16,
+    padding: 14,
+    gap: 6,
+    shadowColor: "#000",
     shadowOpacity: 0.04,
     shadowRadius: 8,
     elevation: 1,
   },
-  cardTitle: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
-  cardHeaderRow: { flexDirection: "row", alignItems: "center", justifyContent: "space-between" },
-  barList: { gap: 14 },
-  minutesCard: { borderRadius: 20, padding: 20 },
-  minutesRow: {
+  riskWindowHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
   },
-  minutesLabel: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "Inter_500Medium", marginBottom: 4 },
-  minutesNum: { color: "#fff", fontSize: 42, fontFamily: "Inter_700Bold" },
-  minutesSub: { color: "rgba(255,255,255,0.6)", fontSize: 11, fontFamily: "Inter_400Regular" },
-  trendBadge: {
-    flexDirection: "row",
+  riskWindowDate: { fontSize: 13, fontFamily: "Inter_700Bold" },
+  riskWindowBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: 10 },
+  riskWindowBadgeText: { fontSize: 10, fontFamily: "Inter_600SemiBold" },
+  riskWindowReason: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17 },
+  riskWindowSuggestion: { fontSize: 11, fontFamily: "Inter_500Medium", fontStyle: "italic" },
+  recGroup: { gap: 10 },
+  recGroupLabel: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  recRow: { flexDirection: "row", gap: 12, alignItems: "flex-start" },
+  recIcon: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: "center",
-    gap: 4,
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 20,
+    justifyContent: "center",
   },
-  trendText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  trendBars: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "flex-end",
-  },
-  trendBarCol: { alignItems: "center", gap: 4 },
-  trendBarBg: {
-    width: 26,
-    backgroundColor: "#E4E8F5",
-    borderRadius: 6,
-    justifyContent: "flex-end",
-    overflow: "hidden",
-  },
-  trendBarFill: { width: "100%", borderRadius: 6 },
-  trendBarDay: { fontSize: 10, fontFamily: "Inter_500Medium" },
-  riskAssessment: { borderRadius: 16, padding: 16, gap: 10 },
-  riskAssessmentHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  riskAssessmentScore: { fontSize: 32, fontFamily: "Inter_700Bold" },
-  riskBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
-  riskBadgeText: { color: "#fff", fontSize: 12, fontFamily: "Inter_600SemiBold" },
-  riskDesc: { fontSize: 13, fontFamily: "Inter_400Regular", lineHeight: 19 },
-  totalEntries: { fontSize: 11, fontFamily: "Inter_400Regular" },
-  tipCard: { borderRadius: 16, padding: 16, gap: 8, marginBottom: 8 },
-  tipHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  tipEyebrow: { fontSize: 10, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
-  tipText: { fontSize: 14, fontFamily: "Inter_400Regular", lineHeight: 21 },
+  recTitle: { fontSize: 13, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
+  recBody: { fontSize: 12, fontFamily: "Inter_400Regular", lineHeight: 17 },
 });

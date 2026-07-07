@@ -3,7 +3,6 @@ import { router } from "expo-router";
 import React, { useRef, useState } from "react";
 import {
   Animated,
-  Image,
   KeyboardAvoidingView,
   Platform,
   Pressable,
@@ -17,8 +16,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { Feather } from "@expo/vector-icons";
-
-const LUMINARA_LOGO = require("../assets/luminara-logo.png");
+import { LuminaraLogo } from "@/components/LuminaraLogo";
 
 const MOODS = [
   { emoji: "😞", label: "Very low" },
@@ -28,7 +26,7 @@ const MOODS = [
   { emoji: "😊", label: "Great" },
 ];
 
-type Step = 0 | 1 | 2 | 3 | 4 | 5;
+type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export default function OnboardingScreen() {
   const colors = useColors();
@@ -65,8 +63,20 @@ export default function OnboardingScreen() {
     if (parts.length !== 3) return null;
     const [m, d, y] = parts;
     if (!m || !d || !y || y.length !== 4) return null;
-    const date = new Date(`${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`);
-    if (isNaN(date.getTime())) return null;
+    const month = Number(m);
+    const day = Number(d);
+    const year = Number(y);
+    // Construct in local time and verify the parts round-trip, so impossible
+    // dates like 02/31 are rejected instead of silently rolling into March.
+    const date = new Date(year, month - 1, day);
+    if (
+      date.getFullYear() !== year ||
+      date.getMonth() !== month - 1 ||
+      date.getDate() !== day
+    ) {
+      return null;
+    }
+    if (date.getTime() > Date.now()) return null; // birth date can't be in the future
     return `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
   };
 
@@ -84,11 +94,15 @@ export default function OnboardingScreen() {
       if (!name.trim()) return setError("Please enter your name");
       transition(4);
     } else if (step === 4) {
-      if (!babyName.trim()) return setError("Please enter your baby's name");
       transition(5);
     } else if (step === 5) {
+      transition(6);
+    } else if (step === 6) {
+      if (!babyName.trim()) return setError("Please enter your baby's name");
+      transition(7);
+    } else if (step === 7) {
       const parsed = parseDate(birthDateInput);
-      if (!parsed) return setError("Please enter a valid date (MM/DD/YYYY)");
+      if (!parsed) return setError("Please enter a valid date (MM/DD/YYYY) that isn't in the future");
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await saveProfile({
         name: name.trim(),
@@ -100,12 +114,12 @@ export default function OnboardingScreen() {
     }
   };
 
-  const totalSteps = 6;
+  const totalSteps = 8;
   const progress = ((step + 1) / totalSteps) * 100;
 
   return (
     <KeyboardAvoidingView
-      style={{ flex: 1, backgroundColor: step === 2 ? "#0D3B38" : step === 3 ? "#1A1040" : colors.background }}
+      style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
       <View
@@ -120,38 +134,26 @@ export default function OnboardingScreen() {
         <View style={styles.topRow}>
           {step > 0 ? (
             <Pressable
-              onPress={() => transition((step - 1) as Step)}
-              style={[
-                styles.backBtn,
-                {
-                  backgroundColor:
-                    step === 2 || step === 3
-                      ? "rgba(255,255,255,0.15)"
-                      : colors.card,
-                },
-              ]}
+              onPress={() => {
+                setError("");
+                transition((step - 1) as Step);
+              }}
+              style={[styles.backBtn, { backgroundColor: colors.card }]}
             >
-              <Feather
-                name="arrow-left"
-                size={18}
-                color={step === 2 || step === 3 ? "#fff" : colors.text}
-              />
+              <Feather name="arrow-left" size={18} color={colors.text} />
             </Pressable>
           ) : (
             <View style={{ width: 36 }} />
           )}
-          <View style={[styles.progressBar, { backgroundColor: step === 2 || step === 3 ? "rgba(255,255,255,0.2)" : colors.lavender }]}>
+          <View style={[styles.progressBar, { backgroundColor: colors.lavender }]}>
             <Animated.View
               style={[
                 styles.progressFill,
-                {
-                  width: `${progress}%` as any,
-                  backgroundColor: step === 2 || step === 3 ? "#3AAFA9" : colors.primary,
-                },
+                { width: `${progress}%` as any, backgroundColor: colors.primary },
               ]}
             />
           </View>
-          <Text style={[styles.stepNum, { color: step === 2 || step === 3 ? "rgba(255,255,255,0.6)" : colors.mutedForeground }]}>
+          <Text style={[styles.stepNum, { color: colors.mutedForeground }]}>
             {step + 1}/{totalSteps}
           </Text>
         </View>
@@ -165,11 +167,7 @@ export default function OnboardingScreen() {
 
             {step === 0 && (
               <View style={styles.splashContent}>
-                <Image
-                  source={LUMINARA_LOGO}
-                  style={styles.logoImage}
-                  resizeMode="contain"
-                />
+                <LuminaraLogo variant="badge" size={124} />
                 <Text style={[styles.splashTitle, { color: colors.foreground }]}>
                   A safe space{"\n"}for your mind.
                 </Text>
@@ -179,7 +177,7 @@ export default function OnboardingScreen() {
                 <View style={styles.featuresGrid}>
                   {[
                     { icon: "📊", label: "Daily Mood\nTracking" },
-                    { icon: "🧠", label: "AI Risk\nInsights" },
+                    { icon: "🧠", label: "Early Risk\nAwareness" },
                     { icon: "🔒", label: "Privacy\nFirst" },
                     { icon: "💬", label: "Expert\nGuidance" },
                   ].map((f, i) => (
@@ -260,28 +258,28 @@ export default function OnboardingScreen() {
                     textAlignVertical="top"
                   />
                   <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
-                    🔒 Your reflections are private and secure.
+                    🔒 This reflection is just for you in this moment — it isn't saved.
                   </Text>
                 </View>
               </View>
             )}
 
             {step === 2 && (
-              <View style={styles.darkScreen}>
-                <View style={[styles.darkIconCircle, { backgroundColor: "rgba(58,175,169,0.2)" }]}>
-                  <Text style={{ fontSize: 60 }}>🧘</Text>
+              <View style={styles.promoScreen}>
+                <View style={[styles.promoIconCircle, { backgroundColor: colors.softGreen }]}>
+                  <Text style={{ fontSize: 56 }}>🧘</Text>
                 </View>
-                <Text style={styles.darkEyebrow}>UNDERSTAND YOUR RHYTHMS</Text>
-                <Text style={styles.darkTitle}>
+                <Text style={[styles.promoEyebrow, { color: colors.teal }]}>UNDERSTAND YOUR RHYTHMS</Text>
+                <Text style={[styles.promoTitle, { color: colors.foreground }]}>
                   Track your mood,{"\n"}sleep, and energy.
                 </Text>
-                <Text style={styles.darkDesc}>
+                <Text style={[styles.promoDesc, { color: colors.mutedForeground }]}>
                   Daily check-ins take less than a minute and help you stay in tune with your needs — so you can get support before things feel overwhelming.
                 </Text>
-                <View style={styles.darkBadges}>
-                  {["✓ Science-backed", "✓ Clinically validated", "✓ Takes under 1 minute"].map((b) => (
-                    <View key={b} style={[styles.darkBadge, { backgroundColor: "rgba(58,175,169,0.2)" }]}>
-                      <Text style={[styles.darkBadgeText, { color: "#3AAFA9" }]}>{b}</Text>
+                <View style={styles.promoBadges}>
+                  {["✓ Evidence-informed guidance", "✓ Private by design", "✓ Takes under 1 minute"].map((b) => (
+                    <View key={b} style={[styles.promoBadge, { backgroundColor: colors.softGreen }]}>
+                      <Text style={[styles.promoBadgeText, { color: colors.teal }]}>{b}</Text>
                     </View>
                   ))}
                 </View>
@@ -289,35 +287,91 @@ export default function OnboardingScreen() {
             )}
 
             {step === 3 && (
-              <View style={[styles.darkScreen, { backgroundColor: "transparent" }]}>
-                <View style={[styles.darkIconCircle, { backgroundColor: "rgba(124,92,191,0.2)" }]}>
-                  <Text style={{ fontSize: 60 }}>🔮</Text>
+              <View style={{ gap: 8 }}>
+                <View style={[styles.stepHeader, { backgroundColor: colors.blush }]}>
+                  <Text style={[styles.stepHeaderTitle, { color: colors.foreground }]}>
+                    Let's get started
+                  </Text>
+                  <Text style={[styles.stepHeaderSub, { color: colors.mutedForeground }]}>
+                    A few details help us personalize your experience.
+                  </Text>
                 </View>
-                <Text style={[styles.darkEyebrow, { color: "#9B8DD4" }]}>EARLY RISK INSIGHTS</Text>
-                <Text style={styles.darkTitle}>Peace of mind{"\n"}for you.</Text>
-                <Text style={styles.darkDesc}>
-                  Our algorithm uses your daily data to help identify early signs of postpartum depression, so you can get the support you deserve — before a crisis.
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>Your name</Text>
+                <TextInput
+                  style={[styles.input, {
+                    backgroundColor: colors.card,
+                    borderColor: error ? colors.destructive : colors.border,
+                    color: colors.text,
+                  }]}
+                  placeholder="Your first name"
+                  placeholderTextColor={colors.mutedForeground}
+                  value={name}
+                  onChangeText={setName}
+                  maxLength={40}
+                  autoFocus
+                />
+                {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
+              </View>
+            )}
+
+            {step === 4 && (
+              <View style={styles.promoScreen}>
+                <View style={[styles.promoIconCircle, { backgroundColor: colors.blush }]}>
+                  <Text style={{ fontSize: 56 }}>🧭</Text>
+                </View>
+                <Text style={[styles.promoEyebrow, { color: colors.purple }]}>EARLY RISK INSIGHTS</Text>
+                <Text style={[styles.promoTitle, { color: colors.foreground }]}>Peace of mind{"\n"}for you.</Text>
+                <Text style={[styles.promoDesc, { color: colors.mutedForeground }]}>
+                  Our rule-based check-in heuristic looks at patterns in your daily data to help you notice early signs of postpartum depression, so you can get the support you deserve — before a crisis.
                 </Text>
-                <View style={styles.darkBadges}>
+                <View style={styles.promoBadges}>
                   {[
-                    { icon: "🏥", label: "100% HIPAA Compliant" },
-                    { icon: "🔬", label: "Clinically Validated Research" },
-                    { icon: "🔒", label: "Anonymous & Encrypted" },
+                    { icon: "🔒", label: "Private by design" },
+                    { icon: "🧭", label: "Early risk awareness, not a diagnosis" },
+                    { icon: "🔐", label: "Anonymous & Encrypted" },
                   ].map((b) => (
-                    <View key={b.label} style={[styles.darkBadge, { backgroundColor: "rgba(124,92,191,0.2)" }]}>
+                    <View key={b.label} style={[styles.promoBadge, { backgroundColor: colors.blush }]}>
                       <Text>{b.icon}</Text>
-                      <Text style={[styles.darkBadgeText, { color: "#9B8DD4" }]}>{b.label}</Text>
+                      <Text style={[styles.promoBadgeText, { color: colors.purple }]}>{b.label}</Text>
                     </View>
                   ))}
                 </View>
               </View>
             )}
 
-            {step === 3 && null}
+            {step === 5 && (
+              <View style={styles.promoScreen}>
+                <View style={[styles.promoIconCircle, { backgroundColor: colors.softOrange }]}>
+                  <Text style={{ fontSize: 56 }}>🌷</Text>
+                </View>
+                <Text style={[styles.promoEyebrow, { color: colors.warm }]}>YOUR WHOLE PICTURE</Text>
+                <Text style={[styles.promoTitle, { color: colors.foreground }]}>
+                  More than mood —{"\n"}your whole reproductive health.
+                </Text>
+                <Text style={[styles.promoDesc, { color: colors.mutedForeground }]}>
+                  Luminara goes beyond daily check-ins to help you keep everything in one place.
+                </Text>
+                <View style={styles.promoBadges}>
+                  {[
+                    { icon: "🗂️", label: "Medical records & labs in one place" },
+                    { icon: "🩸", label: "Cycle & biomarker tracking with predictions" },
+                    { icon: "🤝", label: "An optional partner space with consent-first sharing" },
+                  ].map((b) => (
+                    <View key={b.label} style={[styles.promoBadge, { backgroundColor: colors.softOrange }]}>
+                      <Text>{b.icon}</Text>
+                      <Text style={[styles.promoBadgeText, { color: "#9A5010" }]}>{b.label}</Text>
+                    </View>
+                  ))}
+                </View>
+                <Text style={[styles.privacyNote, { color: colors.mutedForeground, textAlign: "center" }]}>
+                  🔒 Everything stays on your phone. Research sharing is strictly opt-in.
+                </Text>
+              </View>
+            )}
 
-            {(step === 3 || step === 4 || step === 5) && step !== 3 && (
+            {(step === 6 || step === 7) && (
               <View style={{ gap: 8 }}>
-                {step === 4 && (
+                {step === 6 && (
                   <>
                     <View style={[styles.stepHeader, { backgroundColor: colors.blush }]}>
                       <Text style={[styles.stepHeaderTitle, { color: colors.foreground }]}>
@@ -334,12 +388,13 @@ export default function OnboardingScreen() {
                       placeholderTextColor={colors.mutedForeground}
                       value={babyName}
                       onChangeText={setBabyName}
+                      maxLength={40}
                       autoFocus
                     />
                     {error ? <Text style={[styles.error, { color: colors.destructive }]}>{error}</Text> : null}
                   </>
                 )}
-                {step === 5 && (
+                {step === 7 && (
                   <>
                     <View style={[styles.stepHeader, { backgroundColor: colors.blush }]}>
                       <Text style={[styles.stepHeaderTitle, { color: colors.foreground }]}>
@@ -365,33 +420,6 @@ export default function OnboardingScreen() {
               </View>
             )}
 
-            {step === 3 && (
-              <View style={{ gap: 8 }}>
-                <View style={[styles.stepHeader, { backgroundColor: "rgba(255,255,255,0.08)" }]}>
-                  <Text style={[styles.stepHeaderTitle, { color: "#fff" }]}>
-                    Let's get started
-                  </Text>
-                  <Text style={[styles.stepHeaderSub, { color: "rgba(255,255,255,0.6)" }]}>
-                    A few details help us personalize your experience.
-                  </Text>
-                </View>
-                <Text style={[styles.fieldLabel, { color: "rgba(255,255,255,0.8)" }]}>Your name</Text>
-                <TextInput
-                  style={[styles.input, {
-                    backgroundColor: "rgba(255,255,255,0.12)",
-                    borderColor: error ? "#E85555" : "rgba(255,255,255,0.2)",
-                    color: "#fff",
-                  }]}
-                  placeholder="Your first name"
-                  placeholderTextColor="rgba(255,255,255,0.4)"
-                  value={name}
-                  onChangeText={setName}
-                  autoFocus
-                />
-                {error ? <Text style={[styles.error, { color: "#FF8A8A" }]}>{error}</Text> : null}
-              </View>
-            )}
-
           </Animated.View>
         </ScrollView>
 
@@ -402,9 +430,9 @@ export default function OnboardingScreen() {
             {
               backgroundColor:
                 step === 2
-                  ? "#3AAFA9"
-                  : step === 3
-                  ? "#7C5CBF"
+                  ? colors.teal
+                  : step === 4
+                  ? colors.purple
                   : colors.primary,
               opacity: pressed ? 0.85 : 1,
             },
@@ -415,9 +443,9 @@ export default function OnboardingScreen() {
               ? "Begin Your Journey"
               : step === 2
               ? "Next →"
-              : step === 3
+              : step === 4
               ? "Next →"
-              : step === 5
+              : step === 7
               ? "Start with Luminara 🌸"
               : "Continue →"}
           </Text>
@@ -452,10 +480,6 @@ const styles = StyleSheet.create({
   scrollContent: { flexGrow: 1, paddingTop: 12, paddingBottom: 8 },
 
   splashContent: { alignItems: "center", gap: 20, paddingTop: 8 },
-  logoImage: {
-    width: 180,
-    height: 140,
-  },
   splashTitle: {
     fontSize: 32,
     fontFamily: "Inter_700Bold",
@@ -520,8 +544,12 @@ const styles = StyleSheet.create({
   },
   privacyNote: { fontSize: 11, fontFamily: "Inter_400Regular" },
 
-  darkScreen: { gap: 20, alignItems: "center", paddingTop: 8 },
-  darkIconCircle: {
+  // Shared layout for the three full-screen "promo" steps (2, 4, 5) — each
+  // supplies its own accent color (icon circle / eyebrow / badge) inline so
+  // the same soft, light-themed structure reads as one cohesive family
+  // instead of a slideshow of unrelated colors.
+  promoScreen: { gap: 20, alignItems: "center", paddingTop: 8 },
+  promoIconCircle: {
     width: 100,
     height: 100,
     borderRadius: 50,
@@ -529,29 +557,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     marginBottom: 8,
   },
-  darkEyebrow: {
-    color: "#3AAFA9",
+  promoEyebrow: {
     fontSize: 11,
     fontFamily: "Inter_600SemiBold",
     letterSpacing: 1,
   },
-  darkTitle: {
-    color: "#fff",
-    fontSize: 30,
+  promoTitle: {
+    fontSize: 28,
     fontFamily: "Inter_700Bold",
     textAlign: "center",
-    lineHeight: 36,
+    lineHeight: 34,
   },
-  darkDesc: {
-    color: "rgba(255,255,255,0.7)",
+  promoDesc: {
     fontSize: 14,
     fontFamily: "Inter_400Regular",
     textAlign: "center",
     lineHeight: 21,
     maxWidth: 300,
   },
-  darkBadges: { gap: 8, alignItems: "flex-start", width: "100%" },
-  darkBadge: {
+  promoBadges: { gap: 8, alignItems: "flex-start", width: "100%" },
+  promoBadge: {
     flexDirection: "row",
     alignItems: "center",
     gap: 8,
@@ -559,7 +584,7 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: 12,
   },
-  darkBadgeText: { fontSize: 13, fontFamily: "Inter_500Medium" },
+  promoBadgeText: { fontSize: 13, fontFamily: "Inter_500Medium" },
 
   stepHeader: { borderRadius: 16, padding: 16, gap: 4 },
   stepHeaderTitle: { fontSize: 20, fontFamily: "Inter_700Bold" },

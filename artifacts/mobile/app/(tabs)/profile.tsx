@@ -1,20 +1,18 @@
 import { Feather } from "@expo/vector-icons";
 import React, { useState } from "react";
 import {
-  Alert,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
-  Switch,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { useApp } from "@/context/AppContext";
+import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
+import { showAlert } from "@/utils/dialog";
 
 function getDaysSince(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -39,6 +37,9 @@ function SettingRow({
   return (
     <Pressable
       onPress={onPress}
+      disabled={!onPress}
+      accessibilityRole={onPress ? "button" : undefined}
+      accessibilityLabel={subtitle ? `${label}, ${subtitle}` : label}
       style={({ pressed }) => [
         rowStyles.row,
         { backgroundColor: pressed && onPress ? colors.muted : "transparent" },
@@ -80,6 +81,37 @@ const rowStyles = StyleSheet.create({
   sub: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 1 },
 });
 
+function StatusPill({ active, label }: { active: boolean; label?: string }) {
+  const colors = useColors();
+  const text = label ?? (active ? "Active" : "Off");
+  return (
+    <View
+      style={[
+        pillStyles.pill,
+        { backgroundColor: active ? colors.softGreen : colors.secondary },
+      ]}
+    >
+      <Text
+        style={[
+          pillStyles.text,
+          { color: active ? colors.riskLow : colors.mutedForeground },
+        ]}
+      >
+        {text}
+      </Text>
+    </View>
+  );
+}
+
+const pillStyles = StyleSheet.create({
+  pill: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 12,
+  },
+  text: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
+});
+
 function SettingsSection({
   title,
   children,
@@ -109,35 +141,68 @@ const sectionStyles = StyleSheet.create({
   },
 });
 
+function formatMemberSince(iso: string): string {
+  const d = new Date(iso);
+  return `Member since ${d.toLocaleDateString(undefined, { month: "long", year: "numeric" })}`;
+}
+
 export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { profile, checkIns } = useApp();
+  const { profile, checkIns, resetProfile } = useApp();
+  const { privacySettings, partnerSettings, careProfile, resetAll: resetHealth } = useHealth();
 
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
-  const [dataSharing, setDataSharing] = useState(false);
-  const [reminderTime, setReminderTime] = useState(true);
+  const [resetting, setResetting] = useState(false);
 
   const daysSince = profile?.birthDate ? getDaysSince(profile.birthDate) : 0;
-  const memberSince = "Member since May 2026";
+  const memberSince = profile?.createdAt ? formatMemberSince(profile.createdAt) : null;
+
+  const handleAboutData = () => {
+    showAlert(
+      "About your data",
+      "Your medical records, cycle logs, medications, and partner observations are stored only on this device — private by design. Sensitive records can be encrypted at rest with a key held in secure device storage.\n\nNothing is sent anywhere unless you explicitly opt in to anonymous research sharing, which you can turn off at any time. Partner access requires your consent and a PIN you control.\n\nThis app is not a diagnosis — always review health information with your healthcare provider.",
+      [{ text: "Got it" }]
+    );
+  };
+
+  const handleAboutApp = () => {
+    showAlert(
+      "About Luminara Health",
+      "Version 1.0.0\n\nA postpartum wellness check-in app with an optional reproductive-health toolkit — cycle tracking, medical records, medications, and a consent-based partner space. Everything is local-first and stays on this device unless you explicitly choose to share it."
+    );
+  };
 
   const handleLogout = () => {
-    Alert.alert(
+    if (resetting) return;
+    showAlert(
       "Reset App Data",
-      "This will clear all your data and return to onboarding. Are you sure?",
+      "This will permanently clear all your data — check-ins, records, cycle logs, medications, and partner data — and return you to onboarding. This can't be undone. Are you sure?",
       [
         { text: "Cancel", style: "cancel" },
         {
           text: "Reset",
           style: "destructive",
           onPress: async () => {
-            await AsyncStorage.clear();
-            router.replace("/onboarding");
+            setResetting(true);
+            try {
+              // profile becoming null makes the root layout redirect to
+              // /onboarding on its own — no manual navigation needed.
+              await Promise.all([resetProfile(), resetHealth()]);
+            } finally {
+              setResetting(false);
+            }
           },
         },
       ]
     );
   };
+
+  // While (tabs) is mounted the root layout guarantees a non-null,
+  // setupComplete profile — except for one transitional render right after
+  // a reset, when profile briefly becomes null before the redirect to
+  // /onboarding takes over. Render nothing rather than flash a fallback
+  // person's name/initial during that frame.
+  if (!profile) return null;
 
   return (
     <ScrollView
@@ -153,13 +218,11 @@ export default function ProfileScreen() {
     >
       <View style={[styles.profileCard, { backgroundColor: colors.primary }]}>
         <View style={[styles.avatar, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
-          <Text style={styles.avatarText}>
-            {profile?.name?.charAt(0)?.toUpperCase() ?? "N"}
-          </Text>
+          <Text style={styles.avatarText}>{profile.name.charAt(0).toUpperCase()}</Text>
         </View>
         <View>
-          <Text style={styles.profileName}>{profile?.name ?? "Nagham"}</Text>
-          <Text style={styles.profileSub}>{memberSince}</Text>
+          <Text style={styles.profileName}>{profile.name}</Text>
+          {memberSince ? <Text style={styles.profileSub}>{memberSince}</Text> : null}
         </View>
         <View style={styles.profileStats}>
           <View style={styles.profileStat}>
@@ -169,15 +232,15 @@ export default function ProfileScreen() {
           <View style={[styles.profileStatDivider]} />
           <View style={styles.profileStat}>
             <Text style={styles.profileStatNum}>{daysSince}</Text>
-            <Text style={styles.profileStatLabel}>Days of {profile?.babyName ?? "Laila"}</Text>
+            <Text style={styles.profileStatLabel}>Days of {profile.babyName}</Text>
           </View>
         </View>
       </View>
 
       <View style={[styles.hipaaBadge, { backgroundColor: colors.softGreen, borderColor: colors.riskLow + "40", borderWidth: 1 }]}>
-        <Feather name="shield" size={14} color={colors.riskLow} />
+        <Feather name="lock" size={14} color={colors.riskLow} />
         <Text style={[styles.hipaaText, { color: colors.riskLow }]}>
-          100% HIPAA Compliant · Your data is private and secure
+          Private by design · Your data stays on this device
         </Text>
       </View>
 
@@ -185,72 +248,62 @@ export default function ProfileScreen() {
         <SettingRow
           icon="user"
           label="Personal Details"
-          subtitle={`${profile?.name ?? "Nagham"} · Baby ${profile?.babyName ?? "Laila"}`}
-          onPress={() => {}}
+          subtitle={`${profile.name} · Baby ${profile.babyName}`}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="globe"
           label="Language"
           subtitle="English (US)"
-          onPress={() => {}}
-        />
-        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
-        <SettingRow
-          icon="bell"
-          label="Notification Settings"
-          subtitle="Daily check-in reminders"
-          rightElement={
-            <Switch
-              value={notificationsEnabled}
-              onValueChange={setNotificationsEnabled}
-              trackColor={{ true: colors.primary, false: colors.lavender }}
-              thumbColor="#fff"
-            />
-          }
-        />
-        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
-        <SettingRow
-          icon="clock"
-          label="Check-in Reminder"
-          subtitle={reminderTime ? "9:00 AM daily" : "Off"}
-          rightElement={
-            <Switch
-              value={reminderTime}
-              onValueChange={setReminderTime}
-              trackColor={{ true: colors.primary, false: colors.lavender }}
-              thumbColor="#fff"
-            />
-          }
         />
       </SettingsSection>
 
-      <SettingsSection title="Privacy & Security">
+      <SettingsSection title="Privacy & Data">
         <SettingRow
-          icon="lock"
-          label="Privacy Policy"
-          onPress={() => {}}
-        />
-        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
-        <SettingRow
-          icon="activity"
-          label="Anonymous Data Sharing"
-          subtitle="Help improve maternal mental health research"
+          icon="globe"
+          label="Personalized care"
+          subtitle="Optional background info for more inclusive guidance"
+          onPress={() => router.push("/care-profile")}
           rightElement={
-            <Switch
-              value={dataSharing}
-              onValueChange={setDataSharing}
-              trackColor={{ true: colors.primary, false: colors.lavender }}
-              thumbColor="#fff"
+            <StatusPill
+              active={careProfile.backgrounds.length > 0 || careProfile.limitedSunExposure}
+              label={
+                careProfile.backgrounds.length > 0 || careProfile.limitedSunExposure
+                  ? "Set"
+                  : "Off"
+              }
             />
           }
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
-          icon="shield"
-          label="HIPAA Compliance"
-          subtitle="Strictly anonymous, consent-based data"
-          onPress={() => {}}
+          icon="sliders"
+          label="Privacy & data controls"
+          subtitle="Encryption, retention, and clearing data"
+          onPress={() => router.push("/privacy")}
+        />
+        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
+        <SettingRow
+          icon="award"
+          label="Research participation"
+          subtitle="Anonymous, opt-in only"
+          onPress={() => router.push("/research")}
+          rightElement={<StatusPill active={privacySettings.research.participating} label={privacySettings.research.participating ? "Active" : "Off"} />}
+        />
+        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
+        <SettingRow
+          icon="users"
+          label="Partner settings"
+          subtitle="Consent-based sharing with a partner"
+          onPress={() => router.push("/partner/settings")}
+          rightElement={<StatusPill active={partnerSettings.enabled} label={partnerSettings.enabled ? "Enabled" : "Off"} />}
+        />
+        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
+        <SettingRow
+          icon="info"
+          label="About your data"
+          subtitle="How Luminara keeps your health data private"
+          onPress={handleAboutData}
         />
       </SettingsSection>
 
@@ -259,27 +312,29 @@ export default function ProfileScreen() {
           icon="sun"
           label="Theme"
           subtitle="Light mode"
-          onPress={() => {}}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="info"
           label="About Luminara Health"
           subtitle="Version 1.0.0"
-          onPress={() => {}}
+          onPress={handleAboutApp}
         />
       </SettingsSection>
 
       <Pressable
         onPress={handleLogout}
+        disabled={resetting}
+        accessibilityRole="button"
+        accessibilityLabel="Reset app data"
         style={({ pressed }) => [
           styles.logoutBtn,
-          { backgroundColor: colors.card, opacity: pressed ? 0.8 : 1 },
+          { backgroundColor: colors.card, opacity: resetting ? 0.6 : pressed ? 0.8 : 1 },
         ]}
       >
         <Feather name="log-out" size={16} color={colors.riskHigh} />
         <Text style={[styles.logoutText, { color: colors.riskHigh }]}>
-          Reset App Data
+          {resetting ? "Resetting…" : "Reset App Data"}
         </Text>
       </Pressable>
 

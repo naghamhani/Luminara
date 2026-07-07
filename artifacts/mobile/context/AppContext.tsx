@@ -26,6 +26,9 @@ export interface UserProfile {
   babyName: string;
   birthDate: string;
   setupComplete: boolean;
+  /** ISO timestamp of when onboarding was first completed. Optional so
+   *  profiles saved before this field existed still load fine. */
+  createdAt?: string;
 }
 
 interface AppContextType {
@@ -33,6 +36,9 @@ interface AppContextType {
   checkIns: CheckIn[];
   isLoading: boolean;
   saveProfile: (profile: UserProfile) => Promise<void>;
+  /** Full factory reset: clears storage and in-memory state, returning to
+   *  onboarding. Used by "Reset App Data" in profile settings. */
+  resetProfile: () => Promise<void>;
   addCheckIn: (data: Omit<CheckIn, "id" | "riskScore" | "createdAt">) => Promise<void>;
   hasCheckedInToday: boolean;
   todayCheckIn: CheckIn | null;
@@ -117,6 +123,7 @@ const SEED_PROFILE: UserProfile = {
   babyName: "Laila",
   birthDate: "2025-08-06",
   setupComplete: true,
+  createdAt: daysAgo(30) + "T09:00:00.000Z",
 };
 
 function buildSeedCheckIns(): CheckIn[] {
@@ -212,8 +219,27 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const saveProfile = useCallback(async (p: UserProfile) => {
-    setProfile(p);
-    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(p));
+    // Stamp createdAt on first save; preserve it across later edits so
+    // "member since" reflects when onboarding actually completed, not the
+    // most recent profile edit.
+    const withCreatedAt: UserProfile = {
+      ...p,
+      createdAt: p.createdAt ?? new Date().toISOString(),
+    };
+    setProfile(withCreatedAt);
+    await AsyncStorage.setItem(PROFILE_KEY, JSON.stringify(withCreatedAt));
+  }, []);
+
+  const resetProfile = useCallback(async () => {
+    setProfile(null);
+    setCheckIns([]);
+    await AsyncStorage.multiRemove([PROFILE_KEY, CHECKINS_KEY]);
+    // Re-stamp the seed-version key (rather than leaving it deleted) so the
+    // next cold start sees "already seeded, nothing there" and does NOT
+    // silently repopulate demo data over the profile the user sets up next
+    // in onboarding. profile becoming null makes RootLayoutNav's
+    // `!profile?.setupComplete` redirect to /onboarding automatically.
+    await AsyncStorage.setItem(SEED_VERSION_KEY, SEED_VERSION);
   }, []);
 
   const addCheckIn = useCallback(
@@ -261,6 +287,7 @@ export function AppProvider({ children }: { children: React.ReactNode }) {
         checkIns,
         isLoading,
         saveProfile,
+        resetProfile,
         addCheckIn,
         hasCheckedInToday,
         todayCheckIn,

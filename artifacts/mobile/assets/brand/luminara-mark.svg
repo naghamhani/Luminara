@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" width="512" height="512" role="img" aria-label="Luminara flame mark">
+  <title>Luminara — flame mark (transparent)</title>
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0" stop-color="#F6A94C" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#F6A94C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <circle cx="50" cy="48" r="34" fill="url(#glow)"/>
+  <path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/>
+  <path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z" fill="#FFE7BE" opacity="0.92"/>
+  <path d="M24,72 C34,90 66,90 76,72" fill="none" stroke="#5168B4" stroke-width="5.5" stroke-linecap="round"/>
+</svg>

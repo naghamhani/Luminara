@@ -3,22 +3,29 @@ import { useColorScheme } from "react-native";
 import colors from "@/constants/colors";
 
 /**
- * Returns the design tokens for the current color scheme.
+ * The app's configured appearance. This mirrors `userInterfaceStyle` in
+ * app.json. Luminara currently ships **light-only**: the dark palette exists
+ * (see constants/colors.ts) but is intentionally dormant until the product
+ * decides to offer a real theme toggle. Set this to "system" to follow the OS.
+ */
+const APPEARANCE: "light" | "dark" | "system" = "light";
+
+/**
+ * Returns the design tokens for the active palette.
  *
- * The returned object contains all color tokens for the active palette
- * plus scheme-independent values like `radius`.
+ * The returned object contains all color tokens for the active palette plus
+ * scheme-independent values like `radius`.
  *
- * Falls back to the light palette when no dark key is defined in
- * constants/colors.ts (the scaffold ships light-only by default).
- * When a sibling web artifact's dark tokens are synced into a `dark`
- * key, this hook will automatically switch palettes based on the
- * device's appearance setting.
+ * IMPORTANT: on Expo web, `userInterfaceStyle` in app.json is NOT applied, so
+ * `useColorScheme()` follows the browser's `prefers-color-scheme`. Honoring
+ * that unconditionally meant a light-only app rendered its (cold navy) dark
+ * palette for anyone browsing in dark mode. We therefore resolve the scheme
+ * from the app's own APPEARANCE setting, only deferring to the OS when it is
+ * explicitly set to "system".
  */
 export function useColors() {
-  const scheme = useColorScheme();
-  const palette =
-    scheme === "dark" && "dark" in colors
-      ? (colors as Record<string, typeof colors.light>).dark
-      : colors.light;
+  const osScheme = useColorScheme();
+  const scheme = APPEARANCE === "system" ? osScheme : APPEARANCE;
+  const palette = scheme === "dark" && "dark" in colors ? colors.dark : colors.light;
   return { ...palette, radius: colors.radius };
 }

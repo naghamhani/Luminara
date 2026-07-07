@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luminara — the brand & the market</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ===========================================
+   VIEWPORT FITTING: MANDATORY BASE STYLES
+   =========================================== */
+html, body { height: 100%; overflow-x: hidden; margin: 0; }
+html { scroll-behavior: smooth; }
+body { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+
+.slide {
+    width: 100vw;
+    height: 100vh;
+    height: 100dvh;
+    overflow: hidden;
+    scroll-snap-align: start;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+}
+.slide-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    max-height: 100%;
+    overflow: hidden;
+    padding: var(--slide-padding);
+    position: relative;
+    z-index: 2;
+}
+
+:root {
+    /* Luminara brand tokens (from constants/colors.ts) */
+    --lav: #FBF7F9;        /* app background */
+    --indigo: #8C6FBF;     /* primary / hero */
+    --indigo-deep: #6E52A0;
+    --ink: #2B2438;        /* navy text */
+    --teal: #3AAFA9;       /* accent */
+    --purple: #B0729E;
+    --flame: #F6A94C;      /* candle amber — the one owned accent */
+    --flame-core: #FFB765;
+    --gold: #FFD98A;
+    --rose: #E17D9B;
+    --blush: #FBEAF1;
+    --lavender: #EEE6F8;
+    --muted: #6E6480;
+    --hairline: #EDE2EC;
+    --card: #FFFFFF;
+    --softGreen: #E6F7F2;
+    --softOrange: #FEF4E8;
+
+    --title-size: clamp(1.9rem, 6vw, 4.6rem);
+    --h2-size: clamp(1.4rem, 4vw, 3rem);
+    --body-size: clamp(0.82rem, 1.6vw, 1.15rem);
+    --kicker-size: clamp(0.6rem, 1vw, 0.8rem);
+
+    --slide-padding: clamp(1rem, 4vw, 4rem);
+    --content-gap: clamp(0.5rem, 2vw, 2rem);
+
+    --display: "Fraunces", Georgia, serif;
+    --body: "Manrope", sans-serif;
+}
+
+body { font-family: var(--body); color: var(--ink); background: var(--lav); }
+img { max-width: 100%; object-fit: contain; }
+
+@media (max-height: 700px) {
+    :root { --slide-padding: clamp(0.75rem, 3vw, 2rem); --title-size: clamp(1.5rem, 5vw, 3rem); }
+}
+@media (max-height: 600px) {
+    :root { --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem); --title-size: clamp(1.3rem, 4.5vw, 2.2rem); --body-size: clamp(0.72rem, 1.3vw, 0.95rem); }
+    .nav-dots, .keyboard-hint { display: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
+    html { scroll-behavior: auto; }
+}
+/* ============ phones: let tall slides grow & scroll instead of clipping ============ */
+@media (max-width: 760px) {
+    .slide { height: auto; min-height: 100vh; min-height: 100dvh; overflow: visible; }
+    .slide-content {
+        max-height: none; overflow: visible;
+        padding-top: clamp(2.5rem, 8vh, 4rem);
+        padding-bottom: clamp(2.5rem, 8vh, 4rem);
+    }
+    .reveal { opacity: 1 !important; transform: none !important; }
+    .hint-desktop { display: none; }
+}
+
+/* ============ typography ============ */
+.kicker {
+    font-family: var(--body);
+    font-size: var(--kicker-size);
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    margin: 0 0 clamp(0.5rem, 1.5vh, 1rem);
+}
+.on-dark .kicker { color: var(--gold); }
+h1, h2 {
+    font-family: var(--display);
+    font-weight: 600;
+    line-height: 1.06;
+    letter-spacing: -0.015em;
+    margin: 0;
+}
+h1 { font-size: var(--title-size); }
+h2 { font-size: var(--h2-size); }
+.lede {
+    font-size: var(--body-size);
+    font-weight: 500;
+    color: var(--muted);
+    line-height: 1.55;
+    max-width: 36ch;
+    margin: clamp(0.6rem, 2vh, 1.2rem) 0 0;
+}
+.on-dark, .on-dark h1, .on-dark h2 { color: var(--lav); }
+.on-dark .lede { color: rgba(251, 247, 249, 0.82); }
+
+/* ============ slide fields ============ */
+.field-night {
+    background:
+        radial-gradient(120% 90% at 50% 8%, rgba(255,193,110,0.16) 0%, rgba(255,193,110,0) 42%),
+        linear-gradient(165deg, #43315E 0%, #6E52A0 46%, #8C6FBF 100%);
+}
+.field-ink { background: linear-gradient(165deg, #2B2438 0%, #4A3B63 100%); }
+.field-blush { background: linear-gradient(180deg, #FBFAFF 0%, var(--lav) 100%); }
+
+/* ============ layout helpers ============ */
+.split {
+    display: flex; align-items: center; justify-content: center;
+    gap: clamp(1.5rem, 5vw, 5rem);
+    width: 100%; max-width: 1120px;
+}
+.split > div { flex: 1; min-width: 0; }
+@media (max-width: 760px) {
+    .split { flex-direction: column; gap: clamp(1rem, 2vh, 1.8rem); }
+}
+.center { text-align: center; }
+.maxw { max-width: 62ch; margin-left: auto; margin-right: auto; }
+
+/* ============ reveal animation ============ */
+.reveal { opacity: 0; transform: translateY(22px); transition: opacity 0.7s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1); }
+.reveal.d1 { transition-delay: 0.12s; }
+.reveal.d2 { transition-delay: 0.24s; }
+.reveal.d3 { transition-delay: 0.36s; }
+.reveal.d4 { transition-delay: 0.48s; }
+.slide.in-view .reveal { opacity: 1; transform: none; }
+@media (prefers-reduced-motion: reduce) { .reveal { transform: none; } }
+
+/* ============ soft cloud edges (echo the logo) ============ */
+.wave-bottom { position: absolute; bottom: -1px; left: 0; width: 100%; z-index: 1; display: block; }
+.wave-top { position: absolute; top: -1px; left: 0; width: 100%; z-index: 1; display: block; transform: scaleY(-1); }
+
+/* ============ the flame mark ============ */
+.mark { width: clamp(96px, 17vh, 168px); height: auto; }
+.blob { position: absolute; border-radius: 62% 38% 55% 45%/48% 42% 58% 52%; z-index: 0; pointer-events: none; animation: blobfloat 16s ease-in-out infinite; }
+@keyframes blobfloat { 0%,100% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(-16px,20px) rotate(7deg); } }
+.squiggle-under { display: inline-block; width: 100%; height: .18em; margin-top: .04em; }
+@keyframes float { 0%,100% { transform: translateY(0) rotate(var(--rot,-3deg)); } 50% { transform: translateY(-10px) rotate(var(--rot,-3deg)); } }
+.floaty { animation: float 6s ease-in-out infinite; --rot:-2deg; }
+@media (prefers-reduced-motion: reduce) { .blob, .floaty { animation: none; } }
+.mark svg { width: 100%; height: auto; display: block; }
+@keyframes breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.05); } }
+.breathing { animation: breathe 5.5s ease-in-out infinite; transform-origin: center bottom; }
+
+/* ============ phase flame row ============ */
+.flame-row { display: flex; gap: clamp(0.8rem, 4vw, 3rem); align-items: flex-end; justify-content: center; margin-top: clamp(1rem, 3vh, 2rem); flex-wrap: wrap; }
+.flame-cell { text-align: center; }
+.flame-cell svg { width: clamp(58px, 12vw, 108px); height: auto; display: block; margin: 0 auto; }
+.flame-cell .cap { font-size: var(--kicker-size); font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); margin-top: clamp(0.4rem, 1vh, 0.8rem); }
+.formula {
+    font-family: var(--body); font-size: clamp(0.72rem, 1.4vw, 1rem); font-weight: 700;
+    color: var(--indigo-deep); background: var(--blush); border: 1px solid var(--lavender);
+    border-radius: 999px; padding: 0.5em 1.2em; display: inline-block; margin-top: clamp(1rem, 3vh, 1.8rem);
+}
+
+/* ============ color slide ============ */
+.swatch-row { display: flex; gap: clamp(0.6rem, 1.6vw, 1.2rem); margin-top: clamp(1rem, 3vh, 2rem); flex-wrap: wrap; justify-content: center; }
+.swatch {
+    width: clamp(70px, 11vw, 130px); height: clamp(88px, 15vw, 172px);
+    border-radius: clamp(20px, 2.4vw, 34px) clamp(20px, 2.4vw, 34px) clamp(20px, 2.4vw, 34px) clamp(6px, 1vw, 10px); display: flex; align-items: flex-end;
+    padding: clamp(0.4rem, 1vw, 0.8rem); box-sizing: border-box;
+    font-size: clamp(0.5rem, 0.85vw, 0.72rem); font-weight: 700; letter-spacing: 0.06em;
+    box-shadow: 0 12px 30px rgba(90,65,132,0.10);
+    transition: transform .3s cubic-bezier(.22,1,.36,1);
+}
+.swatch:nth-child(even) { border-radius: clamp(20px, 2.4vw, 34px) clamp(20px, 2.4vw, 34px) clamp(6px, 1vw, 10px) clamp(20px, 2.4vw, 34px); }
+.swatch:hover { transform: translateY(-5px) rotate(-2deg); }
+.swatch.hero { width: clamp(120px, 20vw, 230px); }
+
+/* ============ facts ============ */
+.facts { list-style: none; padding: 0; margin: clamp(0.8rem, 2.5vh, 1.5rem) 0 0; display: grid; gap: clamp(0.45rem, 1.2vh, 0.8rem); }
+.facts li { font-size: var(--body-size); font-weight: 500; color: var(--muted); position: relative; padding-left: 1.35em; line-height: 1.45; }
+.facts li::before { content: ""; position: absolute; left: 0; top: 0.62em; width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--flame); box-shadow: 0 0 0 4px rgba(242,166,90,0.18); }
+.on-dark .facts li { color: rgba(251,247,249,0.82); }
+.facts b { color: var(--ink); font-weight: 700; }
+.on-dark .facts b { color: var(--lav); }
+
+/* ============ navigation ============ */
+.nav-dots { position: fixed; right: clamp(0.6rem, 1.6vw, 1.4rem); top: 50%; transform: translateY(-50%); display: flex; flex-direction: column; gap: 10px; z-index: 50; }
+.nav-dots button { width: 9px; height: 9px; border-radius: 50%; border: none; padding: 0; background: rgba(140,111,191,0.28); cursor: pointer; transition: transform .3s, background .3s, height .3s, border-radius .3s; }
+.nav-dots button.active { background: var(--indigo); height: 22px; border-radius: 5px; }
+.progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--indigo), var(--flame)); width: 0; z-index: 60; transition: width .3s ease; }
+.keyboard-hint { position: fixed; bottom: clamp(0.5rem, 1.5vh, 1rem); left: 50%; transform: translateX(-50%); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(90,65,132,0.32); z-index: 50; pointer-events: none; }
+
+/* ============ chips (scattered data) ============ */
+.chips { display: flex; flex-wrap: wrap; gap: clamp(0.5rem, 1.6vw, 1rem); justify-content: center; margin-top: clamp(1rem, 3vh, 2rem); max-width: 640px; }
+.chip { display: inline-flex; align-items: center; gap: 0.55em; font-family: var(--body); font-size: var(--body-size); font-weight: 700; background: var(--card); color: var(--ink); border: 1px solid var(--hairline); border-radius: 999px; padding: 0.5em 1.15em; white-space: nowrap; box-shadow: 0 6px 16px rgba(90,65,132,0.05); }
+.chip .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; }
+
+/* ============ versus ============ */
+.versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: clamp(0.8rem, 2.5vw, 2rem); width: 100%; max-width: 900px; margin-top: clamp(1rem, 3vh, 2rem); text-align: left; }
+.versus .col { display: grid; gap: clamp(0.4rem, 1.2vh, 0.7rem); align-content: start; }
+.versus .col h3 { font-family: var(--body); font-weight: 700; font-size: var(--kicker-size); letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 0.4em; }
+.versus .before h3 { color: rgba(251,247,249,0.5); }
+.versus .after h3 { color: var(--gold); }
+.versus .row { font-size: var(--body-size); font-weight: 500; line-height: 1.42; display: flex; gap: 0.55em; align-items: baseline; margin: 0; color: rgba(251,247,249,0.6); }
+.versus .after .row { color: var(--lav); font-weight: 600; }
+.versus .mark2 { flex: none; font-weight: 800; }
+.versus .before .mark2 { color: rgba(251,247,249,0.4); }
+.versus .after .mark2 { color: var(--teal); }
+.versus .divider { width: 1px; background: rgba(251,247,249,0.18); }
+@media (max-width: 760px) { .versus { grid-template-columns: 1fr; gap: clamp(0.6rem, 2vh, 1rem); } .versus .divider { display: none; } }
+
+/* ============ motto ============ */
+.motto h1 { text-align: center; }
+.motto .cycle-wrap { display: block; min-height: 1.15em; }
+.motto .cycle { color: var(--gold); display: inline-block; transition: opacity .4s ease, transform .4s ease; }
+.motto .cycle.out { opacity: 0; transform: translateY(0.25em); }
+
+/* ============ moat band ============ */
+.moat-band { background: var(--ink); color: var(--lav); border-radius: clamp(14px, 1.6vw, 20px); padding: clamp(0.9rem, 2vw, 1.3rem) clamp(1rem, 2.4vw, 1.6rem); margin-top: clamp(0.8rem, 2vh, 1.4rem); max-width: 440px; box-shadow: 0 18px 44px rgba(90,65,132,0.2); }
+.moat-band .tag { font-size: var(--kicker-size); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin: 0 0 0.5em; }
+.moat-band .tag-dot { display: inline-block; width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--flame); margin-right: 0.5em; vertical-align: middle; }
+.moat-band .line { font-family: var(--display); font-weight: 600; font-size: clamp(1.05rem, 2.4vw, 1.6rem); line-height: 1.14; margin: 0; }
+.moat-band .sub { font-size: var(--kicker-size); color: rgba(251,247,249,0.72); margin: 0.55em 0 0; font-weight: 500; letter-spacing: 0; text-transform: none; line-height: 1.42; }
+
+/* ============ device illustration ============ */
+.device { width: clamp(210px, 30vh, 300px); height: auto; filter: drop-shadow(0 26px 50px rgba(90,65,132,0.22)); display: block; margin: 0 auto; }
+
+/* ============ battleground cards ============ */
+.grid6 { display: grid; grid-template-columns: repeat(3, 1fr); gap: clamp(0.6rem, 1.4vw, 1rem); width: 100%; max-width: 980px; margin-top: clamp(1rem, 3vh, 1.8rem); }
+@media (max-width: 760px) { .grid6 { grid-template-columns: 1fr; } }
+.bcard { background: var(--card); border: 1px solid var(--hairline); border-radius: 22px 22px 22px 6px; padding: clamp(0.8rem, 1.6vw, 1.15rem); text-align: left; box-shadow: 0 8px 20px rgba(90,65,132,0.05); transition: transform .25s cubic-bezier(.22,1,.36,1), border-radius .25s ease; }
+.bcard:nth-child(even) { border-radius: 22px 22px 6px 22px; }
+.bcard:hover { transform: translateY(-4px) rotate(-.5deg); border-radius: 22px; }
+.bcard h4 { font-family: var(--body); font-size: clamp(0.82rem, 1.5vw, 1rem); font-weight: 700; margin: 0.15em 0 0.3em; color: var(--ink); }
+.bcard .who { font-size: clamp(0.68rem, 1.2vw, 0.82rem); color: var(--muted); font-weight: 600; line-height: 1.4; margin: 0; }
+.bcard .tagn { font-size: 0.6rem; font-weight: 800; letter-spacing: 0.12em; text-transform: uppercase; color: var(--indigo); }
+
+/* ============ positioning map ============ */
+.map-wrap { width: 100%; max-width: 720px; margin-top: clamp(0.8rem, 2vh, 1.4rem); }
+.map-wrap svg { width: 100%; height: auto; display: block; }
+
+/* ============ comparison table ============ */
+.table-scroll { width: 100%; max-width: 1080px; overflow-x: auto; margin-top: clamp(0.8rem, 2vh, 1.4rem); -webkit-overflow-scrolling: touch; border-radius: 16px; box-shadow: 0 14px 36px rgba(90,65,132,0.08); }
+table.cmp { border-collapse: collapse; width: 100%; min-width: 720px; background: var(--card); font-size: clamp(0.66rem, 1.15vw, 0.86rem); }
+table.cmp th, table.cmp td { padding: 0.6em 0.7em; text-align: center; border-bottom: 1px solid var(--hairline); }
+table.cmp thead th { font-family: var(--body); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; position: sticky; top: 0; background: var(--card); }
+table.cmp tbody th { text-align: left; font-weight: 600; color: var(--ink); white-space: nowrap; font-size: clamp(0.68rem, 1.2vw, 0.84rem); }
+table.cmp .lum { background: linear-gradient(180deg, rgba(140,111,191,0.09), rgba(140,111,191,0.04)); }
+table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 10px 10px 0 0; }
+.yes { color: var(--teal); font-weight: 800; }
+.no { color: #C2557A; font-weight: 800; opacity: 0.75; }
+.partial { color: var(--flame); font-weight: 800; }
+.legend { font-size: 0.68rem; color: var(--muted); font-weight: 600; margin-top: 0.7em; }
+
+/* ============ roadmap ============ */
+.road { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(0.6rem, 1.4vw, 1rem); width: 100%; max-width: 960px; margin-top: clamp(1rem, 3vh, 1.8rem); text-align: left; }
+@media (max-width: 760px) { .road { grid-template-columns: 1fr; } }
+.rcard { background: var(--card); border: 1px solid var(--hairline); border-left: 4px solid var(--flame); border-radius: 20px 20px 20px 6px; padding: clamp(0.75rem, 1.5vw, 1.05rem); box-shadow: 0 8px 20px rgba(90,65,132,0.05); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+.rcard:hover { transform: translateY(-3px) rotate(-.4deg); }
+.rcard.have { border-left-color: var(--teal); }
+.rcard h4 { font-family: var(--body); font-size: clamp(0.8rem, 1.5vw, 0.98rem); font-weight: 700; margin: 0 0 0.25em; color: var(--ink); }
+.rcard p { font-size: clamp(0.68rem, 1.2vw, 0.84rem); color: var(--muted); font-weight: 500; line-height: 1.42; margin: 0; }
+.rcard .pill { display: inline-block; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25em 0.6em; border-radius: 999px; margin-bottom: 0.4em; }
+.rcard .pill.next { background: var(--softOrange); color: #A85F0E; }
+.rcard .pill.edge { background: var(--softGreen); color: #1F7A64; }
+.section-num { font-family: var(--display); font-weight: 600; font-size: clamp(3rem, 12vw, 8rem); color: var(--lavender); line-height: 0.9; }
+</style>
+</head>
+<body>
+<div class="progress" id="progress"></div>
+<nav class="nav-dots" id="dots" aria-label="Slides"></nav>
+<div class="keyboard-hint"><span class="hint-desktop">arrows / space / </span>swipe</div>
+
+<main id="deck">
+
+<!-- 1 · TITLE -->
+<section class="slide field-night on-dark" aria-label="Title">
+    <div class="blob" style="width:220px;height:220px;top:6%;left:8%;background:radial-gradient(circle at 30% 30%, rgba(225,125,155,.28), rgba(225,125,155,0) 70%)" aria-hidden="true"></div>
+    <div class="blob" style="width:260px;height:260px;bottom:12%;right:6%;background:radial-gradient(circle at 60% 40%, rgba(140,111,191,.3), rgba(140,111,191,0) 70%);animation-delay:-6s" aria-hidden="true"></div>
+    <div class="slide-content">
+        <div class="mark breathing reveal" id="titleFlame" aria-hidden="true"></div>
+        <h1 class="reveal d1" style="margin-top: clamp(0.8rem, 3vh, 1.6rem); text-align:center;">Luminara</h1>
+        <p class="lede reveal d2 center">Light you can keep.<br>Your whole self, in one place — and only yours.</p>
+    </div>
+    <svg class="wave-bottom" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+</section>
+
+<!-- 2 · THE PROBLEM -->
+<section class="slide" aria-label="The problem">
+    <div class="slide-content">
+        <p class="kicker reveal">The problem</p>
+        <h1 class="reveal d1 center">Your health is scattered.<br>And it's being watched.</h1>
+        <p class="lede reveal d2 center">Your cycle in one app. Labs in a hospital portal. Meds on a sticky note. Postpartum feelings — nowhere. And every tap is quietly sold to advertisers.</p>
+        <div class="chips reveal d3" aria-hidden="true">
+            <span class="chip"><span class="dot" style="background:var(--rose)"></span>Cycle app</span>
+            <span class="chip"><span class="dot" style="background:var(--teal)"></span>Lab portal</span>
+            <span class="chip"><span class="dot" style="background:var(--flame)"></span>Pill reminders</span>
+            <span class="chip"><span class="dot" style="background:var(--purple)"></span>Mood… somewhere</span>
+            <span class="chip"><span class="dot" style="background:var(--indigo)"></span>Data broker #4,201</span>
+        </div>
+    </div>
+</section>
+
+<!-- 3 · THE OLD WAY -->
+<section class="slide field-ink on-dark" aria-label="Life before Luminara">
+    <div class="slide-content">
+        <p class="kicker reveal">Life before Luminara</p>
+        <h2 class="reveal d1 center">Track in five apps,<br>or trust none of them.</h2>
+        <div class="versus reveal d2">
+            <div class="col before">
+                <h3>The usual</h3>
+                <p class="row"><span class="mark2">✕</span> Cycle, labs, meds, mood — four apps that never talk</p>
+                <p class="row"><span class="mark2">✕</span> Your most private data lives on someone else's server</p>
+                <p class="row"><span class="mark2">✕</span> Postpartum depression? No app is even looking</p>
+                <p class="row"><span class="mark2">✕</span> One algorithm for everybody — built for nobody</p>
+            </div>
+            <div class="divider" aria-hidden="true"></div>
+            <div class="col after">
+                <h3>With Luminara</h3>
+                <p class="row"><span class="mark2">✓</span> Cycle, labs, records, meds &amp; mood in one thread</p>
+                <p class="row"><span class="mark2">✓</span> Encrypted on <em>your</em> device — nothing to subpoena</p>
+                <p class="row"><span class="mark2">✓</span> A real postpartum check-in that watches for the dip</p>
+                <p class="row"><span class="mark2">✓</span> Guidance tuned to your body, your background, you</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 4 · THE LUMINARA WAY -->
+<section class="slide" aria-label="The Luminara way">
+    <div class="slide-content">
+        <div class="split">
+            <div class="center">
+                <div class="reveal" id="wayDevice"></div>
+            </div>
+            <div>
+                <p class="kicker reveal d1">The Luminara way</p>
+                <h2 class="reveal d1">Every signal.<br>One light.</h2>
+                <ul class="facts reveal d2">
+                    <li>Cycle, biomarkers, labs, records, meds &amp; mood — <b>one connected story</b></li>
+                    <li>A wellness read that blends your <b>cycle phase, labs and check-ins</b></li>
+                    <li><b>Private by design</b> — it lives on your phone, encrypted, not in a data lake</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 5 · MOTTO -->
+<section class="slide field-night on-dark" aria-label="Light you can keep">
+    <div class="slide-content motto">
+        <p class="kicker reveal">Say it in one breath</p>
+        <h1 class="reveal d1">Your body.<br>Your data.<br><span class="cycle-wrap"><span class="cycle" id="mottoCycle">Light you can keep.</span></span></h1>
+    </div>
+    <div class="blob" style="width:200px;height:200px;top:10%;right:10%;background:radial-gradient(circle at 40% 40%, rgba(246,169,76,.22), rgba(246,169,76,0) 70%)" aria-hidden="true"></div>
+    <svg class="wave-bottom" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+</section>
+
+<!-- 6 · FROM IDEA TO DESIGN -->
+<section class="slide field-blush" aria-label="From idea to design">
+    <div class="slide-content">
+        <p class="kicker reveal">Now — the design</p>
+        <h1 class="reveal d1 center">One idea,<br>drawn everywhere.</h1>
+        <p class="lede reveal d2 center maxw">A candle in the dark: warmth for the hard hours, light to see by, and a flame you hold close — never a beam you broadcast. That single image is the whole system.</p>
+    </div>
+</section>
+
+<!-- 7 · THE LOGO -->
+<section class="slide" aria-label="The logo">
+    <div class="blob" style="width:170px;height:170px;top:8%;left:6%;background:radial-gradient(circle at 30% 30%, rgba(225,125,155,.22), rgba(225,125,155,0) 70%)" aria-hidden="true"></div>
+    <div class="slide-content">
+        <div class="split">
+            <div class="center">
+                <div style="display:inline-block; transform: rotate(-3deg);">
+                    <div class="mark breathing reveal" style="width: clamp(150px, 30vh, 260px);" id="logoFlame"></div>
+                </div>
+            </div>
+            <div>
+                <p class="kicker reveal d1">The logo · why</p>
+                <h2 class="reveal d1">A single flame,<br>cupped in two <span style="position:relative;display:inline-block">hands<svg class="squiggle-under" viewBox="0 0 120 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C 16 2, 30 2, 44 8 S 72 14, 86 8 S 112 2, 118 8" fill="none" stroke="var(--rose)" stroke-width="4" stroke-linecap="round"/></svg></span>.</h2>
+                <ul class="facts reveal d2">
+                    <li><b>Warmth:</b> a companion for 3am feeds and hard postpartum nights</li>
+                    <li><b>Clarity:</b> it turns scattered data into something you can see by</li>
+                    <li><b>Held:</b> the cupped hands say protected, private, on your device</li>
+                    <li>No clouds (that's the thing we're <em>not</em>), no candle for a vigil</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 8 · THE MARK IS ALIVE -->
+<section class="slide field-blush" aria-label="The living mark">
+    <div class="slide-content">
+        <p class="kicker reveal">The logo · how it lives in the app</p>
+        <h2 class="reveal d1 center">One flame,<br>coloured by your phase.</h2>
+        <div class="flame-row reveal d2" id="phaseRow"></div>
+        <div class="reveal d3 center">
+            <span class="formula">menstrual · follicular · ovulation · luteal</span>
+            <p class="lede center maxw">The same flame everywhere — the phase strip, the check-in seal, the partner dot, the app icon — it just takes the colour of where you are today.</p>
+        </div>
+    </div>
+</section>
+
+<!-- 9 · THE COLOR -->
+<section class="slide" aria-label="The colour">
+    <div class="slide-content">
+        <p class="kicker reveal">The design · colour</p>
+        <h2 class="reveal d1 center">Calm indigo to trust.<br>A flame to warm it.</h2>
+        <div class="swatch-row reveal d2" aria-hidden="true">
+            <div class="swatch hero" style="background:#8C6FBF;color:#FBF7F9;">INDIGO</div>
+            <div class="swatch" style="background:#FBF7F9;color:#6E6480;border:1px solid #EDE2EC;">LAVENDER</div>
+            <div class="swatch" style="background:#3A2F52;color:#FBF7F9;">NAVY</div>
+            <div class="swatch" style="background:linear-gradient(180deg,#FFD98A,#F6A94C);color:#7a4410;">AMBER</div>
+            <div class="swatch" style="background:#3AAFA9;color:#ffffff;">TEAL</div>
+        </div>
+        <p class="lede reveal d3 center maxw">Indigo carries the calm and the credibility. The warm flame is rationed — it appears only to guide, so when it glows, it means something.</p>
+    </div>
+</section>
+
+<!-- 10 · SOFT EDGES -->
+<section class="slide" aria-label="No hard edges">
+    <div class="slide-content">
+        <div class="split">
+            <div>
+                <p class="kicker reveal">The curves · why</p>
+                <h2 class="reveal d1">No hard edges<br>on a tender day.</h2>
+                <ul class="facts reveal d2">
+                    <li><b>Why:</b> a sharp corner is a form; cupped hands are a place to rest</li>
+                    <li><b>How:</b> the same rounded family — flame, cradle, pill, card — 16px radius everywhere</li>
+                    <li>Every screen breathes on a slow, unhurried rhythm</li>
+                </ul>
+            </div>
+            <div>
+                <svg class="reveal d2" viewBox="0 0 460 300" role="img" aria-label="Cupped hands cradling the flame" style="width:100%;height:auto;">
+                    <defs>
+                        <radialGradient id="glB" cx="50%" cy="42%" r="55%"><stop offset="0" stop-color="#FFD98A" stop-opacity="0.6"/><stop offset="1" stop-color="#FFD98A" stop-opacity="0"/></radialGradient>
+                        <radialGradient id="gl1" cx="50%" cy="42%" r="55%"><stop offset="0" stop-color="#FFD98A"/><stop offset="0.6" stop-color="#F6A94C"/><stop offset="1" stop-color="#E8892E"/></radialGradient>
+                    </defs>
+                    <rect x="0" y="0" width="460" height="300" rx="26" fill="#FBF7F9"/>
+                    <circle cx="230" cy="150" r="120" fill="url(#glB)"/>
+                    <!-- the flame -->
+                    <path fill="url(#gl1)" d="M230,60 C246,96 272,114 272,158 C272,196 254,220 230,220 C206,220 188,196 188,158 C188,114 214,96 230,60 Z"/>
+                    <path fill="#FFF3D6" opacity="0.9" d="M230,116 C238,142 254,152 254,178 C254,200 244,214 230,214 C216,214 206,200 206,178 C206,152 222,142 230,116 Z"/>
+                    <!-- two cupped hands -->
+                    <path fill="none" stroke="#B0729E" stroke-width="18" stroke-linecap="round" d="M120,196 C150,252 220,266 230,246"/>
+                    <path fill="none" stroke="#8C6FBF" stroke-width="18" stroke-linecap="round" d="M340,196 C310,252 240,266 230,246"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 11 · THE DESIGN IS THE PROMISE -->
+<section class="slide" aria-label="The design is the promise">
+    <div class="slide-content">
+        <div class="split">
+            <div class="center">
+                <div class="reveal" id="promiseDevice"></div>
+            </div>
+            <div>
+                <p class="kicker reveal d1">The design · one system</p>
+                <h2 class="reveal d1">The UI is<br>the promise.</h2>
+                <ul class="facts reveal d2">
+                    <li>Lavender canvas, calm as a quiet room</li>
+                    <li>Consent switches are visible, honest, and never dark-patterned</li>
+                    <li>Every claim reads "not a diagnosis — talk to your provider"</li>
+                </ul>
+                <div class="moat-band reveal d3">
+                    <p class="tag"><span class="tag-dot"></span>The Luminara promise</p>
+                    <p class="line">Private by design. Yours by default.</p>
+                    <p class="sub">Encrypted on your device. Nothing leaves unless you choose to share it — and then only anonymised.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- 12 · SECTION: THE MARKET -->
+<section class="slide field-night on-dark" aria-label="The market">
+    <svg class="wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+    <div class="slide-content">
+        <p class="kicker reveal">Part two</p>
+        <h1 class="reveal d1 center">The market —<br>and where we win.</h1>
+        <p class="lede reveal d2 center maxw">Menstrual-health apps are a <b>$2.4B+</b> market split into six battlegrounds. Here's every serious player, and the exact gap Luminara is built to own.</p>
+    </div>
+</section>
+
+<!-- 13 · THE BATTLEGROUNDS -->
+<section class="slide field-blush" aria-label="The battlegrounds">
+    <div class="slide-content">
+        <p class="kicker reveal">The landscape</p>
+        <h2 class="reveal d1 center">Six battlegrounds.<br>One unclaimed corner.</h2>
+        <div class="grid6 reveal d2">
+            <div class="bcard"><span class="tagn">Mass-market giants</span><h4>Flo · Glow</h4><p class="who">77M+ users, AI chatbots, community. Growth over privacy — and they sell reach.</p></div>
+            <div class="bcard"><span class="tagn">Science purists</span><h4>Clue · Natural Cycles</h4><p class="who">Clinical credibility &amp; GDPR. NC is FDA-cleared contraception. Cycle-only focus.</p></div>
+            <div class="bcard"><span class="tagn">Hardware ecosystems</span><h4>Apple · Fitbit · Ava</h4><p class="who">Free, wearable-fed temperature &amp; sleep. Thin on records, labs, mood.</p></div>
+            <div class="bcard"><span class="tagn">Privacy safe-havens</span><h4>Euki · Drip</h4><p class="who">On-device, zero cloud, un-subpoenable. But shallow — cycle notes, little depth.</p></div>
+            <div class="bcard"><span class="tagn">TTC specialists</span><h4>Premom · Fertility&nbsp;Friend</h4><p class="who">LH-strip scanning, chart-reading. Laser-focused on conception only.</p></div>
+            <div class="bcard"><span class="tagn">Niche disruptors</span><h4>Stardust · Ovia · Samphire</h4><p class="who">Gen-Z aesthetics, employer B2B, neuro-wearables. None own postpartum.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- 14 · POSITIONING MAP -->
+<section class="slide" aria-label="Positioning map">
+    <div class="blob" style="width:190px;height:190px;top:6%;right:8%;background:radial-gradient(circle at 40% 40%, rgba(246,169,76,.18), rgba(246,169,76,0) 70%)" aria-hidden="true"></div>
+    <div class="slide-content">
+        <p class="kicker reveal">Where everyone sits</p>
+        <h2 class="reveal d1 center">Privacy × whole-person<br><span style="position:relative;display:inline-block">depth<svg class="squiggle-under" viewBox="0 0 130 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C 18 2, 32 2, 48 8 S 78 14, 94 8 S 122 2, 128 8" fill="none" stroke="var(--flame)" stroke-width="4" stroke-linecap="round"/></svg></span>.</h2>
+        <div class="map-wrap reveal d2">
+            <svg viewBox="0 0 720 470" role="img" aria-label="Positioning map: privacy on the x-axis, whole-person depth on the y-axis. Luminara sits top-right, alone.">
+                <defs>
+                    <radialGradient id="lumGlow" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#FFD98A"/><stop offset="1" stop-color="#F2A65A"/></radialGradient>
+                </defs>
+                <!-- quadrant wash -->
+                <rect x="60" y="30" width="620" height="380" rx="24" fill="#FBFAFF" stroke="#EDE2EC"/>
+                <rect x="370" y="30" width="310" height="190" rx="0" fill="rgba(140,111,191,0.06)"/>
+                <!-- axes -->
+                <line x1="60" y1="220" x2="680" y2="220" stroke="#EDE2EC" stroke-width="1.5"/>
+                <line x1="370" y1="30" x2="370" y2="410" stroke="#EDE2EC" stroke-width="1.5"/>
+                <!-- axis labels -->
+                <text x="70" y="435" font-family="Manrope" font-size="13" font-weight="700" fill="#6E6480">Sells / stores your data</text>
+                <text x="670" y="435" text-anchor="end" font-family="Manrope" font-size="13" font-weight="700" fill="#6E6480">Private by design →</text>
+                <text x="376" y="48" font-family="Manrope" font-size="13" font-weight="700" fill="#6E6480">Whole-person ↑</text>
+                <text x="376" y="405" font-family="Manrope" font-size="13" font-weight="700" fill="#6E6480">Single-purpose</text>
+                <!-- competitor dots -->
+                <g font-family="Manrope" font-size="12.5" font-weight="700" fill="#3A2F52">
+                    <circle cx="175" cy="150" r="7" fill="#B0729E"/><text x="188" y="154">Flo</text>
+                    <circle cx="200" cy="185" r="7" fill="#B0729E"/><text x="213" y="189">Glow</text>
+                    <circle cx="215" cy="300" r="7" fill="#8C6FBF"/><text x="228" y="304">Ovia</text>
+                    <circle cx="330" cy="330" r="7" fill="#8C6FBF"/><text x="245" y="334" text-anchor="end">Clue</text>
+                    <circle cx="360" cy="360" r="7" fill="#8C6FBF"/><text x="373" y="376">Natural Cycles</text>
+                    <circle cx="300" cy="380" r="7" fill="#8C6FBF"/><text x="313" y="384">Premom</text>
+                    <circle cx="560" cy="360" r="7" fill="#3AAFA9"/><text x="547" y="364" text-anchor="end">Apple</text>
+                    <circle cx="600" cy="300" r="7" fill="#3AAFA9"/><text x="587" y="304" text-anchor="end">Euki · Drip</text>
+                    <circle cx="285" cy="345" r="7" fill="#8C6FBF"/><text x="272" y="349" text-anchor="end">Stardust</text>
+                </g>
+                <!-- Luminara star -->
+                <circle cx="600" cy="110" r="26" fill="url(#lumGlow)" opacity="0.35"><animate attributeName="r" values="22;30;22" dur="3.2s" repeatCount="indefinite"/></circle>
+                <circle cx="600" cy="110" r="13" fill="url(#lumGlow)" stroke="#fff" stroke-width="2.5"/>
+                <text x="600" y="82" text-anchor="middle" font-family="Fraunces, serif" font-size="17" font-weight="700" fill="#3A2F52">Luminara</text>
+            </svg>
+        </div>
+        <p class="lede reveal d3 center maxw" style="margin-top:0.6rem;">The whole-person + private corner is empty. The privacy apps stay shallow; the deep apps sell your data. We're the only one going deep <em>and</em> staying on-device.</p>
+    </div>
+</section>
+
+<!-- 15 · COMPARISON TABLE -->
+<section class="slide field-blush" aria-label="Comparison table">
+    <div class="slide-content">
+        <p class="kicker reveal">Head to head</p>
+        <h2 class="reveal d1 center">Feature for feature.</h2>
+        <div class="table-scroll reveal d2">
+            <table class="cmp">
+                <thead>
+                    <tr>
+                        <th style="text-align:left;">Capability</th>
+                        <th class="lum">Luminara</th>
+                        <th>Flo</th>
+                        <th>Clue</th>
+                        <th>Natural&nbsp;Cycles</th>
+                        <th>Ovia</th>
+                        <th>Euki</th>
+                        <th>Apple</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr><th>On-device / local-first</th><td class="lum yes">●</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="yes">●</td><td class="yes">●</td></tr>
+                    <tr><th>Encrypted at rest (device key)</th><td class="lum yes">●</td><td class="no">○</td><td class="partial">◐</td><td class="no">○</td><td class="no">○</td><td class="yes">●</td><td class="yes">●</td></tr>
+                    <tr><th>Never sells / brokers data</th><td class="lum yes">●</td><td class="no">○</td><td class="partial">◐</td><td class="partial">◐</td><td class="no">○</td><td class="yes">●</td><td class="yes">●</td></tr>
+                    <tr><th>Cycle &amp; fertility tracking</th><td class="lum yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td><td class="yes">●</td></tr>
+                    <tr><th>Labs &amp; medical records</th><td class="lum yes">●</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="partial">◐</td><td class="no">○</td><td class="partial">◐</td></tr>
+                    <tr><th>Medication tracker</th><td class="lum yes">●</td><td class="partial">◐</td><td class="no">○</td><td class="no">○</td><td class="partial">◐</td><td class="no">○</td><td class="partial">◐</td></tr>
+                    <tr><th>Postpartum-depression screening</th><td class="lum yes">●</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="partial">◐</td><td class="no">○</td><td class="no">○</td></tr>
+                    <tr><th>Partner co-observation (consent)</th><td class="lum yes">●</td><td class="partial">◐</td><td class="no">○</td><td class="partial">◐</td><td class="no">○</td><td class="no">○</td><td class="no">○</td></tr>
+                    <tr><th>Ancestry-aware equity nudges</th><td class="lum yes">●</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="no">○</td><td class="no">○</td></tr>
+                    <tr><th>Anonymised research opt-in</th><td class="lum yes">●</td><td class="partial">◐</td><td class="yes">●</td><td class="partial">◐</td><td class="no">○</td><td class="no">○</td><td class="no">○</td></tr>
+                    <tr><th>FDA-cleared contraception</th><td class="lum partial">◐</td><td class="no">○</td><td class="no">○</td><td class="yes">●</td><td class="no">○</td><td class="no">○</td><td class="no">○</td></tr>
+                    <tr><th>Wearable / HealthKit import</th><td class="lum partial">◐</td><td class="partial">◐</td><td class="partial">◐</td><td class="yes">●</td><td class="no">○</td><td class="no">○</td><td class="yes">●</td></tr>
+                </tbody>
+            </table>
+        </div>
+        <p class="legend reveal d3"><span class="yes">●</span> full &nbsp;·&nbsp; <span class="partial">◐</span> partial / on the roadmap &nbsp;·&nbsp; <span class="no">○</span> none</p>
+    </div>
+</section>
+
+<!-- 16 · WHY WE WIN -->
+<section class="slide" aria-label="Why we win">
+    <div class="slide-content">
+        <p class="kicker reveal">The moat</p>
+        <h2 class="reveal d1 center">Why Luminara wins.</h2>
+        <ul class="facts reveal d2 maxw" style="max-width:52ch;">
+            <li><b>Whole-person, not one organ:</b> cycle, labs, records, meds and mood live in one thread — everyone else tracks a slice.</li>
+            <li><b>Privacy without the shallow tax:</b> Euki-grade on-device encryption, but with the depth Euki lacks. You don't trade safety for features.</li>
+            <li><b>Postpartum is our wedge:</b> a real PPD check-in with a risk model — the one life stage no giant is even looking at.</li>
+            <li><b>A partner, by consent:</b> PIN-gated co-observation for the weeks when someone else notices the dip first. Nobody else has it.</li>
+            <li><b>Care that sees you:</b> ancestry-aware, non-diagnostic nudges (vitamin D, thalassemia &amp; sickle-cell, fibroids, gestational diabetes) — health equity built in, not bolted on.</li>
+            <li><b>Honest by policy:</b> no fake HIPAA badges, no dark patterns, "not a diagnosis" everywhere.</li>
+        </ul>
+    </div>
+</section>
+
+<!-- 17 · WHAT WE ADD NEXT -->
+<section class="slide field-blush" aria-label="What we add next">
+    <div class="slide-content">
+        <p class="kicker reveal">To pull further ahead</p>
+        <h2 class="reveal d1 center">What we build next.</h2>
+        <div class="road reveal d2">
+            <div class="rcard"><span class="pill next">Close the gap</span><h4>Wearable &amp; HealthKit import</h4><p>Pull wrist-temp, HRV &amp; sleep from Apple Watch / Oura to auto-feed BBT and the wellness score — matching Natural Cycles &amp; Ava.</p></div>
+            <div class="rcard"><span class="pill next">Close the gap</span><h4>E2E-encrypted multi-device sync</h4><p>The <code>SyncAdapter</code> is already stubbed — ship encrypted-blob sync so data spans phone + tablet without a server ever seeing plaintext.</p></div>
+            <div class="rcard"><span class="pill next">New moat</span><h4>On-device AI companion</h4><p>A postpartum-aware assistant that answers privately, on the phone — Flo's chatbot without shipping your questions to a cloud.</p></div>
+            <div class="rcard"><span class="pill next">New moat</span><h4>Camera LH / test-strip reader</h4><p>Scan ovulation &amp; pregnancy strips into a numeric curve — beating Premom at TTC, inside a private app.</p></div>
+            <div class="rcard"><span class="pill next">New lane</span><h4>PCOS · PMDD · endo tracks</h4><p>Dedicated symptom tracks for the conditions the mass-market giants flatten into "irregular."</p></div>
+            <div class="rcard"><span class="pill next">Reach</span><h4>Arabic / RTL &amp; SWANA-first</h4><p>Localise the equity library and UI — own a region the incumbents ignore.</p></div>
+            <div class="rcard have"><span class="pill edge">Already ours</span><h4>Clinician one-pager export</h4><p><code>generateReport</code> already ships — polish it into a share-to-provider PDF and a subpoena-proof local vault.</p></div>
+            <div class="rcard"><span class="pill next">Credibility</span><h4>Pursue FDA fertility clearance</h4><p>Formalise the BBT model into a cleared fertility-awareness mode — Natural Cycles' one true edge, neutralised.</p></div>
+        </div>
+    </div>
+</section>
+
+<!-- 18 · CLOSE -->
+<section class="slide field-ink on-dark" aria-label="Closing">
+    <svg class="wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+    <div class="slide-content">
+        <div class="mark breathing reveal" id="closeFlame" aria-hidden="true"></div>
+        <h1 class="reveal d1 center" style="margin-top: clamp(0.8rem, 3vh, 1.6rem);">Your body.<br>Your data.<br>Light you can keep.</h1>
+    </div>
+</section>
+
+</main>
+
+<script>
+/* ---------- the flame mark ---------- */
+function flameSVG(id, outer, glow, cradle) {
+    // The "Kept Flame": a flat flame cupped by two hands.
+    // Pass cradle = "none" to omit the hands (used by the phase row).
+    var hands = (cradle && cradle !== "none")
+        ? '<path fill="none" stroke="' + cradle + '" stroke-width="5.5" stroke-linecap="round" d="M24,72 C34,90 66,90 76,72"/>'
+        : '';
+    return '' +
+    '<svg viewBox="0 0 100 100" role="img" aria-hidden="true">' +
+      '<defs>' +
+        '<radialGradient id="glow_' + id + '" cx="50%" cy="46%" r="52%">' +
+          '<stop offset="0" stop-color="' + glow + '" stop-opacity="0.55"/>' +
+          '<stop offset="1" stop-color="' + glow + '" stop-opacity="0"/>' +
+        '</radialGradient>' +
+      '</defs>' +
+      '<circle cx="50" cy="48" r="40" fill="url(#glow_' + id + ')"/>' +
+      '<path fill="' + outer + '" d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z"/>' +
+      '<path fill="#FFF3D6" opacity="0.92" d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z"/>' +
+      hands +
+    '</svg>';
+}
+
+document.getElementById("titleFlame").innerHTML = flameSVG("t", "#F6A94C", "#FFD98A", "#FBF7F9");
+document.getElementById("logoFlame").innerHTML  = flameSVG("l", "#F6A94C", "#FFD98A", "#8C6FBF");
+document.getElementById("closeFlame").innerHTML = flameSVG("c", "#F6A94C", "#FFD98A", "#FBF7F9");
+
+/* phase-tinted flames */
+const phases = [
+    { outer: "#E17D9B", glow: "#FFB3C6", label: "Menstrual" },
+    { outer: "#3AAFA9", glow: "#9BE7E2", label: "Follicular" },
+    { outer: "#F2A65A", glow: "#FFD98A", label: "Ovulation" },
+    { outer: "#B0729E", glow: "#C9B6F2", label: "Luteal" },
+];
+document.getElementById("phaseRow").innerHTML = phases.map((p, i) =>
+    '<div class="flame-cell">' + flameSVG("p" + i, p.outer, p.glow, "none") +
+    '<div class="cap">' + p.label + '</div></div>'
+).join("");
+
+/* ---------- a little phone illustration (no external assets) ---------- */
+function deviceSVG(kind) {
+    const head =
+    '<svg class="device" viewBox="0 0 300 600" role="img" aria-label="Luminara app screen">' +
+      '<defs>' +
+        '<linearGradient id="hdr" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#8C6FBF"/><stop offset="1" stop-color="#B0729E"/></linearGradient>' +
+        '<radialGradient id="fl" cx="50%" cy="40%" r="55%"><stop offset="0" stop-color="#FFD98A"/><stop offset="0.6" stop-color="#F2A65A"/><stop offset="1" stop-color="#E8892E"/></radialGradient>' +
+      '</defs>' +
+      '<rect x="8" y="8" width="284" height="584" rx="44" fill="#3A2F52"/>' +
+      '<rect x="18" y="18" width="264" height="564" rx="36" fill="#FBF7F9"/>' +
+      '<rect x="120" y="30" width="60" height="10" rx="5" fill="#3A2F52" opacity="0.25"/>';
+    // header card with flame + phase
+    const body =
+      '<rect x="34" y="58" width="232" height="120" rx="22" fill="url(#hdr)"/>' +
+      '<path fill="url(#fl)" d="M84,86 C90,102 104,110 104,128 C104,144 95,156 84,156 C73,156 64,144 64,128 C64,110 78,102 84,86 Z"/>' +
+      '<text x="120" y="98" font-family="Manrope" font-size="12" font-weight="700" fill="#EEF0FB">Luteal phase</text>' +
+      '<text x="120" y="120" font-family="Manrope" font-size="10" font-weight="600" fill="#EEE6F8">Day 22 of ~29</text>' +
+      '<text x="120" y="150" font-family="Manrope" font-size="10" font-weight="600" fill="#EEE6F8">Next period in 7 days</text>' +
+      // 2x3 grid tiles
+      tiles();
+    function tiles() {
+        const labels = [["Cycle","#3AAFA9"],["Labs","#8C6FBF"],["Records","#B0729E"],["Meds","#F2A65A"],["Check-in","#E17D9B"],["Partner","#3AAFA9"]];
+        let s = "";
+        labels.forEach((l, i) => {
+            const col = i % 2, row = (i / 2) | 0;
+            const x = 34 + col * 120, y = 196 + row * 88;
+            s += '<rect x="' + x + '" y="' + y + '" width="108" height="76" rx="18" fill="#FFFFFF" stroke="#EDE2EC"/>' +
+                 '<circle cx="' + (x + 22) + '" cy="' + (y + 26) + '" r="11" fill="' + l[1] + '" opacity="0.9"/>' +
+                 '<text x="' + (x + 16) + '" y="' + (y + 58) + '" font-family="Manrope" font-size="11" font-weight="700" fill="#3A2F52">' + l[0] + '</text>';
+        });
+        return s;
+    }
+    // bottom lock/privacy pill
+    const foot =
+      '<rect x="60" y="474" width="180" height="30" rx="15" fill="#EEF0FB"/>' +
+      '<circle cx="80" cy="489" r="5" fill="#3AAFA9"/>' +
+      '<text x="94" y="493" font-family="Manrope" font-size="10" font-weight="700" fill="#6E52A0">Encrypted on this device</text>' +
+      '<rect x="110" y="556" width="80" height="6" rx="3" fill="#3A2F52" opacity="0.25"/>' +
+    '</svg>';
+    return head + body + foot;
+}
+document.getElementById("wayDevice").innerHTML = deviceSVG();
+document.getElementById("promiseDevice").innerHTML = deviceSVG();
+
+/* ---------- motto cycling ---------- */
+(function () {
+    const el = document.getElementById("mottoCycle");
+    if (!el) return;
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (reduced) return;
+    const lines = [
+        { t: "Light you can keep.", hold: 3600 },
+        { t: "Private by design.", hold: 2600 },
+        { t: "Your whole self, one thread.", hold: 2600 },
+        { t: "Nothing to subpoena.", hold: 2600 },
+        { t: "Care that sees you.", hold: 2600 },
+        { t: "Warmth for the hard nights.", hold: 3600 },
+    ];
+    let i = 0;
+    (function next() {
+        setTimeout(() => {
+            el.classList.add("out");
+            setTimeout(() => {
+                i = (i + 1) % lines.length;
+                el.textContent = lines[i].t;
+                el.classList.remove("out");
+                next();
+            }, 400);
+        }, lines[i].hold);
+    })();
+})();
+
+/* ---------- presentation controller ---------- */
+class Deck {
+    constructor() {
+        this.slides = [...document.querySelectorAll(".slide")];
+        this.dotsEl = document.getElementById("dots");
+        this.progress = document.getElementById("progress");
+        this.current = 0;
+
+        this.slides.forEach((s, i) => {
+            const b = document.createElement("button");
+            b.setAttribute("aria-label", "Go to slide " + (i + 1));
+            b.addEventListener("click", () => this.go(i));
+            this.dotsEl.appendChild(b);
+        });
+        this.dots = [...this.dotsEl.children];
+
+        const io = new IntersectionObserver(entries => {
+            entries.forEach(e => {
+                if (e.isIntersecting) {
+                    e.target.classList.add("in-view");
+                    this.setCurrent(this.slides.indexOf(e.target));
+                }
+            });
+        }, { threshold: 0.55 });
+        this.slides.forEach(s => io.observe(s));
+
+        document.addEventListener("keydown", e => {
+            if (["ArrowDown", "ArrowRight", " ", "PageDown"].includes(e.key)) { e.preventDefault(); this.go(this.current + 1); }
+            if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); this.go(this.current - 1); }
+            if (e.key === "Home") this.go(0);
+            if (e.key === "End") this.go(this.slides.length - 1);
+        });
+
+        const deckDrivesScroll = () => window.innerWidth > 760;
+        this.wheelLock = false;
+        document.addEventListener("wheel", e => {
+            if (!deckDrivesScroll()) return;
+            e.preventDefault();
+            if (this.wheelLock || Math.abs(e.deltaY) < 12) return;
+            this.wheelLock = true;
+            this.go(this.current + (e.deltaY > 0 ? 1 : -1));
+            setTimeout(() => { this.wheelLock = false; }, 750);
+        }, { passive: false });
+
+        let touchY = null;
+        document.addEventListener("touchstart", e => { touchY = e.touches[0].clientY; }, { passive: true });
+        document.addEventListener("touchend", e => {
+            if (touchY === null) return;
+            if (!deckDrivesScroll()) { touchY = null; return; }
+            const dy = touchY - e.changedTouches[0].clientY;
+            if (Math.abs(dy) > 60) this.go(this.current + (dy > 0 ? 1 : -1));
+            touchY = null;
+        }, { passive: true });
+
+        this.setCurrent(0);
+    }
+    setCurrent(i) {
+        if (i < 0) return;
+        this.current = i;
+        this.dots.forEach((d, j) => d.classList.toggle("active", j === i));
+        this.progress.style.width = ((i + 1) / this.slides.length * 100) + "%";
+    }
+    go(i) {
+        i = Math.max(0, Math.min(this.slides.length - 1, i));
+        this.setCurrent(i);
+        this.slides[i].scrollIntoView({ behavior: "smooth" });
+    }
+}
+new Deck();
+</script>
+</body>
+</html>
