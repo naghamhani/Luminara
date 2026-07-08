@@ -675,7 +675,7 @@ function flameSVG(id, outer, glow, cradle) {
     // The "Kept Flame": a flat flame cupped by two hands.
     // Pass cradle = "none" to omit the hands (used by the phase row).
     var hands = (cradle && cradle !== "none")
-        ? '<path fill="none" stroke="' + cradle + '" stroke-width="7" stroke-linecap="round" d="M22,58 C22,86 78,86 78,58"/>'
+        ? '<path fill="none" stroke="' + cradle + '" stroke-width="4.5" stroke-linecap="round" d="M22,58 C22,86 78,86 78,58"/>'
         : '';
     return '' +
     '<svg viewBox="0 0 100 100" role="img" aria-hidden="true">' +
