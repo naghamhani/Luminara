@@ -13,14 +13,13 @@
    =========================================== */
 html, body { height: 100%; overflow-x: hidden; margin: 0; }
 html { scroll-behavior: smooth; }
-body { scroll-snap-type: y proximity; scroll-behavior: smooth; }
+body { scroll-behavior: smooth; }
 
 .slide {
     width: 100vw;
-    height: 100vh;
-    height: 100dvh;
+    min-height: 100vh;
+    min-height: 100dvh;
     overflow: hidden;
-    scroll-snap-align: start;
     display: flex;
     flex-direction: column;
     position: relative;
@@ -31,9 +30,9 @@ body { scroll-snap-type: y proximity; scroll-behavior: smooth; }
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    max-height: 100%;
-    overflow: hidden;
     padding: var(--slide-padding);
+    padding-top: clamp(2.5rem, 6vh, 4rem);
+    padding-bottom: clamp(2.5rem, 6vh, 4rem);
     position: relative;
     z-index: 2;
 }
@@ -78,7 +77,7 @@ img { max-width: 100%; object-fit: contain; }
 }
 @media (max-height: 600px) {
     :root { --slide-padding: clamp(0.5rem, 2.5vw, 1.5rem); --title-size: clamp(1.3rem, 4.5vw, 2.2rem); --body-size: clamp(0.72rem, 1.3vw, 0.95rem); }
-    .nav-dots, .keyboard-hint { display: none; }
+    .nav-dots { display: none; }
 }
 @media (prefers-reduced-motion: reduce) {
     *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.2s !important; }
@@ -93,7 +92,6 @@ img { max-width: 100%; object-fit: contain; }
         padding-bottom: clamp(2.5rem, 8vh, 4rem);
     }
     .reveal { opacity: 1 !important; transform: none !important; }
-    .hint-desktop { display: none; }
 }
 
 /* ============ typography ============ */
@@ -101,11 +99,24 @@ img { max-width: 100%; object-fit: contain; }
     font-family: var(--body);
     font-size: var(--kicker-size);
     font-weight: 700;
-    letter-spacing: 0.18em;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
     color: var(--indigo);
     margin: 0 0 clamp(0.5rem, 1.5vh, 1rem);
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6em;
 }
+.kicker::before {
+    content: "";
+    width: 22px;
+    height: 2px;
+    border-radius: 2px;
+    background: var(--rose);
+    display: inline-block;
+}
+.on-dark .kicker::before { background: var(--gold); }
+
 .on-dark .kicker { color: var(--gold); }
 h1, h2 {
     font-family: var(--display);
@@ -159,14 +170,14 @@ h2 { font-size: var(--h2-size); }
 @media (prefers-reduced-motion: reduce) { .reveal { transform: none; } }
 
 /* ============ soft cloud edges (echo the logo) ============ */
-.wave-bottom { position: absolute; bottom: -1px; left: 0; width: 100%; z-index: 1; display: block; }
-.wave-top { position: absolute; top: -1px; left: 0; width: 100%; z-index: 1; display: block; transform: scaleY(-1); }
+.wave-bottom { position: absolute; bottom: -1px; left: 0; width: 100%; height: clamp(40px, 7vh, 80px); z-index: 1; display: block; }
+.wave-top { position: absolute; top: -1px; left: 0; width: 100%; height: clamp(40px, 7vh, 80px); z-index: 1; display: block; transform: scaleY(-1); }
 
 /* ============ the flame mark ============ */
 .mark { width: clamp(96px, 17vh, 168px); height: auto; }
 .blob { position: absolute; border-radius: 62% 38% 55% 45%/48% 42% 58% 52%; z-index: 0; pointer-events: none; animation: blobfloat 16s ease-in-out infinite; }
 @keyframes blobfloat { 0%,100% { transform: translate(0,0) rotate(0deg); } 50% { transform: translate(-16px,20px) rotate(7deg); } }
-.squiggle-under { display: inline-block; width: 100%; height: .18em; margin-top: .04em; }
+.squiggle-under { position: absolute; left: 0; bottom: -.16em; width: 100%; height: .18em; pointer-events: none; }
 @keyframes float { 0%,100% { transform: translateY(0) rotate(var(--rot,-3deg)); } 50% { transform: translateY(-10px) rotate(var(--rot,-3deg)); } }
 .floaty { animation: float 6s ease-in-out infinite; --rot:-2deg; }
 @media (prefers-reduced-motion: reduce) { .blob, .floaty { animation: none; } }
@@ -212,7 +223,6 @@ h2 { font-size: var(--h2-size); }
 .nav-dots button { width: 9px; height: 9px; border-radius: 50%; border: none; padding: 0; background: rgba(140,111,191,0.28); cursor: pointer; transition: transform .3s, background .3s, height .3s, border-radius .3s; }
 .nav-dots button.active { background: var(--indigo); height: 22px; border-radius: 5px; }
 .progress { position: fixed; top: 0; left: 0; height: 3px; background: linear-gradient(90deg, var(--indigo), var(--flame)); width: 0; z-index: 60; transition: width .3s ease; }
-.keyboard-hint { position: fixed; bottom: clamp(0.5rem, 1.5vh, 1rem); left: 50%; transform: translateX(-50%); font-size: 0.65rem; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase; color: rgba(90,65,132,0.32); z-index: 50; pointer-events: none; }
 
 /* ============ chips (scattered data) ============ */
 .chips { display: flex; flex-wrap: wrap; gap: clamp(0.5rem, 1.6vw, 1rem); justify-content: center; margin-top: clamp(1rem, 3vh, 2rem); max-width: 640px; }
@@ -220,8 +230,9 @@ h2 { font-size: var(--h2-size); }
 .chip .dot { width: 0.7em; height: 0.7em; border-radius: 50%; flex: none; }
 
 /* ============ versus ============ */
-.versus { display: grid; grid-template-columns: 1fr auto 1fr; align-items: stretch; gap: clamp(0.8rem, 2.5vw, 2rem); width: 100%; max-width: 900px; margin-top: clamp(1rem, 3vh, 2rem); text-align: left; }
-.versus .col { display: grid; gap: clamp(0.4rem, 1.2vh, 0.7rem); align-content: start; }
+.versus { display: grid; grid-template-columns: 1fr 1fr; align-items: stretch; gap: clamp(0.8rem, 2.5vw, 1.6rem); width: 100%; max-width: 900px; margin-top: clamp(1rem, 3vh, 2rem); text-align: left; }
+.versus .col { display: grid; gap: clamp(0.4rem, 1.2vh, 0.7rem); align-content: start; border-radius: 24px 24px 24px 8px; padding: clamp(1rem, 2.2vw, 1.6rem); background: rgba(251,247,249,0.05); border: 1px solid rgba(251,247,249,0.12); }
+.versus .after { border-radius: 24px 24px 8px 24px; background: rgba(255,217,138,0.08); border-color: rgba(255,217,138,0.22); }
 .versus .col h3 { font-family: var(--body); font-weight: 700; font-size: var(--kicker-size); letter-spacing: 0.14em; text-transform: uppercase; margin: 0 0 0.4em; }
 .versus .before h3 { color: rgba(251,247,249,0.5); }
 .versus .after h3 { color: var(--gold); }
@@ -230,8 +241,7 @@ h2 { font-size: var(--h2-size); }
 .versus .mark2 { flex: none; font-weight: 800; }
 .versus .before .mark2 { color: rgba(251,247,249,0.4); }
 .versus .after .mark2 { color: var(--teal); }
-.versus .divider { width: 1px; background: rgba(251,247,249,0.18); }
-@media (max-width: 760px) { .versus { grid-template-columns: 1fr; gap: clamp(0.6rem, 2vh, 1rem); } .versus .divider { display: none; } }
+@media (max-width: 760px) { .versus { grid-template-columns: 1fr; gap: clamp(0.6rem, 2vh, 1rem); } }
 
 /* ============ motto ============ */
 .motto h1 { text-align: center; }
@@ -240,7 +250,7 @@ h2 { font-size: var(--h2-size); }
 .motto .cycle.out { opacity: 0; transform: translateY(0.25em); }
 
 /* ============ moat band ============ */
-.moat-band { background: var(--ink); color: var(--lav); border-radius: clamp(14px, 1.6vw, 20px); padding: clamp(0.9rem, 2vw, 1.3rem) clamp(1rem, 2.4vw, 1.6rem); margin-top: clamp(0.8rem, 2vh, 1.4rem); max-width: 440px; box-shadow: 0 18px 44px rgba(90,65,132,0.2); }
+.moat-band { background: linear-gradient(155deg, #43315E 0%, #6E52A0 100%); color: var(--lav); border-radius: 26px 26px 26px 8px; padding: clamp(0.9rem, 2vw, 1.3rem) clamp(1rem, 2.4vw, 1.6rem); margin-top: clamp(0.8rem, 2vh, 1.4rem); max-width: 440px; box-shadow: 0 18px 44px rgba(90,65,132,0.25); }
 .moat-band .tag { font-size: var(--kicker-size); font-weight: 700; letter-spacing: 0.14em; text-transform: uppercase; color: var(--gold); margin: 0 0 0.5em; }
 .moat-band .tag-dot { display: inline-block; width: 0.5em; height: 0.5em; border-radius: 50%; background: var(--flame); margin-right: 0.5em; vertical-align: middle; }
 .moat-band .line { font-family: var(--display); font-weight: 600; font-size: clamp(1.05rem, 2.4vw, 1.6rem); line-height: 1.14; margin: 0; }
@@ -264,9 +274,10 @@ h2 { font-size: var(--h2-size); }
 .map-wrap svg { width: 100%; height: auto; display: block; }
 
 /* ============ comparison table ============ */
-.table-scroll { width: 100%; max-width: 1080px; overflow-x: auto; margin-top: clamp(0.8rem, 2vh, 1.4rem); -webkit-overflow-scrolling: touch; border-radius: 16px; box-shadow: 0 14px 36px rgba(90,65,132,0.08); }
+.table-scroll { width: 100%; max-width: 1080px; overflow-x: auto; margin-top: clamp(0.8rem, 2vh, 1.4rem); -webkit-overflow-scrolling: touch; border-radius: 22px; box-shadow: 0 14px 36px rgba(90,65,132,0.08); border: 1px solid var(--hairline); }
 table.cmp { border-collapse: collapse; width: 100%; min-width: 720px; background: var(--card); font-size: clamp(0.66rem, 1.15vw, 0.86rem); }
 table.cmp th, table.cmp td { padding: 0.6em 0.7em; text-align: center; border-bottom: 1px solid var(--hairline); }
+table.cmp tbody tr:nth-child(even) td, table.cmp tbody tr:nth-child(even) th { background: rgba(140,111,191,0.035); }
 table.cmp thead th { font-family: var(--body); font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.04em; font-size: 0.62rem; position: sticky; top: 0; background: var(--card); }
 table.cmp tbody th { text-align: left; font-weight: 600; color: var(--ink); white-space: nowrap; font-size: clamp(0.68rem, 1.2vw, 0.84rem); }
 table.cmp .lum { background: linear-gradient(180deg, rgba(140,111,191,0.09), rgba(140,111,191,0.04)); }
@@ -279,9 +290,10 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
 /* ============ roadmap ============ */
 .road { display: grid; grid-template-columns: repeat(2, 1fr); gap: clamp(0.6rem, 1.4vw, 1rem); width: 100%; max-width: 960px; margin-top: clamp(1rem, 3vh, 1.8rem); text-align: left; }
 @media (max-width: 760px) { .road { grid-template-columns: 1fr; } }
-.rcard { background: var(--card); border: 1px solid var(--hairline); border-left: 4px solid var(--flame); border-radius: 20px 20px 20px 6px; padding: clamp(0.75rem, 1.5vw, 1.05rem); box-shadow: 0 8px 20px rgba(90,65,132,0.05); transition: transform .25s cubic-bezier(.22,1,.36,1); }
+.rcard { background: var(--card); border: 1px solid var(--hairline); border-radius: 22px 22px 22px 8px; padding: clamp(0.75rem, 1.5vw, 1.05rem); box-shadow: 0 8px 20px rgba(90,65,132,0.05); transition: transform .25s cubic-bezier(.22,1,.36,1); position: relative; }
+.rcard::before { content: ""; position: absolute; left: 14px; top: -3px; width: 26px; height: 6px; border-radius: 4px; background: var(--flame); }
 .rcard:hover { transform: translateY(-3px) rotate(-.4deg); }
-.rcard.have { border-left-color: var(--teal); }
+.rcard.have::before { background: var(--teal); }
 .rcard h4 { font-family: var(--body); font-size: clamp(0.8rem, 1.5vw, 0.98rem); font-weight: 700; margin: 0 0 0.25em; color: var(--ink); }
 .rcard p { font-size: clamp(0.68rem, 1.2vw, 0.84rem); color: var(--muted); font-weight: 500; line-height: 1.42; margin: 0; }
 .rcard .pill { display: inline-block; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.1em; text-transform: uppercase; padding: 0.25em 0.6em; border-radius: 999px; margin-bottom: 0.4em; }
@@ -293,7 +305,6 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
 <body>
 <div class="progress" id="progress"></div>
 <nav class="nav-dots" id="dots" aria-label="Slides"></nav>
-<div class="keyboard-hint"><span class="hint-desktop">arrows / space / </span>swipe</div>
 
 <main id="deck">
 
@@ -306,11 +317,12 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
         <h1 class="reveal d1" style="margin-top: clamp(0.8rem, 3vh, 1.6rem); text-align:center;">Luminara</h1>
         <p class="lede reveal d2 center">Light you can keep.<br>Your whole self, in one place — and only yours.</p>
     </div>
-    <svg class="wave-bottom" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+    <svg class="wave-bottom" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,85 C420,15 1020,145 1440,55 L1440,120 L0,120 Z"/></svg>
 </section>
 
 <!-- 2 · THE PROBLEM -->
 <section class="slide" aria-label="The problem">
+    <div class="blob" style="width:210px;height:210px;top:8%;right:8%;background:radial-gradient(circle at 40% 40%, rgba(140,111,191,.16), rgba(140,111,191,0) 70%)" aria-hidden="true"></div>
     <div class="slide-content">
         <p class="kicker reveal">The problem</p>
         <h1 class="reveal d1 center">Your health is scattered.<br>And it's being watched.</h1>
@@ -327,6 +339,7 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
 
 <!-- 3 · THE OLD WAY -->
 <section class="slide field-ink on-dark" aria-label="Life before Luminara">
+    <div class="blob" style="width:200px;height:200px;bottom:8%;left:6%;background:radial-gradient(circle at 40% 40%, rgba(225,125,155,.2), rgba(225,125,155,0) 70%)" aria-hidden="true"></div>
     <div class="slide-content">
         <p class="kicker reveal">Life before Luminara</p>
         <h2 class="reveal d1 center">Track in five apps,<br>or trust none of them.</h2>
@@ -338,11 +351,10 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
                 <p class="row"><span class="mark2">✕</span> Postpartum depression? No app is even looking</p>
                 <p class="row"><span class="mark2">✕</span> One algorithm for everybody — built for nobody</p>
             </div>
-            <div class="divider" aria-hidden="true"></div>
             <div class="col after">
                 <h3>With Luminara</h3>
                 <p class="row"><span class="mark2">✓</span> Cycle, labs, records, meds &amp; mood in one thread</p>
-                <p class="row"><span class="mark2">✓</span> Encrypted on <em>your</em> device — nothing to subpoena</p>
+                <p class="row"><span class="mark2">✓</span> <span>Encrypted on <em>your</em> device — nothing to subpoena</span></p>
                 <p class="row"><span class="mark2">✓</span> A real postpartum check-in that watches for the dip</p>
                 <p class="row"><span class="mark2">✓</span> Guidance tuned to your body, your background, you</p>
             </div>
@@ -377,7 +389,7 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
         <h1 class="reveal d1">Your body.<br>Your data.<br><span class="cycle-wrap"><span class="cycle" id="mottoCycle">Light you can keep.</span></span></h1>
     </div>
     <div class="blob" style="width:200px;height:200px;top:10%;right:10%;background:radial-gradient(circle at 40% 40%, rgba(246,169,76,.22), rgba(246,169,76,0) 70%)" aria-hidden="true"></div>
-    <svg class="wave-bottom" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+    <svg class="wave-bottom" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,85 C420,15 1020,145 1440,55 L1440,120 L0,120 Z"/></svg>
 </section>
 
 <!-- 6 · FROM IDEA TO DESIGN -->
@@ -401,11 +413,11 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
             </div>
             <div>
                 <p class="kicker reveal d1">The logo · why</p>
-                <h2 class="reveal d1">A single flame,<br>cupped in two <span style="position:relative;display:inline-block">hands<svg class="squiggle-under" viewBox="0 0 120 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C 16 2, 30 2, 44 8 S 72 14, 86 8 S 112 2, 118 8" fill="none" stroke="var(--rose)" stroke-width="4" stroke-linecap="round"/></svg></span>.</h2>
+                <h2 class="reveal d1">A single flame,<br>kept in a <span style="position:relative;display:inline-block">cradle<svg class="squiggle-under" viewBox="0 0 130 14" preserveAspectRatio="none" aria-hidden="true"><path d="M2 8 C 18 2, 32 2, 48 8 S 78 14, 94 8 S 122 2, 128 8" fill="none" stroke="var(--rose)" stroke-width="4" stroke-linecap="round"/></svg></span>.</h2>
                 <ul class="facts reveal d2">
                     <li><b>Warmth:</b> a companion for 3am feeds and hard postpartum nights</li>
                     <li><b>Clarity:</b> it turns scattered data into something you can see by</li>
-                    <li><b>Held:</b> the cupped hands say protected, private, on your device</li>
+                    <li><b>Held:</b> the cradle says protected, private, on your device</li>
                     <li>No clouds (that's the thing we're <em>not</em>), no candle for a vigil</li>
                 </ul>
             </div>
@@ -502,7 +514,8 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
 
 <!-- 12 · SECTION: THE MARKET -->
 <section class="slide field-night on-dark" aria-label="The market">
-    <svg class="wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+    <svg class="wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,85 C420,15 1020,145 1440,55 L1440,120 L0,120 Z"/></svg>
+    <div class="blob" style="width:230px;height:230px;top:14%;left:8%;background:radial-gradient(circle at 30% 30%, rgba(225,125,155,.24), rgba(225,125,155,0) 70%)" aria-hidden="true"></div>
     <div class="slide-content">
         <p class="kicker reveal">Part two</p>
         <h1 class="reveal d1 center">The market —<br>and where we win.</h1>
@@ -645,7 +658,9 @@ table.cmp thead th.lum { background: var(--indigo); color: #fff; border-radius: 
 
 <!-- 18 · CLOSE -->
 <section class="slide field-ink on-dark" aria-label="Closing">
-    <svg class="wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,70 C120,30 240,30 360,55 C500,84 560,40 720,58 C880,76 940,34 1080,54 C1200,71 1320,52 1440,40 L1440,120 L0,120 Z"/></svg>
+    <svg class="wave-top" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true"><path fill="#FBF7F9" d="M0,85 C420,15 1020,145 1440,55 L1440,120 L0,120 Z"/></svg>
+    <div class="blob" style="width:220px;height:220px;top:10%;right:10%;background:radial-gradient(circle at 40% 40%, rgba(246,169,76,.2), rgba(246,169,76,0) 70%)" aria-hidden="true"></div>
+    <div class="blob" style="width:180px;height:180px;bottom:14%;left:8%;background:radial-gradient(circle at 40% 40%, rgba(140,111,191,.22), rgba(140,111,191,0) 70%);animation-delay:-5s" aria-hidden="true"></div>
     <div class="slide-content">
         <div class="mark breathing reveal" id="closeFlame" aria-hidden="true"></div>
         <h1 class="reveal d1 center" style="margin-top: clamp(0.8rem, 3vh, 1.6rem);">Your body.<br>Your data.<br>Light you can keep.</h1>
@@ -660,7 +675,7 @@ function flameSVG(id, outer, glow, cradle) {
     // The "Kept Flame": a flat flame cupped by two hands.
     // Pass cradle = "none" to omit the hands (used by the phase row).
     var hands = (cradle && cradle !== "none")
-        ? '<path fill="none" stroke="' + cradle + '" stroke-width="5.5" stroke-linecap="round" d="M24,72 C34,90 66,90 76,72"/>'
+        ? '<path fill="none" stroke="' + cradle + '" stroke-width="7" stroke-linecap="round" d="M22,58 C22,86 78,86 78,58"/>'
         : '';
     return '' +
     '<svg viewBox="0 0 100 100" role="img" aria-hidden="true">' +
@@ -792,32 +807,9 @@ class Deck {
         this.slides.forEach(s => io.observe(s));
 
         document.addEventListener("keydown", e => {
-            if (["ArrowDown", "ArrowRight", " ", "PageDown"].includes(e.key)) { e.preventDefault(); this.go(this.current + 1); }
-            if (["ArrowUp", "ArrowLeft", "PageUp"].includes(e.key)) { e.preventDefault(); this.go(this.current - 1); }
-            if (e.key === "Home") this.go(0);
-            if (e.key === "End") this.go(this.slides.length - 1);
+            if (e.key === "Home") { e.preventDefault(); this.go(0); }
+            if (e.key === "End") { e.preventDefault(); this.go(this.slides.length - 1); }
         });
-
-        const deckDrivesScroll = () => window.innerWidth > 760;
-        this.wheelLock = false;
-        document.addEventListener("wheel", e => {
-            if (!deckDrivesScroll()) return;
-            e.preventDefault();
-            if (this.wheelLock || Math.abs(e.deltaY) < 12) return;
-            this.wheelLock = true;
-            this.go(this.current + (e.deltaY > 0 ? 1 : -1));
-            setTimeout(() => { this.wheelLock = false; }, 750);
-        }, { passive: false });
-
-        let touchY = null;
-        document.addEventListener("touchstart", e => { touchY = e.touches[0].clientY; }, { passive: true });
-        document.addEventListener("touchend", e => {
-            if (touchY === null) return;
-            if (!deckDrivesScroll()) { touchY = null; return; }
-            const dy = touchY - e.changedTouches[0].clientY;
-            if (Math.abs(dy) > 60) this.go(this.current + (dy > 0 ? 1 : -1));
-            touchY = null;
-        }, { passive: true });
 
         this.setCurrent(0);
     }

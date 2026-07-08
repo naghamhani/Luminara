@@ -147,7 +147,7 @@ footer{padding:2.5rem 0;border-top:1px solid var(--border);color:var(--muted);fo
 @media(prefers-reduced-motion:reduce){.blob,.floaty{animation:none!important}}
 
 /* squiggle underline */
-.squiggle{display:block;width:100%;height:.22em;margin-top:.05em}
+.squiggle{position:absolute;left:0;bottom:-.18em;width:100%;height:.22em;pointer-events:none}
 
 /* section kicker with line */
 .kicker-line{display:inline-flex;align-items:center;gap:.6em}
@@ -173,7 +173,7 @@ footer{padding:2.5rem 0;border-top:1px solid var(--border);color:var(--muted);fo
 <header class="nav">
   <div class="wrap nav-in">
     <a class="brand" href="#top">
-      <svg viewBox="0 0 100 100" aria-label="Luminara"><rect width="100" height="100" rx="26" fill="#8C6FBF"/><path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/><path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z" fill="#FFE7BE"/><path d="M24,72 C34,90 66,90 76,72" fill="none" stroke="#FBF7F9" stroke-width="5.5" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 100 100" aria-label="Luminara"><rect width="100" height="100" rx="26" fill="#8C6FBF"/><path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/><path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z" fill="#FFE7BE"/><path fill="none" stroke="#FBF7F9" stroke-width="7" stroke-linecap="round" d="M22,58 C22,86 78,86 78,58"/></svg>
       Luminara
     </a>
     <nav class="nav-links">
@@ -376,7 +376,7 @@ footer{padding:2.5rem 0;border-top:1px solid var(--border);color:var(--muted);fo
 <footer>
   <div class="wrap foot-in">
     <div class="brand" style="font-size:1.1rem">
-      <svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#8C6FBF"/><path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/><path d="M24,72 C34,90 66,90 76,72" fill="none" stroke="#FBF7F9" stroke-width="6" stroke-linecap="round"/></svg>
+      <svg width="28" height="28" viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" rx="26" fill="#8C6FBF"/><path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/><path fill="none" stroke="#FBF7F9" stroke-width="7" stroke-linecap="round" d="M22,58 C22,86 78,86 78,58"/></svg>
       Luminara
     </div>
     <div>© <span id="yr"></span> Luminara Health · Light you can keep.</div>
