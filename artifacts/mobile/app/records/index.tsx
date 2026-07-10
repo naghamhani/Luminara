@@ -10,7 +10,9 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { EmptyState } from "@/components/EmptyState";
 import { ScreenHeader } from "@/components/records/ScreenHeader";
+import { Skeleton } from "@/components/Skeleton";
 import { LAB_CATEGORY_ICONS, RECORD_TYPE_ICONS } from "@/components/records/recordIcons";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
@@ -247,7 +249,13 @@ export default function RecordsScreen() {
           </ScrollView>
         )}
 
-        {segment === "documents" ? (
+        {isLoading ? (
+          <View style={styles.list}>
+            <Skeleton height={92} borderRadius={16} />
+            <Skeleton height={92} borderRadius={16} />
+            <Skeleton height={92} borderRadius={16} />
+          </View>
+        ) : segment === "documents" ? (
           filteredRecords.length > 0 ? (
             <View style={styles.list}>
               {filteredRecords.map((r) => (
@@ -255,24 +263,13 @@ export default function RecordsScreen() {
               ))}
             </View>
           ) : (
-            !isLoading && (
-              <View style={styles.empty}>
-                <Text style={{ fontSize: 44 }}>📄</Text>
-                <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-                  No records yet
-                </Text>
-                <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
-                  Add a doctor's note, a photo of a document, or a PDF to keep everything
-                  in one private place — visit notes, imaging reports, prescriptions, and more.
-                </Text>
-                <Pressable
-                  onPress={() => router.push("/records/add")}
-                  style={[styles.emptyBtn, { backgroundColor: colors.primary }]}
-                >
-                  <Text style={styles.emptyBtnText}>Add your first record</Text>
-                </Pressable>
-              </View>
-            )
+            <EmptyState
+              icon="file-text"
+              title="No records yet"
+              message="Add your first medical record to keep track of your health history."
+              actionLabel="Add your first record"
+              onAction={() => router.push("/records/add")}
+            />
           )
         ) : labResults.length > 0 ? (
           <View style={styles.list}>
@@ -281,24 +278,13 @@ export default function RecordsScreen() {
             ))}
           </View>
         ) : (
-          !isLoading && (
-            <View style={styles.empty}>
-              <Text style={{ fontSize: 44 }}>🧪</Text>
-              <Text style={[styles.emptyTitle, { color: colors.foreground }]}>
-                No lab results yet
-              </Text>
-              <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
-                Log values from a hormone panel, blood work, thyroid test, or any other lab
-                report so you can track trends over time.
-              </Text>
-              <Pressable
-                onPress={() => router.push("/records/add-lab")}
-                style={[styles.emptyBtn, { backgroundColor: colors.primary }]}
-              >
-                <Text style={styles.emptyBtnText}>Add your first lab result</Text>
-              </Pressable>
-            </View>
-          )
+          <EmptyState
+            icon="activity"
+            title="No lab results yet"
+            message="Log values from a hormone panel, blood work, thyroid test, or any other lab report so you can track trends over time."
+            actionLabel="Add your first lab result"
+            onAction={() => router.push("/records/add-lab")}
+          />
         )}
 
         <View style={styles.footerNote}>
@@ -380,27 +366,6 @@ const styles = StyleSheet.create({
     lineHeight: 18,
     marginTop: 4,
   },
-  empty: {
-    alignItems: "center",
-    paddingTop: 36,
-    paddingHorizontal: 16,
-    gap: 10,
-  },
-  emptyTitle: { fontSize: 18, fontFamily: "Inter_700Bold" },
-  emptySub: {
-    fontSize: 13.5,
-    fontFamily: "Inter_400Regular",
-    textAlign: "center",
-    lineHeight: 20,
-    maxWidth: 300,
-  },
-  emptyBtn: {
-    marginTop: 8,
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    borderRadius: 14,
-  },
-  emptyBtnText: { color: "#fff", fontSize: 14, fontFamily: "Inter_600SemiBold" },
   footerNote: {
     flexDirection: "row",
     alignItems: "center",

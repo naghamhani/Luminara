@@ -65,6 +65,9 @@ export function ObservationCard({ observation, onDelete }: ObservationCardProps)
             onPress={() => onDelete(observation.id)}
             hitSlop={8}
             style={styles.deleteBtn}
+            accessibilityRole="button"
+            accessibilityLabel="Delete observation"
+            accessibilityHint={`Removes the observation logged on ${formatDate(observation.date)}`}
           >
             <Feather name="trash-2" size={16} color={colors.mutedForeground} />
           </Pressable>

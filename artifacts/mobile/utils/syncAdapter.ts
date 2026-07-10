@@ -1,3 +1,5 @@
+import AsyncStorage from "@react-native-async-storage/async-storage";
+
 import type { HealthSnapshot } from "@/types/health";
 
 /**
@@ -56,6 +58,22 @@ import type { HealthSnapshot } from "@/types/health";
  * "private by design — your data stays on this device."
  */
 
+/** AsyncStorage key for the last mock "sync" timestamp — read by SyncStatusBadge. */
+export const LAST_SYNCED_AT_KEY = "luminara_last_synced_at";
+
+/**
+ * Reads the last mock sync timestamp, if the (no-op) sync flow below has
+ * ever recorded one. Returns null when nothing has been "synced" yet, which
+ * is the expected default for this local-only build.
+ */
+export async function getLastSyncedAt(): Promise<string | null> {
+  try {
+    return await AsyncStorage.getItem(LAST_SYNCED_AT_KEY);
+  } catch {
+    return null;
+  }
+}
+
 export interface SyncAdapter {
   readonly name: string;
   /** Push a full local snapshot to the remote store. No-op until a backend exists. */
@@ -75,6 +93,14 @@ export class LocalOnlyAdapter implements SyncAdapter {
   async pushSnapshot(
     _snapshot: HealthSnapshot
   ): Promise<{ ok: boolean; message: string }> {
+    // Still a no-op — no network call is made. We only record a local
+    // timestamp so UI (SyncStatusBadge) can honestly reflect "we ran the
+    // mocked sync flow at time T", never a claim of real remote sync.
+    try {
+      await AsyncStorage.setItem(LAST_SYNCED_AT_KEY, new Date().toISOString());
+    } catch {
+      // Best-effort only; sync status is non-critical UI.
+    }
     return {
       ok: false,
       message: "Sync is not enabled in this build — data is local-only.",

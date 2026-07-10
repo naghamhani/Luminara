@@ -13,28 +13,41 @@ import {
   TextInput,
   View,
 } from "react-native";
+import Reanimated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp, getTodayString } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 import { Feather } from "@expo/vector-icons";
 
-const MOODS = [
-  { emoji: "😞", label: "Very low", value: 1 },
-  { emoji: "😟", label: "Low", value: 2 },
-  { emoji: "😐", label: "Okay", value: 3 },
-  { emoji: "🙂", label: "Good", value: 4 },
-  { emoji: "😊", label: "Great", value: 5 },
-];
+function useMoods() {
+  const { t } = useTranslation();
+  return [
+    { emoji: "😞", label: t("checkin.moodVeryLow"), value: 1 },
+    { emoji: "😟", label: t("checkin.moodLow"), value: 2 },
+    { emoji: "😐", label: t("checkin.moodOkay"), value: 3 },
+    { emoji: "🙂", label: t("checkin.moodGood"), value: 4 },
+    { emoji: "😊", label: t("checkin.moodGreat"), value: 5 },
+  ];
+}
 
-const SLEEP_OPTIONS = [
-  { label: "< 3h", hours: 2 },
-  { label: "3–4h", hours: 3.5 },
-  { label: "4–5h", hours: 4.5 },
-  { label: "5–6h", hours: 5.5 },
-  { label: "6–7h", hours: 6.5 },
-  { label: "7–8h", hours: 7.5 },
-  { label: "8h+", hours: 9 },
-];
+function useSleepOptions() {
+  const { t } = useTranslation();
+  return [
+    { label: t("checkin.sleepUnder3"), hours: 2 },
+    { label: t("checkin.sleep3to4"), hours: 3.5 },
+    { label: t("checkin.sleep4to5"), hours: 4.5 },
+    { label: t("checkin.sleep5to6"), hours: 5.5 },
+    { label: t("checkin.sleep6to7"), hours: 6.5 },
+    { label: t("checkin.sleep7to8"), hours: 7.5 },
+    { label: t("checkin.sleep8plus"), hours: 9 },
+  ];
+}
 
 function RatingRow({
   label,
@@ -117,10 +130,72 @@ const ratingStyles = StyleSheet.create({
   endLabel: { fontSize: 10, fontFamily: "Inter_400Regular" },
 });
 
+function MoodOptionButton({
+  emoji,
+  label,
+  value,
+  active,
+  onPress,
+}: {
+  emoji: string;
+  label: string;
+  value: number;
+  active: boolean;
+  onPress: () => void;
+}) {
+  const colors = useColors();
+  const scale = useSharedValue(1);
+
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Reanimated.View style={[{ flex: 1, minWidth: "18%" }, scaleStyle]}>
+      <Pressable
+        onPress={() => {
+          scale.value = withSequence(
+            withSpring(0.92, { duration: 120 }),
+            withSpring(1, { duration: 160 })
+          );
+          if (Platform.OS !== "web") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+          onPress();
+        }}
+        accessibilityRole="radio"
+        accessibilityLabel={`${label}, ${value} / 5`}
+        accessibilityState={{ selected: active }}
+        style={[
+          styles.moodBtn,
+          {
+            backgroundColor: active ? colors.primary + "18" : colors.card,
+            borderColor: active ? colors.primary : colors.border,
+            borderWidth: active ? 2 : 1,
+          },
+        ]}
+      >
+        <Text style={styles.moodEmoji}>{emoji}</Text>
+        <Text
+          style={[
+            styles.moodLabel,
+            { color: active ? colors.primary : colors.mutedForeground },
+          ]}
+        >
+          {label}
+        </Text>
+      </Pressable>
+    </Reanimated.View>
+  );
+}
+
 export default function CheckInScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { addCheckIn, hasCheckedInToday, todayCheckIn } = useApp();
+  const { t } = useTranslation();
+  const MOODS = useMoods();
+  const SLEEP_OPTIONS = useSleepOptions();
 
   const [step, setStep] = useState<"mood" | "wellbeing" | "notes" | "done">(
     hasCheckedInToday ? "done" : "mood"
@@ -204,6 +279,15 @@ export default function CheckInScreen() {
   const levelColor =
     level === "low" ? colors.riskLow : level === "moderate" ? colors.riskModerate : colors.riskHigh;
 
+  // One restrained warning-level pulse when a check-in first surfaces as
+  // High Risk on the completion screen — never repeated on re-renders at
+  // the same level, per the app's calm, non-alarming design philosophy.
+  useEffect(() => {
+    if (step === "done" && justCompleted && level === "high" && Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
+  }, [step, justCompleted, level]);
+
   if (step === "done") {
     return (
       <View
@@ -220,18 +304,19 @@ export default function CheckInScreen() {
           <Text style={{ fontSize: 52 }}>✅</Text>
         </View>
         <Text style={[styles.doneTitle, { color: colors.foreground }]}>
-          Check-in complete
+          {t("checkin.doneTitle")}
         </Text>
         <Text style={[styles.doneSub, { color: colors.mutedForeground }]}>
-          {justCompleted
-            ? "Your check-in is saved. You showed up for yourself today — that matters."
-            : "You've already logged today. Come back tomorrow."}
+          {justCompleted ? t("checkin.doneSubNew") : t("checkin.doneSubAlready")}
         </Text>
         {todayCheckIn && (
           <View style={[styles.scoreBox, { backgroundColor: levelColor + "18", borderColor: levelColor + "30", borderWidth: 1.5 }]}>
             <Text style={[styles.scoreBig, { color: levelColor }]}>{todayCheckIn.riskScore}</Text>
             <Text style={[styles.scoreSmall, { color: colors.mutedForeground }]}>
-              Risk Score · {level === "low" ? "Low Risk" : level === "moderate" ? "Moderate" : "High Risk"}
+              {t("checkin.riskScoreLabel").replace(
+                "{level}",
+                level === "low" ? t("checkin.riskLow") : level === "moderate" ? t("checkin.riskModerate") : t("checkin.riskHigh")
+              )}
             </Text>
           </View>
         )}
@@ -246,7 +331,7 @@ export default function CheckInScreen() {
             <Feather name="droplet" size={16} color={colors.purple} />
           </View>
           <Text style={[styles.nextStepText, { color: colors.text }]}>
-            Complete the picture — log today's cycle & biomarkers
+            {t("checkin.nextStepCycle")}
           </Text>
           <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
         </Pressable>
@@ -254,7 +339,7 @@ export default function CheckInScreen() {
           onPress={() => router.push("/(tabs)")}
           style={[styles.doneBtn, { backgroundColor: colors.primary }]}
         >
-          <Text style={styles.doneBtnText}>Back to Home</Text>
+          <Text style={styles.doneBtnText}>{t("checkin.backToHome")}</Text>
         </Pressable>
       </View>
     );
@@ -283,7 +368,7 @@ export default function CheckInScreen() {
                 )
               }
               accessibilityRole="button"
-              accessibilityLabel="Go back"
+              accessibilityLabel={t("common.back")}
               style={styles.backBtn}
             >
               <Feather name="arrow-left" size={20} color={colors.text} />
@@ -294,9 +379,9 @@ export default function CheckInScreen() {
           <View
             style={[styles.stepDots, { gap: 6 }]}
             accessibilityRole="text"
-            accessibilityLabel={`Step ${
-              step === "mood" ? 1 : step === "wellbeing" ? 2 : 3
-            } of 3`}
+            accessibilityLabel={t("checkin.stepOf")
+              .replace("{current}", String(step === "mood" ? 1 : step === "wellbeing" ? 2 : 3))
+              .replace("{total}", "3")}
           >
             {(["mood", "wellbeing", "notes"] as const).map((s) => (
               <View
@@ -324,52 +409,31 @@ export default function CheckInScreen() {
               <>
                 <View>
                   <Text style={[styles.stepTitle, { color: colors.foreground }]}>
-                    How are you feeling today?
+                    {t("checkin.moodTitle")}
                   </Text>
                   <Text style={[styles.stepSub, { color: colors.mutedForeground }]}>
-                    Take a gentle moment to reflect on your day.
+                    {t("checkin.moodSubtitle")}
                   </Text>
                 </View>
 
                 <View
                   style={styles.moodGrid}
                   accessibilityRole="radiogroup"
-                  accessibilityLabel="Mood"
+                  accessibilityLabel={t("checkin.moodTitle")}
                 >
-                  {MOODS.map((m) => {
-                    const active = mood === m.value;
-                    return (
-                      <Pressable
-                        key={m.value}
-                        onPress={() => {
-                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                          setMood(m.value);
-                          setMoodError(false);
-                        }}
-                        accessibilityRole="radio"
-                        accessibilityLabel={`Mood: ${m.label}, ${m.value} of 5`}
-                        accessibilityState={{ selected: active }}
-                        style={[
-                          styles.moodBtn,
-                          {
-                            backgroundColor: active ? colors.primary + "18" : colors.card,
-                            borderColor: active ? colors.primary : colors.border,
-                            borderWidth: active ? 2 : 1,
-                          },
-                        ]}
-                      >
-                        <Text style={styles.moodEmoji}>{m.emoji}</Text>
-                        <Text
-                          style={[
-                            styles.moodLabel,
-                            { color: active ? colors.primary : colors.mutedForeground },
-                          ]}
-                        >
-                          {m.label}
-                        </Text>
-                      </Pressable>
-                    );
-                  })}
+                  {MOODS.map((m) => (
+                    <MoodOptionButton
+                      key={m.value}
+                      emoji={m.emoji}
+                      label={m.label}
+                      value={m.value}
+                      active={mood === m.value}
+                      onPress={() => {
+                        setMood(m.value);
+                        setMoodError(false);
+                      }}
+                    />
+                  ))}
                 </View>
 
                 {mood > 0 && (
@@ -381,10 +445,10 @@ export default function CheckInScreen() {
                   >
                     <Text style={[styles.moodFeedbackText, { color: colors.mutedForeground }]}>
                       {mood <= 2
-                        ? "It's okay to have hard days. You're not alone."
+                        ? t("checkin.moodFeedbackLow")
                         : mood === 3
-                        ? "Every day is different. You're doing your best."
-                        : "Wonderful — carry that energy forward."}
+                        ? t("checkin.moodFeedbackMid")
+                        : t("checkin.moodFeedbackHigh")}
                     </Text>
                   </View>
                 )}
@@ -394,7 +458,7 @@ export default function CheckInScreen() {
                     style={[styles.validationText, { color: colors.riskHigh }]}
                     accessibilityRole="alert"
                   >
-                    Please select a mood to continue.
+                    {t("checkin.moodValidation")}
                   </Text>
                 )}
               </>
@@ -404,20 +468,20 @@ export default function CheckInScreen() {
               <>
                 <View>
                   <Text style={[styles.stepTitle, { color: colors.foreground }]}>
-                    Your wellbeing today
+                    {t("checkin.wellbeingTitle")}
                   </Text>
                   <Text style={[styles.stepSub, { color: colors.mutedForeground }]}>
-                    These signals help track your recovery and flag early changes.
+                    {t("checkin.wellbeingSubtitle")}
                   </Text>
                 </View>
 
                 <View>
-                  <Text style={[styles.subSection, { color: colors.text }]}>Sleep last night</Text>
+                  <Text style={[styles.subSection, { color: colors.text }]}>{t("checkin.sleepLastNight")}</Text>
                   <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
                     <View
                       style={{ flexDirection: "row", gap: 8 }}
                       accessibilityRole="radiogroup"
-                      accessibilityLabel="Sleep last night"
+                      accessibilityLabel={t("checkin.sleepLastNight")}
                     >
                       {SLEEP_OPTIONS.map((opt, i) => {
                         const active = sleepIdx === i;
@@ -430,7 +494,7 @@ export default function CheckInScreen() {
                               setWellbeingError(false);
                             }}
                             accessibilityRole="radio"
-                            accessibilityLabel={`Sleep last night: ${opt.label}`}
+                            accessibilityLabel={`${t("checkin.sleepLastNight")}: ${opt.label}`}
                             accessibilityState={{ selected: active }}
                             style={[
                               styles.sleepChip,
@@ -457,49 +521,49 @@ export default function CheckInScreen() {
 
                 <View style={styles.ratingsList}>
                   <RatingRow
-                    label="Anxiety level"
+                    label={t("checkin.anxietyLabel")}
                     value={anxiety}
                     onChange={(v) => {
                       setAnxiety(v);
                       setWellbeingError(false);
                     }}
-                    low="None"
-                    high="Severe"
+                    low={t("checkin.anxietyLow")}
+                    high={t("checkin.anxietyHigh")}
                     accentColor={anxiety >= 4 ? colors.riskHigh : anxiety === 3 ? colors.riskModerate : colors.primary}
                   />
                   <View style={[styles.divider, { backgroundColor: colors.border }]} />
                   <RatingRow
-                    label="Appetite"
+                    label={t("checkin.appetiteLabel")}
                     value={appetite}
                     onChange={(v) => {
                       setAppetite(v);
                       setWellbeingError(false);
                     }}
-                    low="None"
-                    high="Normal"
+                    low={t("checkin.appetiteLow")}
+                    high={t("checkin.appetiteHigh")}
                   />
                   <View style={[styles.divider, { backgroundColor: colors.border }]} />
                   <RatingRow
-                    label="Bond with baby"
+                    label={t("checkin.bondingLabel")}
                     value={bonding}
                     onChange={(v) => {
                       setBonding(v);
                       setWellbeingError(false);
                     }}
-                    low="Distant"
-                    high="Connected"
+                    low={t("checkin.bondingLow")}
+                    high={t("checkin.bondingHigh")}
                     accentColor={colors.teal}
                   />
                   <View style={[styles.divider, { backgroundColor: colors.border }]} />
                   <RatingRow
-                    label="Feeling supported"
+                    label={t("checkin.supportLabel")}
                     value={support}
                     onChange={(v) => {
                       setSupport(v);
                       setWellbeingError(false);
                     }}
-                    low="Alone"
-                    high="Very supported"
+                    low={t("checkin.supportLow")}
+                    high={t("checkin.supportHigh")}
                     accentColor={colors.purple}
                   />
                 </View>
@@ -509,7 +573,7 @@ export default function CheckInScreen() {
                     style={[styles.validationText, { color: colors.riskHigh }]}
                     accessibilityRole="alert"
                   >
-                    Please rate all fields above to continue.
+                    {t("checkin.wellbeingValidation")}
                   </Text>
                 )}
               </>
@@ -519,10 +583,10 @@ export default function CheckInScreen() {
               <>
                 <View>
                   <Text style={[styles.stepTitle, { color: colors.foreground }]}>
-                    Anything to add?
+                    {t("checkin.notesTitle")}
                   </Text>
                   <Text style={[styles.stepSub, { color: colors.mutedForeground }]}>
-                    Optional — write anything you want to remember about today. Your reflections are private and secure.
+                    {t("checkin.notesSubtitle")}
                   </Text>
                 </View>
                 <TextInput
@@ -537,7 +601,7 @@ export default function CheckInScreen() {
                   value={notes}
                   onChangeText={setNotes}
                   multiline
-                  placeholder="What's on your mind today?"
+                  placeholder={t("checkin.notesPlaceholder")}
                   placeholderTextColor={colors.mutedForeground}
                   textAlignVertical="top"
                 />
@@ -555,7 +619,7 @@ export default function CheckInScreen() {
               : handleSubmit
           }
           accessibilityRole="button"
-          accessibilityLabel={step === "notes" ? "Complete Check-In" : "Continue"}
+          accessibilityLabel={step === "notes" ? t("checkin.completeCheckIn") : t("common.continue")}
           style={({ pressed }) => [
             styles.nextBtn,
             {
@@ -565,7 +629,7 @@ export default function CheckInScreen() {
           ]}
         >
           <Text style={styles.nextBtnText}>
-            {step === "notes" ? "Complete Check-In ✓" : "Continue →"}
+            {step === "notes" ? t("checkin.completeCheckIn") : t("checkin.continueArrow")}
           </Text>
         </Pressable>
       </View>

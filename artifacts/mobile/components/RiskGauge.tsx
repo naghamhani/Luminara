@@ -1,5 +1,12 @@
-import React, { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text, View } from "react-native";
+import React, { useEffect } from "react";
+import { Platform, StyleSheet, Text, View } from "react-native";
+import * as Haptics from "expo-haptics";
+import Animated, {
+  interpolate,
+  useAnimatedStyle,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 
 interface RiskGaugeProps {
@@ -10,15 +17,24 @@ interface RiskGaugeProps {
 
 export function RiskGauge({ score, size = 140, showLabel = true }: RiskGaugeProps) {
   const colors = useColors();
-  const animatedScore = useRef(new Animated.Value(0)).current;
+  const animatedScore = useSharedValue(0);
 
   useEffect(() => {
-    Animated.timing(animatedScore, {
-      toValue: score,
-      duration: 900,
-      useNativeDriver: false,
-    }).start();
+    animatedScore.value = withTiming(score, { duration: 900 });
   }, [score]);
+
+  // Fire one restrained warning-level pulse the moment risk first reads as
+  // "High" — never repeats on subsequent renders at the same level, in
+  // keeping with the app's calm, non-alarming design philosophy.
+  useEffect(() => {
+    if (score > 65 && Platform.OS !== "web") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    }
+  }, [score > 65]);
+
+  const fillStyle = useAnimatedStyle(() => ({
+    opacity: interpolate(animatedScore.value, [0, 100], [0.3, 1]),
+  }));
 
   const getRiskColor = (s: number) => {
     if (s <= 35) return colors.riskLow;
@@ -40,13 +56,14 @@ export function RiskGauge({ score, size = 140, showLabel = true }: RiskGaugeProp
 
   const riskColor = getRiskColor(score);
   const strokeWidth = size * 0.08;
-  const radius = (size - strokeWidth) / 2;
-  const circumference = radius * Math.PI;
-  const clampedScore = Math.max(0, Math.min(100, score));
-  const dashOffset = circumference * (1 - clampedScore / 100);
 
   return (
-    <View style={[styles.container, { width: size, height: size * 0.6 }]}>
+    <View
+      style={[styles.container, { width: size, height: size * 0.6 }]}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel={`Risk gauge: ${getRiskLabel(score)}, score ${score} out of 100`}
+    >
       <View style={[styles.arc, { width: size, height: size / 2 + strokeWidth }]}>
         <View
           style={[
@@ -71,17 +88,14 @@ export function RiskGauge({ score, size = 140, showLabel = true }: RiskGaugeProp
               borderWidth: strokeWidth,
               borderColor: riskColor,
               borderBottomColor: "transparent",
-              opacity: animatedScore.interpolate({
-                inputRange: [0, 100],
-                outputRange: [0.3, 1],
-              }),
             },
+            fillStyle,
           ]}
         />
       </View>
 
       {showLabel && (
-        <View style={styles.labelContainer}>
+        <View style={styles.labelContainer} importantForAccessibility="no-hide-descendants">
           <Text style={[styles.score, { color: riskColor }]}>{score}</Text>
           <Text style={[styles.label, { color: riskColor }]}>
             {getRiskLabel(score)}

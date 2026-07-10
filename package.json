@@ -13,5 +13,6 @@
     "lightningcss-darwin-arm64": "1.31.1",
     "prettier": "^3.8.1",
     "typescript": "~5.9.2"
-  }
+  },
+  "packageManager": "pnpm@12.0.0-alpha.5+sha512.55c3f7b776f3e0303c50e61e55c03705b21671dd1d2d88ec95f2955e4d4dd304612e1dac1bd68eeb23894d3dcc9b5e2d44bfa1b6edf93d750a3097a9a6b049d7"
 }

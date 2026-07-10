@@ -5,6 +5,8 @@ import React, { useMemo } from "react";
 import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { EmptyState } from "@/components/EmptyState";
+import { Skeleton } from "@/components/Skeleton";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
 import { toDateString, type Medication, type MedicationKind } from "@/types/health";
@@ -41,7 +43,7 @@ function isPast(med: Medication, today: string): boolean {
 export default function MedicationsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
-  const { medications, updateMedication, deleteMedication } = useHealth();
+  const { medications, isLoading, updateMedication, deleteMedication } = useHealth();
 
   const today = toDateString(new Date());
 
@@ -109,39 +111,57 @@ export default function MedicationsScreen() {
           <Text style={styles.addBtnText}>Add medication or supplement</Text>
         </Pressable>
 
-        <Section title="Active" count={active.length}>
-          {active.length === 0 ? (
-            <EmptyState text="Nothing marked active right now." colors={colors} />
-          ) : (
-            active.map((med) => (
-              <MedicationCard
-                key={med.id}
-                med={med}
-                colors={colors}
-                onToggleActive={() => handleToggleActive(med)}
-                onDelete={() => handleDelete(med)}
-                onPress={() => router.push(`/medications/add?id=${med.id}`)}
-              />
-            ))
-          )}
-        </Section>
+        {isLoading ? (
+          <View style={{ gap: 10 }}>
+            <Skeleton height={88} borderRadius={16} />
+            <Skeleton height={88} borderRadius={16} />
+            <Skeleton height={88} borderRadius={16} />
+          </View>
+        ) : medications.length === 0 ? (
+          <EmptyState
+            icon="package"
+            title="No medications yet"
+            message="Add your medications and supplements to keep track of what you're taking and why."
+            actionLabel="Add your first medication"
+            onAction={() => router.push("/medications/add")}
+          />
+        ) : (
+          <>
+            <Section title="Active" count={active.length}>
+              {active.length === 0 ? (
+                <InlineEmptyNote text="Nothing marked active right now." colors={colors} />
+              ) : (
+                active.map((med) => (
+                  <MedicationCard
+                    key={med.id}
+                    med={med}
+                    colors={colors}
+                    onToggleActive={() => handleToggleActive(med)}
+                    onDelete={() => handleDelete(med)}
+                    onPress={() => router.push(`/medications/add?id=${med.id}`)}
+                  />
+                ))
+              )}
+            </Section>
 
-        <Section title="Past" count={past.length}>
-          {past.length === 0 ? (
-            <EmptyState text="No past medications logged yet." colors={colors} />
-          ) : (
-            past.map((med) => (
-              <MedicationCard
-                key={med.id}
-                med={med}
-                colors={colors}
-                onToggleActive={() => handleToggleActive(med)}
-                onDelete={() => handleDelete(med)}
-                onPress={() => router.push(`/medications/add?id=${med.id}`)}
-              />
-            ))
-          )}
-        </Section>
+            <Section title="Past" count={past.length}>
+              {past.length === 0 ? (
+                <InlineEmptyNote text="No past medications logged yet." colors={colors} />
+              ) : (
+                past.map((med) => (
+                  <MedicationCard
+                    key={med.id}
+                    med={med}
+                    colors={colors}
+                    onToggleActive={() => handleToggleActive(med)}
+                    onDelete={() => handleDelete(med)}
+                    onPress={() => router.push(`/medications/add?id=${med.id}`)}
+                  />
+                ))
+              )}
+            </Section>
+          </>
+        )}
 
         <Text style={[styles.footerDisclaimer, { color: colors.mutedForeground }]}>
           Always confirm changes with your prescriber.
@@ -172,7 +192,7 @@ function Section({
   );
 }
 
-function EmptyState({ text, colors }: { text: string; colors: ReturnType<typeof useColors> }) {
+function InlineEmptyNote({ text, colors }: { text: string; colors: ReturnType<typeof useColors> }) {
   return (
     <View style={[styles.emptyBox, { backgroundColor: colors.card }]}>
       <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>{text}</Text>

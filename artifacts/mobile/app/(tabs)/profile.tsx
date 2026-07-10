@@ -1,18 +1,41 @@
 import { Feather } from "@expo/vector-icons";
-import React, { useState } from "react";
+import AsyncStorage from "@react-native-async-storage/async-storage";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
   StyleSheet,
+  Switch,
   Text,
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
+import { SyncStatusBadge } from "@/components/SyncStatusBadge";
 import { useApp } from "@/context/AppContext";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 import { showAlert } from "@/utils/dialog";
+import {
+  cancelCyclePredictionReminders,
+  cancelDailyCheckInReminder,
+  cancelMedicationReminders,
+  requestNotificationPermissions,
+  scheduleCyclePredictionReminders,
+  scheduleDailyCheckInReminder,
+  scheduleMedicationReminders,
+} from "@/utils/notifications";
+import { predictCycle } from "@/utils/wellnessAlgorithm";
+
+// Fixed reminder time for now (8:00 PM local). Could be replaced with a time
+// picker later if one gets added to the project — none exists today.
+const DAILY_CHECKIN_HOUR = 20;
+const DAILY_CHECKIN_MINUTE = 0;
+
+const CHECKIN_REMINDER_ENABLED_KEY = "@luminara_settings_checkin_reminder";
+const MEDICATION_REMINDER_ENABLED_KEY = "@luminara_settings_medication_reminder";
+const CYCLE_REMINDER_ENABLED_KEY = "@luminara_settings_cycle_reminder";
 
 function getDaysSince(dateStr: string): number {
   const birth = new Date(dateStr);
@@ -112,6 +135,16 @@ const pillStyles = StyleSheet.create({
   text: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
 });
 
+const dataSyncStyles = StyleSheet.create({
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+  },
+});
+
 function SettingsSection({
   title,
   children,
@@ -150,12 +183,98 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { profile, checkIns, resetProfile } = useApp();
-  const { privacySettings, partnerSettings, careProfile, resetAll: resetHealth } = useHealth();
+  const { locale, setLocale } = useTranslation();
+  const {
+    privacySettings,
+    partnerSettings,
+    careProfile,
+    medications,
+    cycleEntries,
+    resetAll: resetHealth,
+  } = useHealth();
 
   const [resetting, setResetting] = useState(false);
+  const [checkinReminderEnabled, setCheckinReminderEnabled] = useState(false);
+  const [medicationReminderEnabled, setMedicationReminderEnabled] = useState(false);
+  const [cycleReminderEnabled, setCycleReminderEnabled] = useState(false);
 
   const daysSince = profile?.birthDate ? getDaysSince(profile.birthDate) : 0;
   const memberSince = profile?.createdAt ? formatMemberSince(profile.createdAt) : null;
+
+  const cyclePrediction = useMemo(() => predictCycle(cycleEntries), [cycleEntries]);
+
+  useEffect(() => {
+    (async () => {
+      const [checkinRaw, medicationRaw, cycleRaw] = await Promise.all([
+        AsyncStorage.getItem(CHECKIN_REMINDER_ENABLED_KEY),
+        AsyncStorage.getItem(MEDICATION_REMINDER_ENABLED_KEY),
+        AsyncStorage.getItem(CYCLE_REMINDER_ENABLED_KEY),
+      ]);
+      setCheckinReminderEnabled(checkinRaw === "true");
+      setMedicationReminderEnabled(medicationRaw === "true");
+      setCycleReminderEnabled(cycleRaw === "true");
+    })();
+  }, []);
+
+  const handleToggleCheckinReminder = async (value: boolean) => {
+    setCheckinReminderEnabled(value);
+    await AsyncStorage.setItem(CHECKIN_REMINDER_ENABLED_KEY, value ? "true" : "false");
+    if (value) {
+      const granted = await requestNotificationPermissions();
+      if (!granted) {
+        setCheckinReminderEnabled(false);
+        await AsyncStorage.setItem(CHECKIN_REMINDER_ENABLED_KEY, "false");
+        showAlert(
+          "Notifications disabled",
+          "Enable notifications for Luminara Health in your device settings to receive check-in reminders."
+        );
+        return;
+      }
+      await scheduleDailyCheckInReminder(DAILY_CHECKIN_HOUR, DAILY_CHECKIN_MINUTE);
+    } else {
+      await cancelDailyCheckInReminder();
+    }
+  };
+
+  const handleToggleMedicationReminder = async (value: boolean) => {
+    setMedicationReminderEnabled(value);
+    await AsyncStorage.setItem(MEDICATION_REMINDER_ENABLED_KEY, value ? "true" : "false");
+    if (value) {
+      const granted = await requestNotificationPermissions();
+      if (!granted) {
+        setMedicationReminderEnabled(false);
+        await AsyncStorage.setItem(MEDICATION_REMINDER_ENABLED_KEY, "false");
+        showAlert(
+          "Notifications disabled",
+          "Enable notifications for Luminara Health in your device settings to receive medication reminders."
+        );
+        return;
+      }
+      await scheduleMedicationReminders(medications);
+    } else {
+      await cancelMedicationReminders();
+    }
+  };
+
+  const handleToggleCycleReminder = async (value: boolean) => {
+    setCycleReminderEnabled(value);
+    await AsyncStorage.setItem(CYCLE_REMINDER_ENABLED_KEY, value ? "true" : "false");
+    if (value) {
+      const granted = await requestNotificationPermissions();
+      if (!granted) {
+        setCycleReminderEnabled(false);
+        await AsyncStorage.setItem(CYCLE_REMINDER_ENABLED_KEY, "false");
+        showAlert(
+          "Notifications disabled",
+          "Enable notifications for Luminara Health in your device settings to receive cycle reminders."
+        );
+        return;
+      }
+      await scheduleCyclePredictionReminders(cyclePrediction);
+    } else {
+      await cancelCyclePredictionReminders();
+    }
+  };
 
   const handleAboutData = () => {
     showAlert(
@@ -256,6 +375,34 @@ export default function ProfileScreen() {
           label="Language"
           subtitle="English (US)"
         />
+        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
+        <SettingRow
+          icon="globe"
+          label="English / عربي"
+          subtitle={locale === "en" ? "English" : "عربي"}
+          rightElement={
+            <Switch
+              value={locale === "ar"}
+              onValueChange={(value) => setLocale(value ? "ar" : "en")}
+              trackColor={{ false: colors.muted, true: colors.primary }}
+            />
+          }
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Data & Sync">
+        <View style={dataSyncStyles.row}>
+          <View style={[rowStyles.iconWrap, { backgroundColor: colors.secondary }]}>
+            <Feather name="hard-drive" size={16} color={colors.primary} />
+          </View>
+          <View style={{ flex: 1 }}>
+            <Text style={[rowStyles.label, { color: colors.text }]}>Storage</Text>
+            <Text style={[rowStyles.sub, { color: colors.mutedForeground }]}>
+              Saved only on this device
+            </Text>
+          </View>
+          <SyncStatusBadge />
+        </View>
       </SettingsSection>
 
       <SettingsSection title="Privacy & Data">
@@ -304,6 +451,47 @@ export default function ProfileScreen() {
           label="About your data"
           subtitle="How Luminara keeps your health data private"
           onPress={handleAboutData}
+        />
+      </SettingsSection>
+
+      <SettingsSection title="Reminders & Notifications">
+        <SettingRow
+          icon="bell"
+          label="Daily check-in reminder"
+          subtitle="A nudge each evening to log how you're feeling"
+          rightElement={
+            <Switch
+              value={checkinReminderEnabled}
+              onValueChange={handleToggleCheckinReminder}
+              trackColor={{ false: colors.muted, true: colors.primary }}
+            />
+          }
+        />
+        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
+        <SettingRow
+          icon="clipboard"
+          label="Medication reminders"
+          subtitle="Daily reminders for your active medications & supplements"
+          rightElement={
+            <Switch
+              value={medicationReminderEnabled}
+              onValueChange={handleToggleMedicationReminder}
+              trackColor={{ false: colors.muted, true: colors.primary }}
+            />
+          }
+        />
+        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
+        <SettingRow
+          icon="calendar"
+          label="Cycle prediction reminders"
+          subtitle="A heads-up before your predicted period & fertile window"
+          rightElement={
+            <Switch
+              value={cycleReminderEnabled}
+              onValueChange={handleToggleCycleReminder}
+              trackColor={{ false: colors.muted, true: colors.primary }}
+            />
+          }
         />
       </SettingsSection>
 

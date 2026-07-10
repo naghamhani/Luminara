@@ -15,16 +15,23 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 import { Feather } from "@expo/vector-icons";
 import { LuminaraLogo } from "@/components/LuminaraLogo";
+import { MoodIllustration } from "@/components/onboarding/illustrations/MoodIllustration";
+import { RhythmsIllustration } from "@/components/onboarding/illustrations/RhythmsIllustration";
+import { RiskInsightIllustration } from "@/components/onboarding/illustrations/RiskInsightIllustration";
 
-const MOODS = [
-  { emoji: "😞", label: "Very low" },
-  { emoji: "😟", label: "Struggling" },
-  { emoji: "😐", label: "Okay" },
-  { emoji: "🙂", label: "Good" },
-  { emoji: "😊", label: "Great" },
-];
+function useMoods() {
+  const { t } = useTranslation();
+  return [
+    { emoji: "😞", label: t("onboarding.moodVeryLow") },
+    { emoji: "😟", label: t("onboarding.moodStruggling") },
+    { emoji: "😐", label: t("onboarding.moodOkay") },
+    { emoji: "🙂", label: t("onboarding.moodGood") },
+    { emoji: "😊", label: t("onboarding.moodGreat") },
+  ];
+}
 
 type Step = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
@@ -32,6 +39,8 @@ export default function OnboardingScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { saveProfile } = useApp();
+  const { t } = useTranslation();
+  const MOODS = useMoods();
   const fadeAnim = useRef(new Animated.Value(1)).current;
 
   const [step, setStep] = useState<Step>(0);
@@ -91,18 +100,18 @@ export default function OnboardingScreen() {
     } else if (step === 2) {
       transition(3);
     } else if (step === 3) {
-      if (!name.trim()) return setError("Please enter your name");
+      if (!name.trim()) return setError(t("onboarding.nameError"));
       transition(4);
     } else if (step === 4) {
       transition(5);
     } else if (step === 5) {
       transition(6);
     } else if (step === 6) {
-      if (!babyName.trim()) return setError("Please enter your baby's name");
+      if (!babyName.trim()) return setError(t("onboarding.babyNameError"));
       transition(7);
     } else if (step === 7) {
       const parsed = parseDate(birthDateInput);
-      if (!parsed) return setError("Please enter a valid date (MM/DD/YYYY) that isn't in the future");
+      if (!parsed) return setError(t("onboarding.birthDateError"));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       await saveProfile({
         name: name.trim(),
@@ -169,17 +178,17 @@ export default function OnboardingScreen() {
               <View style={styles.splashContent}>
                 <LuminaraLogo variant="badge" size={124} />
                 <Text style={[styles.splashTitle, { color: colors.foreground }]}>
-                  A safe space{"\n"}for your mind.
+                  {t("onboarding.splashTitle")}
                 </Text>
                 <Text style={[styles.splashDesc, { color: colors.mutedForeground }]}>
-                  We help you navigate the emotional journey of motherhood with care, insight, and expert guidance.
+                  {t("onboarding.splashDesc")}
                 </Text>
                 <View style={styles.featuresGrid}>
                   {[
-                    { icon: "📊", label: "Daily Mood\nTracking" },
-                    { icon: "🧠", label: "Early Risk\nAwareness" },
-                    { icon: "🔒", label: "Privacy\nFirst" },
-                    { icon: "💬", label: "Expert\nGuidance" },
+                    { icon: "📊", label: t("onboarding.featureMoodTracking") },
+                    { icon: "🧠", label: t("onboarding.featureRiskAwareness") },
+                    { icon: "🔒", label: t("onboarding.featurePrivacy") },
+                    { icon: "💬", label: t("onboarding.featureGuidance") },
                   ].map((f, i) => (
                     <View key={i} style={[styles.featureChip, { backgroundColor: colors.card }]}>
                       <Text style={{ fontSize: 22 }}>{f.icon}</Text>
@@ -192,19 +201,22 @@ export default function OnboardingScreen() {
 
             {step === 1 && (
               <View style={{ gap: 24 }}>
+                <View style={styles.illustrationWrap}>
+                  <MoodIllustration size={200} />
+                </View>
                 <View style={[styles.onbHeader, { backgroundColor: colors.blush }]}>
                   <Text style={[styles.onbTitleSmall, { color: colors.primary }]}>
-                    Luminara Health · Step 01
+                    {t("onboarding.step01Label")}
                   </Text>
                   <Text style={[styles.onbTitle, { color: colors.foreground }]}>
-                    How are you,{"\n"}radiant mama?
+                    {t("onboarding.moodTitle")}
                   </Text>
                   <Text style={[styles.onbSub, { color: colors.mutedForeground }]}>
-                    Take a gentle moment to reflect on your day.
+                    {t("onboarding.moodSubtitle")}
                   </Text>
                 </View>
                 <View>
-                  <Text style={[styles.fieldLabel, { color: colors.text }]}>Current vibe</Text>
+                  <Text style={[styles.fieldLabel, { color: colors.text }]}>{t("onboarding.currentVibeLabel")}</Text>
                   <View style={styles.moodRow}>
                     {MOODS.map((m, i) => {
                       const active = selectedMood === i;
@@ -239,7 +251,7 @@ export default function OnboardingScreen() {
                 </View>
                 <View style={{ gap: 8 }}>
                   <Text style={[styles.fieldLabel, { color: colors.text }]}>
-                    What's happening in your mind today?
+                    {t("onboarding.thoughtFieldLabel")}
                   </Text>
                   <TextInput
                     style={[
@@ -253,12 +265,12 @@ export default function OnboardingScreen() {
                     value={openingThought}
                     onChangeText={setOpeningThought}
                     multiline
-                    placeholder="Share what's on your mind... (optional)"
+                    placeholder={t("onboarding.thoughtPlaceholder")}
                     placeholderTextColor={colors.mutedForeground}
                     textAlignVertical="top"
                   />
                   <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
-                    🔒 This reflection is just for you in this moment — it isn't saved.
+                    {t("onboarding.thoughtPrivacyNote")}
                   </Text>
                 </View>
               </View>
@@ -266,18 +278,20 @@ export default function OnboardingScreen() {
 
             {step === 2 && (
               <View style={styles.promoScreen}>
-                <View style={[styles.promoIconCircle, { backgroundColor: colors.softGreen }]}>
-                  <Text style={{ fontSize: 56 }}>🧘</Text>
-                </View>
-                <Text style={[styles.promoEyebrow, { color: colors.teal }]}>UNDERSTAND YOUR RHYTHMS</Text>
+                <RhythmsIllustration size={200} />
+                <Text style={[styles.promoEyebrow, { color: colors.teal }]}>{t("onboarding.rhythmsEyebrow")}</Text>
                 <Text style={[styles.promoTitle, { color: colors.foreground }]}>
-                  Track your mood,{"\n"}sleep, and energy.
+                  {t("onboarding.rhythmsTitle")}
                 </Text>
                 <Text style={[styles.promoDesc, { color: colors.mutedForeground }]}>
-                  Daily check-ins take less than a minute and help you stay in tune with your needs — so you can get support before things feel overwhelming.
+                  {t("onboarding.rhythmsDesc")}
                 </Text>
                 <View style={styles.promoBadges}>
-                  {["✓ Evidence-informed guidance", "✓ Private by design", "✓ Takes under 1 minute"].map((b) => (
+                  {[
+                    t("onboarding.rhythmsBadgeEvidence"),
+                    t("onboarding.rhythmsBadgePrivate"),
+                    t("onboarding.rhythmsBadgeQuick"),
+                  ].map((b) => (
                     <View key={b} style={[styles.promoBadge, { backgroundColor: colors.softGreen }]}>
                       <Text style={[styles.promoBadgeText, { color: colors.teal }]}>{b}</Text>
                     </View>
@@ -290,20 +304,20 @@ export default function OnboardingScreen() {
               <View style={{ gap: 8 }}>
                 <View style={[styles.stepHeader, { backgroundColor: colors.blush }]}>
                   <Text style={[styles.stepHeaderTitle, { color: colors.foreground }]}>
-                    Let's get started
+                    {t("onboarding.getStartedTitle")}
                   </Text>
                   <Text style={[styles.stepHeaderSub, { color: colors.mutedForeground }]}>
-                    A few details help us personalize your experience.
+                    {t("onboarding.getStartedSub")}
                   </Text>
                 </View>
-                <Text style={[styles.fieldLabel, { color: colors.text }]}>Your name</Text>
+                <Text style={[styles.fieldLabel, { color: colors.text }]}>{t("onboarding.nameFieldLabel")}</Text>
                 <TextInput
                   style={[styles.input, {
                     backgroundColor: colors.card,
                     borderColor: error ? colors.destructive : colors.border,
                     color: colors.text,
                   }]}
-                  placeholder="Your first name"
+                  placeholder={t("onboarding.namePlaceholder")}
                   placeholderTextColor={colors.mutedForeground}
                   value={name}
                   onChangeText={setName}
@@ -316,19 +330,17 @@ export default function OnboardingScreen() {
 
             {step === 4 && (
               <View style={styles.promoScreen}>
-                <View style={[styles.promoIconCircle, { backgroundColor: colors.blush }]}>
-                  <Text style={{ fontSize: 56 }}>🧭</Text>
-                </View>
-                <Text style={[styles.promoEyebrow, { color: colors.purple }]}>EARLY RISK INSIGHTS</Text>
-                <Text style={[styles.promoTitle, { color: colors.foreground }]}>Peace of mind{"\n"}for you.</Text>
+                <RiskInsightIllustration size={200} />
+                <Text style={[styles.promoEyebrow, { color: colors.purple }]}>{t("onboarding.riskEyebrow")}</Text>
+                <Text style={[styles.promoTitle, { color: colors.foreground }]}>{t("onboarding.riskTitle")}</Text>
                 <Text style={[styles.promoDesc, { color: colors.mutedForeground }]}>
-                  Our rule-based check-in heuristic looks at patterns in your daily data to help you notice early signs of postpartum depression, so you can get the support you deserve — before a crisis.
+                  {t("onboarding.riskDesc")}
                 </Text>
                 <View style={styles.promoBadges}>
                   {[
-                    { icon: "🔒", label: "Private by design" },
-                    { icon: "🧭", label: "Early risk awareness, not a diagnosis" },
-                    { icon: "🔐", label: "Anonymous & Encrypted" },
+                    { icon: "🔒", label: t("onboarding.riskBadgePrivate") },
+                    { icon: "🧭", label: t("onboarding.riskBadgeAwareness") },
+                    { icon: "🔐", label: t("onboarding.riskBadgeEncrypted") },
                   ].map((b) => (
                     <View key={b.label} style={[styles.promoBadge, { backgroundColor: colors.blush }]}>
                       <Text>{b.icon}</Text>
@@ -344,18 +356,18 @@ export default function OnboardingScreen() {
                 <View style={[styles.promoIconCircle, { backgroundColor: colors.softOrange }]}>
                   <Text style={{ fontSize: 56 }}>🌷</Text>
                 </View>
-                <Text style={[styles.promoEyebrow, { color: colors.warm }]}>YOUR WHOLE PICTURE</Text>
+                <Text style={[styles.promoEyebrow, { color: colors.warm }]}>{t("onboarding.wholePictureEyebrow")}</Text>
                 <Text style={[styles.promoTitle, { color: colors.foreground }]}>
-                  More than mood —{"\n"}your whole reproductive health.
+                  {t("onboarding.wholePictureTitle")}
                 </Text>
                 <Text style={[styles.promoDesc, { color: colors.mutedForeground }]}>
-                  Luminara goes beyond daily check-ins to help you keep everything in one place.
+                  {t("onboarding.wholePictureDesc")}
                 </Text>
                 <View style={styles.promoBadges}>
                   {[
-                    { icon: "🗂️", label: "Medical records & labs in one place" },
-                    { icon: "🩸", label: "Cycle & biomarker tracking with predictions" },
-                    { icon: "🤝", label: "An optional partner space with consent-first sharing" },
+                    { icon: "🗂️", label: t("onboarding.wholePictureBadgeRecords") },
+                    { icon: "🩸", label: t("onboarding.wholePictureBadgeCycle") },
+                    { icon: "🤝", label: t("onboarding.wholePictureBadgePartner") },
                   ].map((b) => (
                     <View key={b.label} style={[styles.promoBadge, { backgroundColor: colors.softOrange }]}>
                       <Text>{b.icon}</Text>
@@ -364,7 +376,7 @@ export default function OnboardingScreen() {
                   ))}
                 </View>
                 <Text style={[styles.privacyNote, { color: colors.mutedForeground, textAlign: "center" }]}>
-                  🔒 Everything stays on your phone. Research sharing is strictly opt-in.
+                  {t("onboarding.wholePicturePrivacyNote")}
                 </Text>
               </View>
             )}
@@ -375,16 +387,18 @@ export default function OnboardingScreen() {
                   <>
                     <View style={[styles.stepHeader, { backgroundColor: colors.blush }]}>
                       <Text style={[styles.stepHeaderTitle, { color: colors.foreground }]}>
-                        {name ? `Nice to meet you, ${name}!` : "Tell us about yourself"}
+                        {name
+                          ? t("onboarding.meetYouTitle").replace("{name}", name)
+                          : t("onboarding.meetYouTitleFallback")}
                       </Text>
                       <Text style={[styles.stepHeaderSub, { color: colors.mutedForeground }]}>
-                        We'd love to know a bit more about you.
+                        {t("onboarding.meetYouSub")}
                       </Text>
                     </View>
-                    <Text style={[styles.fieldLabel, { color: colors.text }]}>Your baby's name</Text>
+                    <Text style={[styles.fieldLabel, { color: colors.text }]}>{t("onboarding.babyNameFieldLabel")}</Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.card, borderColor: error ? colors.destructive : colors.border, color: colors.text }]}
-                      placeholder="Baby's first name"
+                      placeholder={t("onboarding.babyNamePlaceholder")}
                       placeholderTextColor={colors.mutedForeground}
                       value={babyName}
                       onChangeText={setBabyName}
@@ -398,16 +412,18 @@ export default function OnboardingScreen() {
                   <>
                     <View style={[styles.stepHeader, { backgroundColor: colors.blush }]}>
                       <Text style={[styles.stepHeaderTitle, { color: colors.foreground }]}>
-                        Welcome, {name}! 🌸
+                        {t("onboarding.welcomeTitle").replace("{name}", name)}
                       </Text>
                       <Text style={[styles.stepHeaderSub, { color: colors.mutedForeground }]}>
-                        When was {babyName || "your baby"} born?
+                        {babyName
+                          ? t("onboarding.welcomeSubBabyName").replace("{babyName}", babyName)
+                          : t("onboarding.welcomeSubFallback")}
                       </Text>
                     </View>
-                    <Text style={[styles.fieldLabel, { color: colors.text }]}>Baby's birth date</Text>
+                    <Text style={[styles.fieldLabel, { color: colors.text }]}>{t("onboarding.birthDateFieldLabel")}</Text>
                     <TextInput
                       style={[styles.input, { backgroundColor: colors.card, borderColor: error ? colors.destructive : colors.border, color: colors.text }]}
-                      placeholder="MM/DD/YYYY"
+                      placeholder={t("onboarding.birthDatePlaceholder")}
                       placeholderTextColor={colors.mutedForeground}
                       value={birthDateInput}
                       onChangeText={(v) => setBirthDateInput(formatDateInput(v))}
@@ -440,14 +456,14 @@ export default function OnboardingScreen() {
         >
           <Text style={styles.nextBtnText}>
             {step === 0
-              ? "Begin Your Journey"
+              ? t("onboarding.beginJourney")
               : step === 2
-              ? "Next →"
+              ? t("onboarding.nextArrow")
               : step === 4
-              ? "Next →"
+              ? t("onboarding.nextArrow")
               : step === 7
-              ? "Start with Luminara 🌸"
-              : "Continue →"}
+              ? t("onboarding.startWithLuminara")
+              : t("common.continue")}
           </Text>
         </Pressable>
       </View>
@@ -514,6 +530,7 @@ const styles = StyleSheet.create({
     lineHeight: 17,
   },
 
+  illustrationWrap: { alignItems: "center", paddingTop: 4 },
   onbHeader: { borderRadius: 20, padding: 20, gap: 4 },
   onbTitleSmall: { fontSize: 11, fontFamily: "Inter_600SemiBold", letterSpacing: 0.5, marginBottom: 4 },
   onbTitle: { fontSize: 26, fontFamily: "Inter_700Bold", lineHeight: 32 },

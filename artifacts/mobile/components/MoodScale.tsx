@@ -1,6 +1,12 @@
 import React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Platform, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import * as Haptics from "expo-haptics";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withSpring,
+} from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
 
 interface MoodScaleProps {
@@ -11,6 +17,58 @@ interface MoodScaleProps {
 }
 
 const defaultLabels = ["Very bad", "Bad", "Okay", "Good", "Great"];
+
+function MoodOption({
+  v,
+  active,
+  color,
+  onPress,
+  label,
+}: {
+  v: number;
+  active: boolean;
+  color: string;
+  onPress: () => void;
+  label: string;
+}) {
+  const colors = useColors();
+  const scale = useSharedValue(1);
+
+  const scaleStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={scaleStyle}>
+      <TouchableOpacity
+        onPress={() => {
+          scale.value = withSequence(
+            withSpring(0.92, { duration: 120 }),
+            withSpring(1, { duration: 160 })
+          );
+          if (Platform.OS !== "web") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+          onPress();
+        }}
+        style={[
+          styles.btn,
+          {
+            backgroundColor: active ? color : colors.secondary,
+            borderColor: active ? color : colors.border,
+          },
+        ]}
+        activeOpacity={0.7}
+        accessibilityRole="radio"
+        accessibilityState={{ checked: active }}
+        accessibilityLabel={`${label} (${v} of 5)`}
+        accessibilityHint="Selects this rating on the mood scale"
+      >
+        <Text style={[styles.num, { color: active ? "#fff" : colors.text }]}>{v}</Text>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+}
 
 export function MoodScale({
   value,
@@ -23,30 +81,16 @@ export function MoodScale({
 
   return (
     <View style={styles.container}>
-      {[1, 2, 3, 4, 5].map((v) => {
-        const active = value === v;
-        return (
-          <TouchableOpacity
-            key={v}
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onChange(v);
-            }}
-            style={[
-              styles.btn,
-              {
-                backgroundColor: active ? color : colors.secondary,
-                borderColor: active ? color : colors.border,
-              },
-            ]}
-            activeOpacity={0.7}
-          >
-            <Text style={[styles.num, { color: active ? "#fff" : colors.text }]}>
-              {v}
-            </Text>
-          </TouchableOpacity>
-        );
-      })}
+      {[1, 2, 3, 4, 5].map((v) => (
+        <MoodOption
+          key={v}
+          v={v}
+          active={value === v}
+          color={color}
+          onPress={() => onChange(v)}
+          label={labels[v - 1] ?? String(v)}
+        />
+      ))}
     </View>
   );
 }

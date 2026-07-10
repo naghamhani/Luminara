@@ -1,6 +1,7 @@
 import { Feather } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import React, { useState } from "react";
-import { Pressable, StyleSheet, TextInput, View, ViewStyle } from "react-native";
+import { Platform, Pressable, StyleSheet, TextInput, View, ViewStyle } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 
@@ -47,7 +48,13 @@ export function PinInput({
           { color: colors.text },
         ]}
         value={value}
-        onChangeText={(t) => onChangeText(t.replace(/[^0-9]/g, "").slice(0, 6))}
+        onChangeText={(t) => {
+          const next = t.replace(/[^0-9]/g, "").slice(0, 6);
+          if (next.length > value.length && Platform.OS !== "web") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          }
+          onChangeText(next);
+        }}
         keyboardType="number-pad"
         secureTextEntry={!visible}
         maxLength={6}

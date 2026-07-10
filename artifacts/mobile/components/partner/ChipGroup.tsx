@@ -38,6 +38,10 @@ export function ChipGroup({ label, options, selected, onToggle, accentColor }: C
                   borderWidth: active ? 1.5 : 1,
                 },
               ]}
+              accessibilityRole="switch"
+              accessibilityState={{ checked: active }}
+              accessibilityLabel={opt}
+              accessibilityHint={active ? "Double tap to remove" : "Double tap to select"}
             >
               <Text style={[styles.chipText, { color: active ? color : colors.text }]}>
                 {opt}

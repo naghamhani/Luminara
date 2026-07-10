@@ -1,6 +1,6 @@
 import { Feather } from "@expo/vector-icons";
 import { router } from "expo-router";
-import React, { useMemo } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
   Pressable,
   ScrollView,
@@ -9,11 +9,22 @@ import {
   View,
 } from "react-native";
 import Svg, { Circle } from "react-native-svg";
+import Animated, {
+  runOnJS,
+  useAnimatedProps,
+  useAnimatedReaction,
+  useSharedValue,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { LuminaraLogo } from "@/components/LuminaraLogo";
+import { Skeleton } from "@/components/Skeleton";
+import { SyncStatusBadge } from "@/components/SyncStatusBadge";
 import { useApp, getRiskLevel } from "@/context/AppContext";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 import { REPRODUCTIVE_PHASE_LABELS, daysBetween, toDateString } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { detectPhase, predictCycle } from "@/utils/wellnessAlgorithm";
@@ -22,18 +33,21 @@ function getDaysSince(dateStr: string): number {
   return Math.max(0, daysBetween(dateStr, toDateString(new Date())));
 }
 
-function getMonthsWeeks(days: number): string {
+function getMonthsWeeks(days: number, t: (key: string) => string): string {
   const months = Math.floor(days / 30);
   const weeks = Math.floor((days % 30) / 7);
-  if (months > 0) return `${months}mo ${weeks}w old`;
-  return `${weeks} weeks old`;
+  if (months > 0)
+    return t("home.monthsWeeksOld")
+      .replace("{months}", String(months))
+      .replace("{weeks}", String(weeks));
+  return t("home.weeksOld").replace("{weeks}", String(weeks));
 }
 
-function getGreeting(): string {
+function getGreeting(t: (key: string) => string): string {
   const h = new Date().getHours();
-  if (h < 12) return "Good morning";
-  if (h < 18) return "Good afternoon";
-  return "Good evening";
+  if (h < 12) return t("home.goodMorning");
+  if (h < 18) return t("home.goodAfternoon");
+  return t("home.goodEvening");
 }
 
 function MiniBar({ date, score }: { date: string; score: number }) {
@@ -66,18 +80,48 @@ const miniBarStyles = StyleSheet.create({
   label: { fontSize: 10, fontFamily: "Inter_500Medium" },
 });
 
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
 /**
  * Circular progress ring for the hero wellness score. The amber arc is the
  * one warm/attention colour in the palette, so the eye lands on the number
  * that matters. Falls back gracefully to an empty ring at 0%.
+ *
+ * Counts up from 0 on mount and whenever the score changes, so the ring
+ * fills in step with the number — a calm, deliberate reveal rather than an
+ * instant jump.
  */
 function WellnessRing({ pct }: { pct: number }) {
+  const { t } = useTranslation();
   const size = 84;
   const stroke = 7;
   const r = (size - stroke) / 2;
   const circ = 2 * Math.PI * r;
   const clamped = Math.max(0, Math.min(100, Math.round(pct)));
-  const offset = circ * (1 - clamped / 100);
+
+  const animatedPct = useSharedValue(0);
+  const [displayPct, setDisplayPct] = useState(0);
+
+  useEffect(() => {
+    animatedPct.value = withTiming(clamped, {
+      duration: 1000,
+      easing: Easing.out(Easing.cubic),
+    });
+  }, [clamped]);
+
+  useAnimatedReaction(
+    () => Math.round(animatedPct.value),
+    (rounded, prev) => {
+      if (rounded !== prev) {
+        runOnJS(setDisplayPct)(rounded);
+      }
+    }
+  );
+
+  const animatedProps = useAnimatedProps(() => ({
+    strokeDashoffset: circ * (1 - animatedPct.value / 100),
+  }));
+
   return (
     <View
       style={styles.ringWrap}
@@ -94,93 +138,97 @@ function WellnessRing({ pct }: { pct: number }) {
           strokeWidth={stroke}
           fill="none"
         />
-        <Circle
+        <AnimatedCircle
           cx={size / 2}
           cy={size / 2}
           r={r}
           stroke="#F6A94C"
           strokeWidth={stroke}
           strokeDasharray={circ}
-          strokeDashoffset={offset}
           strokeLinecap="round"
           fill="none"
           transform={`rotate(-90 ${size / 2} ${size / 2})`}
+          animatedProps={animatedProps}
         />
       </Svg>
-      <Text style={styles.wellnessPct}>{clamped}%</Text>
-      <Text style={styles.wellnessLabel}>Wellness</Text>
+      <Text style={styles.wellnessPct}>{displayPct}%</Text>
+      <Text style={styles.wellnessLabel}>{t("home.wellnessLabel")}</Text>
     </View>
   );
 }
 
-const GUIDED: {
-  icon: string;
-  title: string;
-  subtitle: string;
-  tint: "secondary" | "softGreen" | "softOrange" | "blush";
-}[] = [
-  { icon: "📖", title: "Understanding Postpartum Changes", subtitle: "3 min read", tint: "secondary" },
-  { icon: "🧘", title: "Finding Your Calm Center", subtitle: "5 min meditation", tint: "softGreen" },
-  { icon: "💬", title: "Talking to Your Partner", subtitle: "Conversation guide", tint: "softOrange" },
-  { icon: "🌙", title: "Better Sleep with a Newborn", subtitle: "Sleep strategies", tint: "blush" },
-];
+function useGuided() {
+  const { t } = useTranslation();
+  return [
+    { icon: "📖", title: t("home.guidedUnderstandingTitle"), subtitle: t("home.guidedUnderstandingSub"), tint: "secondary" as const },
+    { icon: "🧘", title: t("home.guidedCalmTitle"), subtitle: t("home.guidedCalmSub"), tint: "softGreen" as const },
+    { icon: "💬", title: t("home.guidedPartnerTitle"), subtitle: t("home.guidedPartnerSub"), tint: "softOrange" as const },
+    { icon: "🌙", title: t("home.guidedSleepTitle"), subtitle: t("home.guidedSleepSub"), tint: "blush" as const },
+  ];
+}
 
 type HealthNavTint = "lavender" | "blush" | "softGreen" | "softOrange" | "secondary" | "softRed";
 
-const HEALTH_NAV_ITEMS: {
+function useHealthNavItems(): {
   icon: React.ComponentProps<typeof Feather>["name"];
   title: string;
   subtitle: string;
   route: string;
   tint: HealthNavTint;
-}[] = [
-  {
-    icon: "file-text",
-    title: "Medical Records",
-    subtitle: "Notes & documents",
-    route: "/records",
-    tint: "lavender",
-  },
-  {
-    icon: "droplet",
-    title: "Cycle & Biomarkers",
-    subtitle: "Track & predict",
-    route: "/cycle",
-    tint: "blush",
-  },
-  {
-    icon: "package",
-    title: "Medications",
-    subtitle: "Meds & supplements",
-    route: "/medications",
-    tint: "softGreen",
-  },
-  {
-    icon: "users",
-    title: "Partner Space",
-    subtitle: "Consent-based sharing",
-    route: "/partner",
-    tint: "softOrange",
-  },
-  {
-    icon: "award",
-    title: "Research",
-    subtitle: "Opt-in contribution",
-    route: "/research",
-    tint: "secondary",
-  },
-  {
-    icon: "shield",
-    title: "Privacy & Data",
-    subtitle: "Your data, your control",
-    route: "/privacy",
-    tint: "softRed",
-  },
-];
+}[] {
+  const { t } = useTranslation();
+  return [
+    {
+      icon: "file-text",
+      title: t("home.medicalRecordsTitle"),
+      subtitle: t("home.medicalRecordsSub"),
+      route: "/records",
+      tint: "lavender",
+    },
+    {
+      icon: "droplet",
+      title: t("home.cycleTitle"),
+      subtitle: t("home.cycleSub"),
+      route: "/cycle",
+      tint: "blush",
+    },
+    {
+      icon: "package",
+      title: t("home.medicationsTitle"),
+      subtitle: t("home.medicationsSub"),
+      route: "/medications",
+      tint: "softGreen",
+    },
+    {
+      icon: "users",
+      title: t("home.partnerTitle"),
+      subtitle: t("home.partnerSub"),
+      route: "/partner",
+      tint: "softOrange",
+    },
+    {
+      icon: "award",
+      title: t("home.researchTitle"),
+      subtitle: t("home.researchSub"),
+      route: "/research",
+      tint: "secondary",
+    },
+    {
+      icon: "shield",
+      title: t("home.privacyTitle"),
+      subtitle: t("home.privacySub"),
+      route: "/privacy",
+      tint: "softRed",
+    },
+  ];
+}
 
 export default function HomeScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
+  const { t } = useTranslation();
+  const GUIDED = useGuided();
+  const HEALTH_NAV_ITEMS = useHealthNavItems();
   const {
     profile,
     hasCheckedInToday,
@@ -189,8 +237,10 @@ export default function HomeScreen() {
     weeklyRiskTrend,
     riskLevel,
     checkIns,
+    isLoading: appLoading,
   } = useApp();
-  const { cycleEntries } = useHealth();
+  const { cycleEntries, isLoading: healthLoading } = useHealth();
+  const isLoading = appLoading || healthLoading;
 
   const phase = useMemo(
     () =>
@@ -230,7 +280,7 @@ export default function HomeScreen() {
   const riskTrendInfo = useMemo(() => {
     const points = weeklyRiskTrend;
     if (points.length < 2) {
-      return { label: "Steady", color: "riskLow" as const };
+      return { label: t("home.trendSteady"), color: "riskLow" as const };
     }
     // weeklyRiskTrend is chronological (oldest -> newest). Compare the
     // average of the first half vs the second half of the week; since a
@@ -244,10 +294,10 @@ export default function HomeScreen() {
     const secondAvg = secondHalf.length > 0 ? avg(secondHalf) : firstAvg;
     const delta = secondAvg - firstAvg;
     const threshold = 3; // points, to avoid noise from tiny fluctuations
-    if (delta <= -threshold) return { label: "Improving", color: "riskLow" as const };
-    if (delta >= threshold) return { label: "Needs attention", color: "riskHigh" as const };
-    return { label: "Steady", color: "riskLow" as const };
-  }, [weeklyRiskTrend]);
+    if (delta <= -threshold) return { label: t("home.trendImproving"), color: "riskLow" as const };
+    if (delta >= threshold) return { label: t("home.trendNeedsAttention"), color: "riskHigh" as const };
+    return { label: t("home.trendSteady"), color: "riskLow" as const };
+  }, [weeklyRiskTrend, t]);
 
   const avgSleep = useMemo(() => {
     const last7 = checkIns.slice(0, 7);
@@ -260,7 +310,8 @@ export default function HomeScreen() {
   const riskColor =
     riskLevel === "low" ? colors.riskLow : riskLevel === "moderate" ? colors.riskModerate : colors.riskHigh;
 
-  const riskLabel = riskLevel === "low" ? "Low Risk" : riskLevel === "moderate" ? "Moderate" : "High Risk";
+  const riskLabel =
+    riskLevel === "low" ? t("home.riskLow") : riskLevel === "moderate" ? t("home.riskModerate") : t("home.riskHigh");
 
   const checkedCount = hasCheckedInToday ? 3 : 0;
 
@@ -279,156 +330,173 @@ export default function HomeScreen() {
       <View style={styles.header}>
         <View>
           <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-            {getGreeting()}
+            {getGreeting(t)}
           </Text>
           <Text style={[styles.name, { color: colors.foreground }]}>
-            {profile?.name ?? "Mama"} 🌸
+            {profile?.name ?? t("home.defaultName")} 🌸
           </Text>
+          <View style={{ marginTop: 6 }}>
+            <SyncStatusBadge />
+          </View>
         </View>
         <Pressable
           onPress={() =>
             showAlert(
-              "Notifications",
-              "You're all caught up — no new notifications. Daily check-in reminders aren't available yet in this build."
+              t("home.notificationsTitle"),
+              t("home.notificationsBody")
             )
           }
           style={[styles.notifBtn, { backgroundColor: colors.card }]}
           accessibilityRole="button"
-          accessibilityLabel="Notifications"
+          accessibilityLabel={t("home.notificationsTitle")}
           hitSlop={8}
         >
           <Feather name="bell" size={18} color={colors.text} />
         </Pressable>
       </View>
 
-      <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
-        <View pointerEvents="none" style={styles.heroFlame}>
-          <LuminaraLogo variant="mono" size={168} color="rgba(255,255,255,0.11)" />
+      {isLoading ? (
+        <View style={{ gap: 16 }}>
+          <Skeleton height={140} borderRadius={24} />
+          <View style={styles.statsRow}>
+            <Skeleton height={92} borderRadius={18} style={{ flex: 1 }} />
+            <Skeleton height={92} borderRadius={18} style={{ flex: 1 }} />
+            <Skeleton height={92} borderRadius={18} style={{ flex: 1 }} />
+          </View>
+          <Skeleton height={150} borderRadius={20} />
         </View>
-        <View style={styles.heroContent}>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.heroTitle}>Take a breath.</Text>
-            <Text style={styles.heroSub}>
-              This is your space for healing and reflection.
-            </Text>
-            {profile?.babyName && profile.birthDate && (
-              <View style={[styles.babyBadge, { backgroundColor: "rgba(255,255,255,0.18)" }]}>
-                <Text style={styles.babyText}>
-                  {profile.babyName} · {getMonthsWeeks(daysSince)}
+      ) : (
+        <>
+          <View style={[styles.heroCard, { backgroundColor: colors.primary }]}>
+            <View pointerEvents="none" style={styles.heroFlame}>
+              <LuminaraLogo variant="mono" size={168} color="rgba(255,255,255,0.11)" />
+            </View>
+            <View style={styles.heroContent}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.heroTitle}>{t("home.heroTitle")}</Text>
+                <Text style={styles.heroSub}>
+                  {t("home.heroSub")}
                 </Text>
+                {profile?.babyName && profile.birthDate && (
+                  <View style={[styles.babyBadge, { backgroundColor: "rgba(255,255,255,0.18)" }]}>
+                    <Text style={styles.babyText}>
+                      {profile.babyName} · {getMonthsWeeks(daysSince, t)}
+                    </Text>
+                  </View>
+                )}
               </View>
-            )}
+              <WellnessRing pct={wellnessPct} />
+            </View>
           </View>
-          <WellnessRing pct={wellnessPct} />
-        </View>
-      </View>
 
-      <View style={styles.statsRow}>
-        <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-          <View style={[styles.statIcon, { backgroundColor: colors.blush }]}>
-            <Feather name="moon" size={16} color={colors.purple} />
-          </View>
-          <Text style={[styles.statVal, { color: colors.foreground }]}>
-            {avgSleep > 0 ? `${avgSleep}h` : "—"}
-          </Text>
-          <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
-            Avg Sleep
-          </Text>
-        </View>
-        <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-          <View style={[styles.statIcon, { backgroundColor: colors.softGreen }]}>
-            <Feather name="activity" size={16} color={colors.riskLow} />
-          </View>
-          <Text style={[styles.statVal, { color: colors.foreground }]}>{streak}</Text>
-          <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>Day Streak</Text>
-        </View>
-        <View style={[styles.statCard, { backgroundColor: colors.card }]}>
-          <View
-            style={[
-              styles.statIcon,
-              {
-                backgroundColor:
-                  riskLevel === "low"
-                    ? colors.softGreen
-                    : riskLevel === "moderate"
-                    ? colors.softOrange
-                    : colors.softRed,
-              },
-            ]}
-          >
-            <Feather name="shield" size={16} color={riskColor} />
-          </View>
-          <Text style={[styles.statVal, { color: riskColor }]}>{riskLabel}</Text>
-          <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>PPD Risk</Text>
-        </View>
-      </View>
-
-      <View style={[styles.checkinCard, { backgroundColor: colors.card }]}>
-        <View style={styles.checkinHeader}>
-          <Text style={[styles.checkinTitle, { color: colors.foreground }]}>
-            Today's Check-In
-          </Text>
-          <Text style={[styles.checkinCount, { color: colors.primary }]}>
-            {checkedCount}/3
-          </Text>
-        </View>
-        <View style={[styles.progressBar, { backgroundColor: colors.lavender }]}>
-          <View
-            style={[
-              styles.progressFill,
-              {
-                width: `${(checkedCount / 3) * 100}%` as any,
-                backgroundColor: colors.primary,
-              },
-            ]}
-          />
-        </View>
-        <View style={styles.checkinItems}>
-          {[
-            { label: "Mood check-in", done: hasCheckedInToday },
-            { label: "Sleep check-in", done: hasCheckedInToday },
-            { label: "Wellbeing log", done: hasCheckedInToday },
-          ].map((item, i) => (
-            <View key={i} style={styles.checkinItem}>
+          <View style={styles.statsRow}>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
+              <View style={[styles.statIcon, { backgroundColor: colors.blush }]}>
+                <Feather name="moon" size={16} color={colors.purple} />
+              </View>
+              <Text style={[styles.statVal, { color: colors.foreground }]}>
+                {avgSleep > 0 ? `${avgSleep}h` : "—"}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>
+                {t("home.avgSleep")}
+              </Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
+              <View style={[styles.statIcon, { backgroundColor: colors.softGreen }]}>
+                <Feather name="activity" size={16} color={colors.riskLow} />
+              </View>
+              <Text style={[styles.statVal, { color: colors.foreground }]}>{streak}</Text>
+              <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{t("home.dayStreak")}</Text>
+            </View>
+            <View style={[styles.statCard, { backgroundColor: colors.card }]}>
               <View
                 style={[
-                  styles.checkDot,
+                  styles.statIcon,
                   {
-                    backgroundColor: item.done ? colors.teal : colors.lavender,
+                    backgroundColor:
+                      riskLevel === "low"
+                        ? colors.softGreen
+                        : riskLevel === "moderate"
+                        ? colors.softOrange
+                        : colors.softRed,
                   },
                 ]}
               >
-                {item.done && <Feather name="check" size={10} color="#fff" />}
+                <Feather name="shield" size={16} color={riskColor} />
               </View>
-              <Text
-                style={[
-                  styles.checkinItemText,
-                  { color: item.done ? colors.mutedForeground : colors.text },
-                ]}
-              >
-                {item.label}
+              <Text style={[styles.statVal, { color: riskColor }]}>{riskLabel}</Text>
+              <Text style={[styles.statLabel, { color: colors.mutedForeground }]}>{t("home.ppdRisk")}</Text>
+            </View>
+          </View>
+
+          <View style={[styles.checkinCard, { backgroundColor: colors.card }]}>
+            <View style={styles.checkinHeader}>
+              <Text style={[styles.checkinTitle, { color: colors.foreground }]}>
+                {t("home.todaysCheckIn")}
+              </Text>
+              <Text style={[styles.checkinCount, { color: colors.primary }]}>
+                {checkedCount}/3
               </Text>
             </View>
-          ))}
-        </View>
-        {!hasCheckedInToday && (
-          <Pressable
-            onPress={() => router.push("/(tabs)/checkin")}
-            style={({ pressed }) => [
-              styles.checkinBtn,
-              { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
-            ]}
-          >
-            <Text style={styles.checkinBtnText}>Start My Check-In →</Text>
-          </Pressable>
-        )}
-      </View>
+            <View style={[styles.progressBar, { backgroundColor: colors.lavender }]}>
+              <View
+                style={[
+                  styles.progressFill,
+                  {
+                    width: `${(checkedCount / 3) * 100}%` as any,
+                    backgroundColor: colors.primary,
+                  },
+                ]}
+              />
+            </View>
+            <View style={styles.checkinItems}>
+              {[
+                { label: t("home.moodCheckIn"), done: hasCheckedInToday },
+                { label: t("home.sleepCheckIn"), done: hasCheckedInToday },
+                { label: t("home.wellbeingLog"), done: hasCheckedInToday },
+              ].map((item, i) => (
+                <View key={i} style={styles.checkinItem}>
+                  <View
+                    style={[
+                      styles.checkDot,
+                      {
+                        backgroundColor: item.done ? colors.teal : colors.lavender,
+                      },
+                    ]}
+                  >
+                    {item.done && <Feather name="check" size={10} color="#fff" />}
+                  </View>
+                  <Text
+                    style={[
+                      styles.checkinItemText,
+                      { color: item.done ? colors.mutedForeground : colors.text },
+                    ]}
+                  >
+                    {item.label}
+                  </Text>
+                </View>
+              ))}
+            </View>
+            {!hasCheckedInToday && (
+              <Pressable
+                onPress={() => router.push("/(tabs)/checkin")}
+                style={({ pressed }) => [
+                  styles.checkinBtn,
+                  { backgroundColor: colors.primary, opacity: pressed ? 0.85 : 1 },
+                ]}
+              >
+                <Text style={styles.checkinBtnText}>{t("home.startMyCheckIn")}</Text>
+              </Pressable>
+            )}
+          </View>
+        </>
+      )}
 
-      {weeklyRiskTrend.length > 0 && (
+      {!isLoading && weeklyRiskTrend.length > 0 && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeader}>
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              7-Day Risk Trend
+              {t("home.riskTrendTitle")}
             </Text>
             <View
               style={[
@@ -475,24 +543,28 @@ export default function HomeScreen() {
         <View style={{ flex: 1 }}>
           {cyclePrediction.currentCycleDay != null && (
             <Text style={[styles.phaseText, { color: colors.foreground }]}>
-              Day {cyclePrediction.currentCycleDay}
               {cyclePrediction.avgCycleLength
-                ? ` of ~${Math.round(cyclePrediction.avgCycleLength)}`
-                : ""}
+                ? t("home.cycleDayOf")
+                    .replace("{day}", String(cyclePrediction.currentCycleDay))
+                    .replace("{length}", String(Math.round(cyclePrediction.avgCycleLength)))
+                : t("home.cycleDay").replace("{day}", String(cyclePrediction.currentCycleDay))}
             </Text>
           )}
           {cyclePrediction.confidence !== "none" && cyclePrediction.nextPeriodStart && (
             <Text style={[styles.phaseSub, { color: colors.mutedForeground }]}>
-              Next period in{" "}
-              {Math.max(
-                0,
-                Math.round(
-                  (new Date(cyclePrediction.nextPeriodStart + "T12:00:00").getTime() -
-                    new Date().setHours(12, 0, 0, 0)) /
-                    86400000
+              {t("home.nextPeriodIn").replace(
+                "{days}",
+                String(
+                  Math.max(
+                    0,
+                    Math.round(
+                      (new Date(cyclePrediction.nextPeriodStart + "T12:00:00").getTime() -
+                        new Date().setHours(12, 0, 0, 0)) /
+                        86400000
+                    )
+                  )
                 )
-              )}{" "}
-              days
+              )}
             </Text>
           )}
         </View>
@@ -501,7 +573,7 @@ export default function HomeScreen() {
 
       <View>
         <Text style={[styles.sectionTitle, { color: colors.foreground, marginBottom: 10 }]}>
-          Your Health
+          {t("home.yourHealth")}
         </Text>
         <View style={styles.healthGrid}>
           {HEALTH_NAV_ITEMS.map((item) => (
@@ -528,7 +600,7 @@ export default function HomeScreen() {
       </View>
 
       <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-        Guided for you
+        {t("home.guidedForYou")}
       </Text>
       <ScrollView
         horizontal
@@ -558,11 +630,10 @@ export default function HomeScreen() {
         <Feather name="phone" size={16} color={colors.riskModerate} />
         <View style={{ flex: 1 }}>
           <Text style={[styles.resourceTitle, { color: colors.text }]}>
-            Immediate Support
+            {t("home.immediateSupport")}
           </Text>
           <Text style={[styles.resourceText, { color: colors.mutedForeground }]}>
-            PSI Helpline: 1-800-944-4773{"\n"}
-            Crisis Text Line: Text "HELLO" to 741741
+            {t("home.supportLines")}
           </Text>
         </View>
       </View>

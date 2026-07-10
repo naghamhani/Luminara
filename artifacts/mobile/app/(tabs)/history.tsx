@@ -19,7 +19,8 @@ import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
 import type { ShareLogEntry } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
-import { generateProviderReportHtml, generateReportHtml } from "@/utils/generateReport";
+import { generateProviderReportHtml } from "@/utils/generateReport";
+import { exportWellnessReportPDF } from "@/utils/pdfReport";
 import { addShareLogEntry, clearShareLog, generateShareCode, listShareLog } from "@/utils/shareLog";
 import { calculateWellnessScore, detectPhase, predictCycle } from "@/utils/wellnessAlgorithm";
 
@@ -892,29 +893,7 @@ export default function HistoryScreen() {
     if (!profile) return;
     try {
       setSharing(true);
-      const html = generateReportHtml(profile, checkIns);
-
-      if (Platform.OS === "web") {
-        const opened = downloadHtmlOnWeb(html, "clinical-wellness-report.html");
-        if (!opened) {
-          showAlert("Download unavailable", "Your browser blocked the report download. Please try again.");
-        }
-        return;
-      }
-
-      const { uri } = await Print.printToFileAsync({ html, base64: false });
-      const canShare = await Sharing.isAvailableAsync();
-      if (canShare) {
-        await Sharing.shareAsync(uri, {
-          mimeType: "application/pdf",
-          dialogTitle: "Share Clinical Wellness Report",
-          UTI: "com.adobe.pdf",
-        });
-      } else {
-        showAlert("Sharing unavailable", "Your device does not support file sharing.");
-      }
-    } catch {
-      showAlert("Error", "Could not generate the report. Please try again.");
+      await exportWellnessReportPDF(profile, checkIns);
     } finally {
       setSharing(false);
     }

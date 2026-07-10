@@ -16,6 +16,7 @@ import {
   type LabMarker,
   type Recommendation,
 } from "@/types/health";
+import { computeSleepAnxietyCorrelation } from "@/utils/correlations";
 import {
   calculateWellnessScore,
   correlateWithPartner,
@@ -302,6 +303,12 @@ export default function InsightsScreen() {
   const showPartnerOffNotice =
     partnerSettings.enabled && !partnerSettings.userCanViewObservations;
 
+  // --- Sleep vs. anxiety signal correlation ------------------------------------
+  const sleepAnxietyInsight = useMemo(
+    () => computeSleepAnxietyCorrelation(checkIns),
+    [checkIns]
+  );
+
   if (!checkIns.length && cycleEntries.length === 0) {
     return (
       <View
@@ -517,6 +524,35 @@ export default function InsightsScreen() {
         </View>
       )}
 
+      {/* 4b. Sleep vs. anxiety signal correlation */}
+      {sleepAnxietyInsight && (
+        <View style={[styles.card, { backgroundColor: colors.card }]}>
+          <SectionHeader title="Sleep & Anxiety Signal" icon="moon" />
+          <View
+            style={[
+              styles.wellnessSummary,
+              { backgroundColor: colors.secondary, borderColor: colors.border },
+            ]}
+          >
+            <Text style={[styles.correlationRatio, { color: colors.primary }]}>
+              {Number.isFinite(sleepAnxietyInsight.ratio) ? `${sleepAnxietyInsight.ratio}x` : "—"}
+            </Text>
+            <View style={{ flex: 1 }}>
+              <Text style={[styles.wellnessLevelText, { color: colors.foreground }]}>
+                {sleepAnxietyInsight.headline}
+              </Text>
+              <Text style={[styles.wellnessLevelSub, { color: colors.mutedForeground }]}>
+                {sleepAnxietyInsight.detail}
+              </Text>
+            </View>
+          </View>
+          <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
+            Computed from your own logged sleep and anxiety over the last 30 days — a pattern to
+            notice, not a diagnosis.
+          </Text>
+        </View>
+      )}
+
       {/* 5. Self vs Partner */}
       {showPartnerSection && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
@@ -691,6 +727,7 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   wellnessScore: { fontSize: 30, fontFamily: "Inter_700Bold" },
+  correlationRatio: { fontSize: 26, fontFamily: "Inter_700Bold" },
   wellnessLevelText: { fontSize: 14, fontFamily: "Inter_600SemiBold", marginBottom: 2 },
   wellnessLevelSub: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 15 },
   disclaimer: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16 },

@@ -7,6 +7,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { BBTChart } from "@/components/cycle/BBTChart";
 import { ConfidencePill } from "@/components/cycle/ConfidencePill";
 import { CycleStrip } from "@/components/cycle/CycleStrip";
+import { EmptyState } from "@/components/EmptyState";
+import { Skeleton } from "@/components/Skeleton";
 import { useApp } from "@/context/AppContext";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
@@ -87,7 +89,7 @@ export default function CycleDashboardScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { profile } = useApp();
-  const { cycleEntries } = useHealth();
+  const { cycleEntries, isLoading } = useHealth();
 
   const today = toDateString(new Date());
 
@@ -212,10 +214,20 @@ export default function CycleDashboardScreen() {
         {/* Recent entries */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.cardTitle, { color: colors.foreground }]}>Recent entries</Text>
-          {recentEntries.length === 0 ? (
-            <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              No entries yet. Start logging to see your history here.
-            </Text>
+          {isLoading ? (
+            <View style={{ gap: 10 }}>
+              <Skeleton height={44} borderRadius={10} />
+              <Skeleton height={44} borderRadius={10} />
+              <Skeleton height={44} borderRadius={10} />
+            </View>
+          ) : recentEntries.length === 0 ? (
+            <EmptyState
+              icon="calendar"
+              title="No entries yet"
+              message="Log your first cycle entry to start tracking your patterns over time."
+              actionLabel="Log today"
+              onAction={() => router.push("/cycle/log")}
+            />
           ) : (
             <View style={{ gap: 10 }}>
               {recentEntries.map((entry) => {
@@ -409,12 +421,6 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_400Regular",
     fontStyle: "italic",
     lineHeight: 16,
-  },
-  emptyText: {
-    fontSize: 13,
-    fontFamily: "Inter_400Regular",
-    textAlign: "center",
-    paddingVertical: 12,
   },
   entryRow: {
     flexDirection: "row",

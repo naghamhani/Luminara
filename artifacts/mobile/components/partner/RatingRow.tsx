@@ -45,6 +45,10 @@ export function RatingRow({ label, value, onChange, low, high, accentColor }: Ra
                   borderRadius: active && value === v ? 15 : 11,
                 },
               ]}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: value === v }}
+              accessibilityLabel={`${label}: ${v} of 5`}
+              accessibilityHint={`Sets ${label.toLowerCase()} rating to ${v}`}
             />
           );
         })}
