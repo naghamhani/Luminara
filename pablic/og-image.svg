@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#43315E"/>
+      <stop offset="0.55" stop-color="#6E52A0"/>
+      <stop offset="1" stop-color="#8C6FBF"/>
+    </linearGradient>
+    <radialGradient id="glow" cx="50%" cy="46%" r="52%">
+      <stop offset="0" stop-color="#FFD98A" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#FFD98A" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="warm" cx="50%" cy="0%" r="80%">
+      <stop offset="0" stop-color="#F6A94C" stop-opacity="0.18"/>
+      <stop offset="1" stop-color="#F6A94C" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <rect width="1200" height="630" fill="url(#bg)"/>
+  <rect width="1200" height="630" fill="url(#warm)"/>
+
+  <!-- soft blobs -->
+  <ellipse cx="120" cy="90" rx="200" ry="180" fill="#E17D9B" opacity="0.14"/>
+  <ellipse cx="1100" cy="560" rx="240" ry="200" fill="#8C7BD0" opacity="0.18"/>
+
+  <!-- flame mark -->
+  <g transform="translate(150,165) scale(3)">
+    <circle cx="50" cy="48" r="40" fill="url(#glow)"/>
+    <path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z" fill="#F6A94C"/>
+    <path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z" fill="#FFE7BE"/>
+    <path fill="none" stroke="#FBF7F9" stroke-width="4.5" stroke-linecap="round" d="M22,58 C22,86 78,86 78,58"/>
+  </g>
+
+  <!-- wordmark + taglines -->
+  <text x="490" y="255" font-family="Georgia, 'Times New Roman', serif" font-size="96" font-weight="600" fill="#FBF7F9">Luminara</text>
+  <text x="494" y="330" font-family="Helvetica, Arial, sans-serif" font-size="38" font-weight="600" fill="#FFD98A">Light you can keep.</text>
+  <text x="494" y="395" font-family="Helvetica, Arial, sans-serif" font-size="28" font-weight="500" fill="#EDEFF9" opacity="0.92">Cycle · Labs · Records · Meds · Mood</text>
+  <text x="494" y="440" font-family="Helvetica, Arial, sans-serif" font-size="28" font-weight="500" fill="#EDEFF9" opacity="0.92">Encrypted on your device. Never sold.</text>
+
+  <!-- privacy pill -->
+  <rect x="494" y="490" width="500" height="56" rx="28" fill="#FBF7F9" opacity="0.12"/>
+  <circle cx="526" cy="518" r="7" fill="#3FAE8E"/>
+  <text x="548" y="527" font-family="Tajawal, Helvetica, Arial, sans-serif" font-size="25" font-weight="700" fill="#FBF7F9">Light you can keep. · ضوّ بيضلّ إلكِ</text>
+</svg>

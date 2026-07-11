@@ -1,0 +1,37 @@
+/* ===== Waitlist page ===== */
+.waitlist-page{position:relative;overflow:hidden;min-height:calc(100vh - 66px);display:flex;align-items:center;background:
+  radial-gradient(120% 80% at 85% -10%, rgba(246,169,76,.14) 0%, rgba(246,169,76,0) 45%),
+  linear-gradient(170deg,#F7EEF4 0%, var(--canvas) 60%);
+  padding:clamp(2.5rem,7vw,5rem) 0}
+.waitlist-wrap{position:relative;z-index:1;display:flex;flex-direction:column;align-items:center;width:100%}
+
+.waitlist-card{background:var(--card);border:1px solid var(--border);border-radius:clamp(22px,3vw,32px);box-shadow:var(--shadow);
+  padding:clamp(1.8rem,4.5vw,3.2rem);max-width:520px;width:100%;text-align:center}
+.waitlist-logo{width:clamp(90px,14vw,130px);height:auto;margin:0 auto 1rem;display:block}
+.waitlist-card h1{font-size:clamp(1.9rem,4.5vw,2.8rem)}
+.waitlist-card .lede{margin:.9rem auto 0;max-width:38ch}
+
+.waitlist-form{margin-top:1.8rem;display:grid;gap:1rem;text-align:start}
+.wl-field{display:grid;gap:.35rem}
+.wl-field label{font-weight:700;font-size:.88rem;color:var(--ink)}
+.wl-field input{font-family:var(--body);font-size:1rem;color:var(--ink);background:var(--canvas);
+  border:1.5px solid var(--border);border-radius:14px;padding:.8em 1em;width:100%;transition:border-color .15s ease, box-shadow .15s ease}
+.wl-field input:focus{outline:none;border-color:var(--indigo);box-shadow:0 0 0 4px rgba(140,111,191,.15)}
+.wl-field input.invalid{border-color:#C2557A}
+.wl-field input.invalid:focus{border-color:#C2557A;box-shadow:0 0 0 4px rgba(194, 85, 122, .15)}
+.wl-field input::placeholder{color:var(--muted);opacity:.6}
+.wl-submit{width:100%;justify-content:center;font-size:1rem;margin-top:.3rem}
+.wl-note{margin:0;font-size:.78rem;color:var(--muted);text-align:center}
+.wl-error{display:none;margin:0;font-size:.85rem;font-weight:700;color:#C2557A;text-align:center}
+.wl-field-error{display:none;margin:0;font-size:.85rem;font-weight:700;color:#C2557A;text-align:start}
+
+.wl-success{display:none;margin-top:1.6rem}
+.wl-success-ic{width:56px;height:56px;border-radius:50%;background:var(--teal-soft);color:var(--teal);
+  font-size:1.6rem;font-weight:800;display:flex;align-items:center;justify-content:center;margin:0 auto 1rem}
+.wl-success h2{font-size:clamp(1.4rem,3vw,1.9rem)}
+.wl-success p{color:var(--muted);font-weight:500;margin:.7rem auto 1.3rem;max-width:36ch}
+
+.wl-trust{margin-top:1.6rem;justify-content:center}
+
+/* RTL */
+html[dir="rtl"] .waitlist-card h1,html[dir="rtl"] .wl-success h2{font-family:"Cairo","Tajawal",var(--display);letter-spacing:0;line-height:1.3}

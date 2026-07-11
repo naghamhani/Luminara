@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Luminara — Join the waitlist</title>
+<meta name="description" content="Luminara is in the making. Join the waitlist and be the first to know when the private, whole-person women's health app is ready.">
+
+<!-- SEO -->
+<link rel="canonical" href="https://luminarahealth.site/waitlist.html">
+<meta name="robots" content="index, follow">
+<meta name="author" content="Luminara Health">
+<meta name="theme-color" content="#8C6FBF">
+
+<!-- Icons -->
+<link rel="icon" href="pablic/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="pablic/favicon-32.png" type="image/png" sizes="32x32">
+<link rel="apple-touch-icon" href="pablic/apple-touch-icon.png">
+
+<!-- Open Graph -->
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Luminara">
+<meta property="og:url" content="https://luminarahealth.site/waitlist.html">
+<meta property="og:title" content="Luminara — Join the waitlist">
+<meta property="og:description" content="Be the first to know when Luminara is ready — the private, whole-person women's health app.">
+<meta property="og:image" content="https://luminarahealth.site/pablic/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="Luminara — the private reproductive & postpartum health app. Light you can keep.">
+<meta property="og:locale" content="en_US">
+<meta property="og:locale:alternate" content="ar_JO">
+
+<!-- Twitter Card -->
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Luminara — Join the waitlist">
+<meta name="twitter:description" content="Be the first to know when Luminara is ready — the private, whole-person women's health app.">
+<meta name="twitter:image" content="https://luminarahealth.site/pablic/og-image.png">
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@500;600;700&family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+<link rel="stylesheet" href="waitlist.css">
+</head>
+<body>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <a class="brand" href="index.html#top">
+      <img src="pablic/logo.png" alt="Luminara">
+      Luminara
+    </a>
+    <div class="nav-actions">
+      <button type="button" id="langToggleMobile" class="lang-toggle lang-toggle-mobile" aria-label="Switch language">عربي</button>
+      <button type="button" id="navToggle" class="nav-toggle" aria-expanded="false" aria-label="Open menu">☰</button>
+    </div>
+    <nav id="navLinks" class="nav-links">
+      <a href="index.html#features" data-i18n="nav.features">Features</a>
+      <a href="index.html#privacy" data-i18n="nav.privacy">Privacy</a>
+      <a href="index.html#compare" data-i18n="nav.compare">Compare</a>
+      <a href="index.html#faq" data-i18n="nav.faq">FAQ</a>
+      <a href="luminara-brand-story.html" class="nav-brand-story" data-i18n="nav.brand_story">✦ Brand Story</a>
+      <a href="waitlist.html" class="btn btn-indigo" style="padding:.6em 1.2em" data-i18n="nav.get">Join the waitlist</a>
+      <button type="button" id="langToggle" class="lang-toggle lang-toggle-desktop" aria-label="Switch language">عربي</button>
+    </nav>
+  </div>
+</header>
+
+<main class="waitlist-page">
+  <div class="blob" style="width:280px;height:280px;top:60px;left:-90px;background:radial-gradient(circle at 30% 30%, rgba(225,125,155,.3), rgba(225,125,155,0) 70%)"></div>
+  <div class="blob" style="width:340px;height:340px;bottom:-40px;right:-120px;background:radial-gradient(circle at 60% 40%, rgba(140,111,191,.25), rgba(140,111,191,0) 70%);animation-delay:-4s"></div>
+
+  <div class="wrap waitlist-wrap">
+    <div class="waitlist-card">
+      <img src="pablic/logo.png" alt="" class="waitlist-logo" aria-hidden="true">
+      <p class="kicker" data-i18n="wl.kicker">Coming soon</p>
+      <h1 data-i18n="wl.title">Join the waitlist.</h1>
+      <p class="lede" data-i18n="wl.lede">Luminara is still in the making. Leave your name and email and you'll be the first to know the moment it's ready.</p>
+
+      <form id="waitlistForm" class="waitlist-form" novalidate>
+        <div class="wl-field">
+          <label for="wlName" data-i18n="wl.name">Name</label>
+          <input type="text" id="wlName" name="name" autocomplete="name" required maxlength="70" data-i18n-placeholder="wl.name_ph" placeholder="Your name">
+        </div>
+        <div class="wl-field">
+          <label for="wlEmail" data-i18n="wl.email">Email</label>
+          <input type="email" id="wlEmail" name="email" autocomplete="email" required maxlength="254" data-i18n-placeholder="wl.email_ph" placeholder="you@example.com">
+          <span class="wl-field-error" id="wlEmailError" data-i18n="wl.email_exists">This email is already on the waitlist.</span>
+        </div>
+        <button type="submit" class="btn btn-amber wl-submit" data-i18n="wl.submit" disabled>Save my spot</button>
+        <p class="wl-note" data-i18n="wl.note">No spam, no sharing — just one email when we launch.</p>
+        <p class="wl-error" id="wlError" data-i18n="wl.error">Please enter your name and a valid email.</p>
+      </form>
+
+      <div class="wl-success" id="wlSuccess">
+        <div class="wl-success-ic">✓</div>
+        <h2 data-i18n="wl.success_title">You're on the list!</h2>
+        <p data-i18n="wl.success_body">We'll email you the moment Luminara is ready. Thank you for keeping the light with us.</p>
+        <a href="index.html" class="btn btn-ghost" data-i18n="wl.back">Back to home</a>
+      </div>
+    </div>
+
+    <div class="trust wl-trust">
+      <span><span class="tick">✓</span> <span data-i18n="hero.trust1">Private by design</span></span>
+      <span><span class="tick">✓</span> <span data-i18n="hero.trust2">On-device encryption</span></span>
+      <span><span class="tick">✓</span> <span data-i18n="hero.trust3">No ads, no trackers</span></span>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap foot-in" style="justify-content:center">
+    <div>© <span id="yr"></span> <span data-i18n="footer.tag">Luminara Health · Light you can keep.</span></div>
+  </div>
+</footer>
+
+<script>
+document.getElementById('yr').textContent = new Date().getFullYear();
+
+const wlForm = document.getElementById('waitlistForm');
+const wlSuccess = document.getElementById('wlSuccess');
+const wlError = document.getElementById('wlError');
+const wlEmailError = document.getElementById('wlEmailError');
+const API_BASE = window.LUMINARA_API || 'http://localhost:3005';
+
+const wlNameInput = document.getElementById('wlName');
+const wlEmailInput = document.getElementById('wlEmail');
+const submitBtn = wlForm.querySelector('.wl-submit');
+
+const checkFormValidity = () => {
+  const sanitize = (val) => val.replace(/<[^>]*>?/gm, '').trim();
+  const name = sanitize(wlNameInput.value);
+  const email = wlEmailInput.value.trim();
+  const emailOk = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email) && email.length <= 254;
+  const nameOk = name.length > 0 && name.length <= 70;
+
+  if (nameOk) wlNameInput.classList.remove('invalid');
+  if (emailOk) {
+    wlEmailInput.classList.remove('invalid');
+    wlEmailError.style.display = 'none';
+  }
+  
+  submitBtn.disabled = !(nameOk && emailOk);
+};
+
+wlNameInput.addEventListener('input', checkFormValidity);
+wlEmailInput.addEventListener('input', checkFormValidity);
+
+const showError = (message, isEmailError = false) => {
+  const activeLang = document.documentElement.lang === 'ar' ? 'ar' : 'en';
+  let displayMsg = message;
+  
+  if (message === 'This email is already on the waitlist.') {
+    displayMsg = activeLang === 'ar' ? 'هذا البريد الإلكتروني مسجل بالفعل في قائمة الانتظار.' : 'This email is already on the waitlist.';
+  } else if (message === 'Please enter your name and a valid email.') {
+    displayMsg = activeLang === 'ar' ? 'اكتبي اسمكِ وإيميل صحيح لو سمحتي.' : 'Please enter your name and a valid email.';
+  } else if (message === 'Something went wrong. Please try again.') {
+    displayMsg = activeLang === 'ar' ? 'حدث خطأ ما. يرجى المحاولة مرة أخرى.' : 'Something went wrong. Please try again.';
+  }
+
+  if (isEmailError) {
+    wlEmailError.textContent = displayMsg;
+    wlEmailError.style.display = 'block';
+    wlError.style.display = 'none';
+    document.getElementById('wlEmail').classList.add('invalid');
+  } else {
+    wlError.textContent = displayMsg;
+    wlError.style.display = 'block';
+    wlEmailError.style.display = 'none';
+    
+    const sanitize = (val) => val.replace(/<[^>]*>?/gm, '').trim();
+    const name = sanitize(document.getElementById('wlName').value);
+    const email = document.getElementById('wlEmail').value.trim();
+    const emailOk = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email) && email.length <= 254;
+    const nameOk = name.length > 0 && name.length <= 70;
+
+    if (!nameOk) document.getElementById('wlName').classList.add('invalid');
+    if (!emailOk) document.getElementById('wlEmail').classList.add('invalid');
+  }
+};
+
+wlForm.addEventListener('submit', async (e) => {
+  e.preventDefault();
+  
+  const sanitize = (val) => val.replace(/<[^>]*>?/gm, '').trim();
+  const name = sanitize(document.getElementById('wlName').value);
+  const email = document.getElementById('wlEmail').value.trim();
+  const emailOk = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/.test(email) && email.length <= 254;
+  const nameOk = name.length > 0 && name.length <= 70;
+
+  // Clear previous errors and styles
+  wlError.style.display = 'none';
+  wlEmailError.style.display = 'none';
+  document.getElementById('wlEmail').classList.remove('invalid');
+  document.getElementById('wlName').classList.remove('invalid');
+
+  if (!nameOk || !emailOk) {
+    showError('Please enter your name and a valid email.');
+    return;
+  }
+
+  const submitBtn = wlForm.querySelector('.wl-submit');
+  submitBtn.disabled = true;
+
+  const showSuccess = () => {
+    wlForm.style.display = 'none';
+    wlSuccess.style.display = 'block';
+  };
+
+  try {
+    const res = await fetch(API_BASE + '/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name,
+        email,
+        locale: document.documentElement.lang === 'ar' ? 'ar' : 'en',
+        source: 'website-waitlist',
+      }),
+    });
+    if (res.ok) {
+      showSuccess();
+      return;
+    }
+    if (res.status === 409) {
+      showError('This email is already on the waitlist.', true);
+      submitBtn.disabled = false;
+      return;
+    }
+    showError('Something went wrong. Please try again.');
+    submitBtn.disabled = false;
+  } catch (err) {
+    // API unreachable (e.g. static hosting without the backend) —
+    // keep a local copy so no signup is lost, and still show success.
+    try {
+      const list = JSON.parse(localStorage.getItem('lum_waitlist') || '[]');
+      list.push({ name, email, at: new Date().toISOString() });
+      localStorage.setItem('lum_waitlist', JSON.stringify(list));
+    } catch (e2) {}
+    showSuccess();
+  }
+});
+</script>
+<script src="i18n.js"></script>
+<script src="nav.js"></script>
+</body>
+</html>

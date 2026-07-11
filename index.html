@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Luminara — light you can keep</title>
+  <meta name="description"
+    content="The private, whole-person reproductive & postpartum health app. Cycle, labs, records, meds and mood in one place — encrypted on your device, never sold.">
+
+  <!-- SEO -->
+  <link rel="canonical" href="https://luminarahealth.site/">
+  <meta name="robots" content="index, follow, max-image-preview:large">
+  <meta name="author" content="Luminara Health">
+  <meta name="theme-color" content="#8C6FBF">
+
+  <!-- Icons -->
+  <link rel="icon" href="pablic/favicon.svg" type="image/svg+xml">
+  <link rel="icon" href="pablic/favicon-32.png" type="image/png" sizes="32x32">
+  <link rel="apple-touch-icon" href="pablic/apple-touch-icon.png">
+
+  <!-- Open Graph -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Luminara">
+  <meta property="og:url" content="https://luminarahealth.site/">
+  <meta property="og:title" content="Luminara — light you can keep">
+  <meta property="og:description"
+    content="The private, whole-person reproductive & postpartum health app. Cycle, labs, records, meds and mood in one place — encrypted on your device, never sold.">
+  <meta property="og:image" content="https://luminarahealth.site/pablic/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt"
+    content="Luminara — the private reproductive & postpartum health app. Light you can keep.">
+  <meta property="og:locale" content="en_US">
+  <meta property="og:locale:alternate" content="ar_JO">
+
+  <!-- Twitter Card -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Luminara — light you can keep">
+  <meta name="twitter:description"
+    content="Cycle, labs, records, meds and mood in one private place — encrypted on your device, never sold.">
+  <meta name="twitter:image" content="https://luminarahealth.site/pablic/og-image.png">
+  <meta name="twitter:image:alt"
+    content="Luminara — the private reproductive & postpartum health app. Light you can keep.">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": "https://luminarahealth.site/#org",
+        "name": "Luminara Health",
+        "url": "https://luminarahealth.site/",
+        "logo": "https://luminarahealth.site/apple-touch-icon.png",
+        "slogan": "Light you can keep."
+      },
+      {
+        "@type": "WebSite",
+        "@id": "https://luminarahealth.site/#website",
+        "url": "https://luminarahealth.site/",
+        "name": "Luminara",
+        "publisher": { "@id": "https://luminarahealth.site/#org" },
+        "inLanguage": ["en", "ar"]
+      },
+      {
+        "@type": "MobileApplication",
+        "name": "Luminara",
+        "operatingSystem": "iOS, Android",
+        "applicationCategory": "HealthApplication",
+        "description": "The private, whole-person reproductive & postpartum health app. Cycle, labs, records, meds and mood in one place — encrypted on your device, never sold.",
+        "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+        "publisher": { "@id": "https://luminarahealth.site/#org" }
+      },
+      {
+        "@type": "FAQPage",
+        "mainEntity": [
+          {
+            "@type": "Question",
+            "name": "Where is my data stored?",
+            "acceptedAnswer": { "@type": "Answer", "text": "On your phone. Sensitive records (labs, medical records) are encrypted at rest with AES-256 using a key stored in your device's secure keychain. There's no server holding your identifiable health data today." }
+          },
+          {
+            "@type": "Question",
+            "name": "Is Luminara a medical device or a diagnosis?",
+            "acceptedAnswer": { "@type": "Answer", "text": "No. Phases, lab flags and wellness scores are informational and always paired with \"not a diagnosis — review with your provider.\" We don't claim FDA clearance or clinical validation." }
+          },
+          {
+            "@type": "Question",
+            "name": "Can a partner see my data?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Only if you turn on the partner space, set a PIN, and grant it. The sensitive direction (partner viewing your summary) is off by default. You can revoke either direction instantly, with no friction." }
+          },
+          {
+            "@type": "Question",
+            "name": "What if I want to help research?",
+            "acceptedAnswer": { "@type": "Answer", "text": "It's opt-in and granular. You pick which data types to contribute, and only an anonymised bundle ever leaves — dates become day-offsets and names/notes/providers are stripped. Revoke anytime." }
+          },
+          {
+            "@type": "Question",
+            "name": "Can I export or delete everything?",
+            "acceptedAnswer": { "@type": "Answer", "text": "Yes. You can export a full local snapshot or clear data by type. Because nothing lives on a server, deleting on-device is the whole story." }
+          }
+        ]
+      }
+    ]
+  }
+  </script>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700;800&family=Cairo:wght@500;600;700&family=Tajawal:wght@400;500;700&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+
+  <!-- flame mark, reused -->
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <defs>
+      <radialGradient id="fg" cx="50%" cy="46%" r="52%">
+        <stop offset="0" stop-color="#FFD98A" />
+        <stop offset=".6" stop-color="#F6A94C" />
+        <stop offset="1" stop-color="#E8892E" />
+      </radialGradient>
+    </defs>
+  </svg>
+
+  <header class="nav">
+    <div class="wrap nav-in">
+      <a class="brand" href="#top">
+        <img src="pablic/logo.png" alt="Luminara">
+        Luminara
+      </a>
+      <div class="nav-actions">
+        <button type="button" id="langToggleMobile" class="lang-toggle lang-toggle-mobile"
+          aria-label="Switch language">عربي</button>
+        <button type="button" id="navToggle" class="nav-toggle" aria-expanded="false" aria-label="Open menu">☰</button>
+      </div>
+      <nav id="navLinks" class="nav-links">
+        <a href="#features" data-i18n="nav.features">Features</a>
+        <a href="#privacy" data-i18n="nav.privacy">Privacy</a>
+        <a href="#compare" data-i18n="nav.compare">Compare</a>
+        <a href="#faq" data-i18n="nav.faq">FAQ</a>
+        <a href="luminara-brand-story.html" class="nav-brand-story" data-i18n="nav.brand_story">✦ Brand Story</a>
+        <a href="waitlist.html" class="btn btn-indigo" style="padding:.6em 1.2em" data-i18n="nav.get">Join the
+          waitlist</a>
+        <button type="button" id="langToggle" class="lang-toggle lang-toggle-desktop"
+          aria-label="Switch language">عربي</button>
+      </nav>
+    </div>
+  </header>
+
+  <main id="top">
+
+    <!-- HERO -->
+    <section class="hero" style="padding:0">
+      <div class="blob"
+        style="width:280px;height:280px;top:-60px;left:-90px;background:radial-gradient(circle at 30% 30%, rgba(225,125,155,.35), rgba(225,125,155,0) 70%)">
+      </div>
+      <div class="blob"
+        style="width:340px;height:340px;top:40px;right:-120px;background:radial-gradient(circle at 60% 40%, rgba(140,111,191,.28), rgba(140,111,191,0) 70%);animation-delay:-4s">
+      </div>
+      <div class="blob"
+        style="width:160px;height:160px;bottom:20px;left:12%;background:radial-gradient(circle at 50% 50%, rgba(246,169,76,.3), rgba(246,169,76,0) 70%);animation-delay:-8s">
+      </div>
+      <div class="wrap hero-grid" style="position:relative;z-index:1">
+        <div>
+          <p class="kicker rv" data-i18n="hero.kicker"><span class="eyebrow-dot"></span>&nbsp; Reproductive &amp;
+            postpartum health</p>
+          <h1 class="rv" style="--d:.05s" data-i18n="hero.title">Light you can <span class="amber"
+              style="position:relative;display:inline-block">keep<svg class="squiggle" viewBox="0 0 160 14"
+                preserveAspectRatio="none" aria-hidden="true">
+                <path d="M2 8 C 20 2, 38 2, 56 8 S 92 14, 110 8 S 146 2, 158 8" fill="none" stroke="var(--rose)"
+                  stroke-width="4" stroke-linecap="round" />
+              </svg></span>.</h1>
+          <p class="lede rv" style="--d:.12s" data-i18n="hero.lede">Your cycle, labs, records, medications and mood —
+            finally in one place. Encrypted on your device, tuned to your body, and <b>never sold to anyone</b>.</p>
+          <div class="cta-row rv" style="--d:.2s">
+            <a href="waitlist.html" class="btn btn-amber" data-i18n="hero.cta1">Join the waitlist</a>
+            <a href="#features" class="btn btn-ghost" data-i18n="hero.cta2">See how it works</a>
+          </div>
+          <div class="trust rv" style="--d:.28s">
+            <span><span class="tick">✓</span> <span data-i18n="hero.trust1">Private by design</span></span>
+            <span><span class="tick">✓</span> <span data-i18n="hero.trust2">On-device encryption</span></span>
+            <span><span class="tick">✓</span> <span data-i18n="hero.trust3">No ads, no trackers</span></span>
+          </div>
+        </div>
+        <div class="phone-wrap crop rv" style="--d:.15s">
+          <svg class="phone2" viewBox="0 0 440 560" role="img"
+            aria-label="The Luminara app — still loading, under construction">
+            <defs>
+              <linearGradient id="edgeP" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0" stop-color="#FFD98A" />
+                <stop offset=".5" stop-color="#B0729E" />
+                <stop offset="1" stop-color="#6E52A0" />
+              </linearGradient>
+              <radialGradient id="glowP" cx="50%" cy="40%" r="60%">
+                <stop offset="0" stop-color="#F6A94C" stop-opacity=".22" />
+                <stop offset="1" stop-color="#F6A94C" stop-opacity="0" />
+              </radialGradient>
+              <radialGradient id="flameHalo" cx="50%" cy="46%" r="52%">
+                <stop offset="0" stop-color="#FFD98A" stop-opacity=".5" />
+                <stop offset="1" stop-color="#FFD98A" stop-opacity="0" />
+              </radialGradient>
+              <filter id="softShadow" x="-30%" y="-30%" width="160%" height="160%">
+                <feDropShadow dx="0" dy="14" stdDeviation="16" flood-color="#5A4184" flood-opacity=".32" />
+              </filter>
+              <clipPath id="loadClip">
+                <rect x="160" y="196" width="120" height="8" rx="4" />
+              </clipPath>
+            </defs>
+
+            <ellipse cx="220" cy="300" rx="200" ry="240" fill="url(#glowP)" />
+
+            <!-- phone body: gradient metal edge + dark bezel (bottom cropped on purpose) -->
+            <g filter="url(#softShadow)">
+              <rect x="106" y="36" width="228" height="560" rx="44" fill="url(#edgeP)" />
+              <rect x="110" y="40" width="220" height="552" rx="40" fill="#241C38" />
+              <rect x="120" y="50" width="200" height="532" rx="32" fill="#FBF7F9" />
+            </g>
+            <rect x="195" y="60" width="50" height="7" rx="3.5" fill="#241C38" opacity=".18" />
+
+            <!-- the app is still being built: breathing flame + loading bar -->
+            <g class="flame-breathe">
+              <circle cx="220" cy="126" r="42" fill="url(#flameHalo)" />
+              <g transform="translate(190,96)">
+                <path
+                  d="M30,9.6 C34.2,19.2 40.8,24.6 40.8,33 C40.8,41.4 36,46.2 30,46.2 C24,46.2 19.2,41.4 19.2,33 C19.2,24.6 25.8,19.2 30,9.6 Z"
+                  fill="url(#fg)" />
+                <path
+                  d="M30,22.8 C32.4,28.8 36,31.8 36,37.2 C36,42 33.6,45 30,45 C26.4,45 24,42 24,37.2 C24,31.8 27.6,28.8 30,22.8 Z"
+                  fill="#FFE7BE" />
+                <path fill="none" stroke="#8C6FBF" stroke-width="2.7" stroke-linecap="round"
+                  d="M13.2,34.8 C13.2,51.6 46.8,51.6 46.8,34.8" />
+              </g>
+            </g>
+            <rect x="160" y="196" width="120" height="8" rx="4" fill="#EEE6F8" />
+            <g clip-path="url(#loadClip)">
+              <rect class="load-run" x="160" y="196" width="52" height="8" rx="4" fill="#F6A94C" />
+            </g>
+
+            <!-- skeleton placeholders: content still cooking -->
+            <rect class="skel" x="132" y="228" width="84" height="80" rx="16" fill="#F1E9F7" />
+            <circle class="skel" cx="152" cy="252" r="9" fill="#E3D7EF" />
+            <rect class="skel" x="142" y="284" width="52" height="9" rx="4.5" fill="#E3D7EF" />
+            <rect class="skel d1" x="224" y="228" width="84" height="80" rx="16" fill="#F1E9F7" />
+            <circle class="skel d1" cx="244" cy="252" r="9" fill="#E3D7EF" />
+            <rect class="skel d1" x="234" y="284" width="52" height="9" rx="4.5" fill="#E3D7EF" />
+
+            <rect class="skel d2" x="132" y="320" width="176" height="76" rx="16" fill="#F1E9F7" />
+            <rect class="skel d2" x="146" y="336" width="122" height="9" rx="4.5" fill="#E3D7EF" />
+            <rect class="skel d2" x="146" y="354" width="88" height="9" rx="4.5" fill="#E3D7EF" />
+            <rect class="skel d2" x="146" y="372" width="140" height="9" rx="4.5" fill="#E3D7EF" />
+
+            <rect class="skel d3" x="132" y="408" width="84" height="84" rx="16" fill="#F1E9F7" />
+            <rect class="skel d3" x="224" y="408" width="84" height="84" rx="16" fill="#F1E9F7" />
+
+            <!-- bottom skeleton card, sliced by the section edge -->
+            <rect class="skel d1" x="132" y="504" width="176" height="90" rx="16" fill="#F1E9F7" />
+
+            <!-- floating chips: the promises that are already true -->
+            <g class="chip-float">
+              <rect x="284" y="104" width="150" height="36" rx="18" fill="#FFFFFF" filter="url(#softShadow)" />
+              <rect x="298" y="118" width="12" height="10" rx="2.5" fill="#3FAE8E" />
+              <path d="M300.5 118 v-2.5 a3.5 3.5 0 0 1 7 0 v2.5" stroke="#3FAE8E" stroke-width="2" fill="none" />
+              <text x="316" y="126" font-family="Manrope, Tajawal" font-size="8.5" font-weight="700" fill="#2B2438"
+                data-i18n="phone.encrypted">Encrypted on this device</text>
+            </g>
+            <g class="chip-float b">
+              <rect x="14" y="330" width="118" height="36" rx="18" fill="#FFFFFF" filter="url(#softShadow)" />
+              <circle cx="34" cy="348" r="7" fill="#F6A94C" />
+              <text x="48" y="352" font-family="Manrope, Tajawal" font-size="9.5" font-weight="700" fill="#2B2438"
+                data-i18n="wl.kicker">Coming soon</text>
+            </g>
+
+            <!-- sparkles -->
+            <path d="M96 70 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z" fill="#F6A94C" opacity=".8" />
+            <path d="M356 240 l2.5 6 6 2.5 -6 2.5 -2.5 6 -2.5 -6 -6 -2.5 6 -2.5 Z" fill="#E17D9B" opacity=".7" />
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- PARTNERS -->
+    <section class="partners-section">
+      <div class="wrap partners-in rv">
+        <a href="https://rhas.org.jo/Default.aspx" target="_blank" rel="noopener" class="partner-card">
+          <span class="partners-title" data-i18n="partner.title_label">Main Partner</span>
+          <div class="partner-item">
+            <img src="pablic/rhas-logo.png" alt="Royal Health Awareness Society" class="partner-logo">
+            <div class="partner-details">
+              <span class="partner-name" data-i18n="partner.rhas_name">Royal Health Awareness Society</span>
+              <p class="partner-subtitle" data-i18n="partner.rhas_desc">Empowering healthy lifestyles in Jordan</p>
+            </div>
+          </div>
+        </a>
+      </div>
+    </section>
+
+    <!-- PROBLEM -->
+    <section class="band" style="border:none;background:var(--card);padding-top:2rem">
+      <div class="wrap section-head" style="margin-bottom:0">
+        <p class="kicker rv"><span class="kicker-line" data-i18n="problem.kicker">The problem</span></p>
+        <h2 class="rv" data-i18n="problem.title">Your health is scattered — and it's being watched.</h2>
+        <p class="lede rv" data-i18n="problem.lede">Cycle in one app, labs in a hospital portal, meds on a sticky note,
+          postpartum feelings nowhere. And most trackers quietly sell what you log.</p>
+        <div class="chips rv">
+          <span class="chip"><span class="d" style="background:#D8607F"></span><span data-i18n="problem.chip1">Cycle
+              app</span></span>
+          <span class="chip"><span class="d" style="background:#2FA37E"></span><span data-i18n="problem.chip2">Lab
+              portal</span></span>
+          <span class="chip"><span class="d" style="background:#F6A94C"></span><span data-i18n="problem.chip3">Pill
+              reminders</span></span>
+          <span class="chip"><span class="d" style="background:#8C7BD0"></span><span data-i18n="problem.chip4">Mood…
+              somewhere</span></span>
+          <span class="chip"><span class="d" style="background:#8C6FBF"></span><span data-i18n="problem.chip5">
+              Privacy Data</span></span>
+        </div>
+      </div>
+    </section>
+
+    <!-- FEATURES -->
+    <section id="features">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="kicker rv" data-i18n="features.kicker">One light</p>
+          <h2 class="rv" data-i18n="features.title">Everything that matters, in one private place.</h2>
+          <p class="lede rv" data-i18n="features.lede">Not another single-organ tracker. Luminara connects the whole
+            picture — and keeps it yours.</p>
+        </div>
+        <div class="features">
+          <div class="feat rv" style="--d:0s">
+            <div class="ic" style="background:var(--teal-soft)"><svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="#2FA37E" stroke-width="2.2">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 7v5l3 2" />
+              </svg></div>
+            <h3 data-i18n="feat1.title">Cycle &amp; biomarkers</h3>
+            <p data-i18n="feat1.body">Flow, BBT, cervical mucus and tests → phase detection and predictions with an
+              honest confidence level.</p>
+          </div>
+          <div class="feat rv" style="--d:.06s">
+            <div class="ic" style="background:var(--secondary)"><svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="#8C6FBF" stroke-width="2.2">
+                <path d="M6 3h12M9 3v6l-5 9a2 2 0 0 0 2 3h12a2 2 0 0 0 2-3l-5-9V3" />
+              </svg></div>
+            <h3 data-i18n="feat2.title">Labs &amp; records</h3>
+            <p data-i18n="feat2.body">Lab markers auto-flagged low/normal/high, plus doctor notes, imaging and
+              prescriptions — all in one vault.</p>
+          </div>
+          <div class="feat rv" style="--d:.12s">
+            <div class="ic" style="background:var(--amber-soft)"><svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="#A0610F" stroke-width="2.2">
+                <rect x="3" y="8" width="18" height="12" rx="3" />
+                <path d="M12 4v4M8 14h8" />
+              </svg></div>
+            <h3 data-i18n="feat3.title">Medications</h3>
+            <p data-i18n="feat3.body">Track meds, supplements and vitamins — active or paused — linked to the visit that
+              started them.</p>
+          </div>
+          <div class="feat rv" style="--d:.18s">
+            <div class="ic" style="background:#FBE9EF"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="#D8607F" stroke-width="2.2">
+                <path d="M12 21s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9Z" />
+              </svg></div>
+            <h3 data-i18n="feat4.title">Postpartum check-in</h3>
+            <p data-i18n="feat4.body">A real mental-health check-in with a risk model that watches for the dip — the
+              stage no giant is looking at.</p>
+          </div>
+          <div class="feat rv" style="--d:.24s">
+            <div class="ic" style="background:var(--teal-soft)"><svg width="22" height="22" viewBox="0 0 24 24"
+                fill="none" stroke="#2FA37E" stroke-width="2.2">
+                <circle cx="9" cy="8" r="3.2" />
+                <circle cx="17" cy="10" r="2.6" />
+                <path d="M3 20a6 6 0 0 1 12 0M14.5 20a5 5 0 0 1 6.5-4.8" />
+              </svg></div>
+            <h3 data-i18n="feat5.title">Partner space</h3>
+            <p data-i18n="feat5.body">An optional, PIN-gated space where a partner can note what they see — with consent
+              you control, both ways.</p>
+          </div>
+          <div class="feat rv" style="--d:.3s">
+            <div class="ic" style="background:var(--blush)"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"
+                stroke="#8C7BD0" stroke-width="2.2">
+                <circle cx="12" cy="12" r="9" />
+                <path d="M12 3a9 9 0 0 0 0 18M3 12h18" />
+              </svg></div>
+            <h3 data-i18n="feat6.title">Care that sees you</h3>
+            <p data-i18n="feat6.body">Optional, ancestry-aware awareness nudges (vitamin D, thalassemia, fibroids,
+              gestational diabetes) — never a diagnosis.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PRIVACY -->
+    <section id="privacy">
+      <div class="wrap">
+        <div class="privacy rv">
+          <div class="privacy-in">
+            <div>
+              <p class="kicker" data-i18n="privacy.kicker">The moat</p>
+              <h2 data-i18n="privacy.title">Private by design.<br>Yours by default.</h2>
+              <ul>
+                <li><span class="tick">✓</span><span data-i18n="privacy.li1"><b>On your device, encrypted.</b> Sensitive
+                    records use AES-256 with a key held in your phone's secure keychain.</span></li>
+                <li><span class="tick">✓</span><span data-i18n="privacy.li2"><b>Nothing to subpoena.</b> There's no
+                    cloud copy of your data because we don't have one.</span></li>
+                <li><span class="tick">✓</span><span data-i18n="privacy.li3"><b>Research is opt-in and anonymised.</b>
+                    If you ever contribute, dates become day-offsets and names/notes are stripped.</span></li>
+                <li><span class="tick">✓</span><span data-i18n="privacy.li4"><b>No ads, no trackers, no dark
+                      patterns.</b> Turning privacy on is one tap and stays on.</span></li>
+                <li style="margin-top: 1.2rem; display: flex; gap: .7em; align-items: center;"><span class="tick"
+                    style="opacity: 0">✓</span><a href="legal.html?tab=privacy"
+                    style="color: var(--amber); font-weight: 700; text-decoration: underline;"
+                    data-i18n="privacy.full_link">Read our full Privacy Policy →</a></li>
+              </ul>
+            </div>
+            <div style="display:flex;justify-content:center">
+              <svg width="270" height="270" viewBox="0 0 270 270" role="img"
+                aria-label="Your health data protected inside a shield, on your device"
+                style="animation:float 7s ease-in-out infinite;--rot:0deg">
+                <defs>
+                  <linearGradient id="shieldStroke" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0" stop-color="#FFD98A" />
+                    <stop offset="1" stop-color="#F6A94C" />
+                  </linearGradient>
+                  <radialGradient id="shieldGlow" cx="50%" cy="40%" r="60%">
+                    <stop offset="0" stop-color="#FFD98A" stop-opacity=".25" />
+                    <stop offset="1" stop-color="#FFD98A" stop-opacity="0" />
+                  </radialGradient>
+                  <radialGradient id="flameGlow2" cx="50%" cy="46%" r="52%">
+                    <stop offset="0" stop-color="#FFD98A" stop-opacity=".5" />
+                    <stop offset="1" stop-color="#FFD98A" stop-opacity="0" />
+                  </radialGradient>
+                </defs>
+                <circle cx="135" cy="120" r="110" fill="url(#shieldGlow)" />
+                <!-- shield -->
+                <path
+                  d="M135 30 C165 48 195 56 210 58 C210 118 200 172 135 210 C70 172 60 118 60 58 C75 56 105 48 135 30 Z"
+                  fill="rgba(251,247,249,0.07)" stroke="url(#shieldStroke)" stroke-width="3" stroke-linejoin="round" />
+                <!-- your data, safe inside: cycle · check-in · records · meds -->
+                <circle cx="92" cy="86" r="7" fill="#3FAE8E" />
+                <circle cx="120" cy="72" r="7" fill="#E17D9B" />
+                <circle cx="150" cy="72" r="7" fill="#8C7BD0" />
+                <circle cx="178" cy="86" r="7" fill="#F6A94C" />
+                <!-- the kept flame -->
+                <g transform="translate(85,78)">
+                  <circle cx="50" cy="48" r="40" fill="url(#flameGlow2)" />
+                  <path d="M50,16 C57,32 68,41 68,55 C68,69 60,77 50,77 C40,77 32,69 32,55 C32,41 43,32 50,16 Z"
+                    fill="#F6A94C" />
+                  <path d="M50,38 C54,48 60,53 60,62 C60,70 56,75 50,75 C44,75 40,70 40,62 C40,53 46,48 50,38 Z"
+                    fill="#FFE7BE" />
+                  <path fill="none" stroke="#FBF7F9" stroke-width="4.5" stroke-linecap="round"
+                    d="M22,58 C22,86 78,86 78,58" />
+                </g>
+                <!-- sparkles -->
+                <path d="M225 48 l3 7 7 3 -7 3 -3 7 -3 -7 -7 -3 7 -3 Z" fill="#FFD98A" opacity=".9" />
+                <path d="M42 120 l2.4 5.6 5.6 2.4 -5.6 2.4 -2.4 5.6 -2.4 -5.6 -5.6 -2.4 5.6 -2.4 Z" fill="#FFD98A"
+                  opacity=".7" />
+                <!-- lock badge -->
+                <rect x="77" y="224" width="116" height="34" rx="17" fill="rgba(251,247,249,0.1)"
+                  stroke="rgba(255,217,138,0.4)" />
+                <g transform="translate(90,233)">
+                  <rect x="0" y="6" width="14" height="11" rx="3" fill="#FFD98A" />
+                  <path d="M3 6 v-2 a4 4 0 0 1 8 0 v2" fill="none" stroke="#FFD98A" stroke-width="2.2" />
+                </g>
+                <text x="143" y="246" text-anchor="middle" font-family="Manrope, Tajawal, sans-serif" font-size="13"
+                  font-weight="700" fill="#FBF7F9" data-i18n="privacy.stays">Stays here</text>
+              </svg>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- COMPARE -->
+    <section id="compare" class="band">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="kicker rv" data-i18n="compare.kicker">Head to head</p>
+          <h2 class="rv" data-i18n="compare.title">Deep like the giants. Private like the safe-havens.</h2>
+          <p class="lede rv" data-i18n="compare.lede">The whole-person + on-device corner was empty. That's the one
+            we're built for.</p>
+        </div>
+        <div class="table-scroll rv">
+          <table class="cmp">
+            <thead>
+              <tr>
+                <th style="text-align:left" data-i18n="compare.col.cap">Capability</th>
+                <th class="lum">Luminara</th>
+                <th>Flo</th>
+                <th>Clue</th>
+                <th>Natural&nbsp;Cycles</th>
+                <th>Euki</th>
+                <th>Apple</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <th data-i18n="compare.row1">On-device / local-first</th>
+                <td class="lum y">●</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="y">●</td>
+                <td class="y">●</td>
+              </tr>
+              <tr>
+                <th data-i18n="compare.row2">Never sells your data</th>
+                <td class="lum y">●</td>
+                <td class="n">○</td>
+                <td class="p">◐</td>
+                <td class="p">◐</td>
+                <td class="y">●</td>
+                <td class="y">●</td>
+              </tr>
+              <tr>
+                <th data-i18n="compare.row3">Labs &amp; medical records</th>
+                <td class="lum y">●</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="p">◐</td>
+              </tr>
+              <tr>
+                <th data-i18n="compare.row4">Postpartum-depression screening</th>
+                <td class="lum y">●</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+              </tr>
+              <tr>
+                <th data-i18n="compare.row5">Partner co-observation (consent)</th>
+                <td class="lum y">●</td>
+                <td class="p">◐</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+              </tr>
+              <tr>
+                <th data-i18n="compare.row6">Ancestry-aware equity nudges</th>
+                <td class="lum y">●</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+                <td class="n">○</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <p style="text-align:center;color:var(--muted);font-size:.8rem;margin-top:.9rem" data-i18n="compare.legend">
+          <span class="y">●</span> full &nbsp; <span class="p">◐</span> partial / roadmap &nbsp; <span
+            class="n">○</span> none &nbsp;·&nbsp; directional positioning, not an audited claim
+        </p>
+      </div>
+    </section>
+
+    <!-- QUOTE -->
+    <section>
+      <div class="wrap quote-wrap rv">
+        <span class="mark">"</span>
+        <blockquote data-i18n="quote.text">The first app that treats my cycle, my labs and my mood like they belong to
+          the <em>same</em> person — because they do.</blockquote>
+        <cite data-i18n="quote.cite">— an early Luminara tester</cite>
+      </div>
+    </section>
+
+    <!-- FAQ -->
+    <section id="faq">
+      <div class="wrap">
+        <div class="section-head">
+          <p class="kicker rv" data-i18n="faq.kicker">Good questions</p>
+          <h2 class="rv" data-i18n="faq.title">The things people actually ask.</h2>
+        </div>
+        <div class="faq">
+          <details class="rv">
+            <summary><span data-i18n="faq.q1">Where is my data stored?</span> <span class="plus">+</span></summary>
+            <p data-i18n="faq.a1">On your phone. Sensitive records (labs, medical records) are encrypted at rest with
+              AES-256 using a key stored in your device's secure keychain. There's no server holding your identifiable
+              health data today.</p>
+          </details>
+          <details class="rv">
+            <summary><span data-i18n="faq.q2">Is Luminara a medical device or a diagnosis?</span> <span
+                class="plus">+</span></summary>
+            <p data-i18n="faq.a2">No. Phases, lab flags and wellness scores are informational and always paired with
+              "not a diagnosis — review with your provider." We don't claim FDA clearance or clinical validation.</p>
+          </details>
+          <details class="rv">
+            <summary><span data-i18n="faq.q3">Can a partner see my data?</span> <span class="plus">+</span></summary>
+            <p data-i18n="faq.a3">Only if you turn on the partner space, set a PIN, and grant it. The sensitive
+              direction (partner viewing your summary) is off by default. You can revoke either direction instantly,
+              with no friction.</p>
+          </details>
+          <details class="rv">
+            <summary><span data-i18n="faq.q4">What if I want to help research?</span> <span class="plus">+</span>
+            </summary>
+            <p data-i18n="faq.a4">It's opt-in and granular. You pick which data types to contribute, and only an
+              anonymised bundle ever leaves — dates become day-offsets and names/notes/providers are stripped. Revoke
+              anytime.</p>
+          </details>
+          <details class="rv">
+            <summary><span data-i18n="faq.q5">Can I export or delete everything?</span> <span class="plus">+</span>
+            </summary>
+            <p data-i18n="faq.a5">Yes. You can export a full local snapshot or clear data by type. Because nothing lives
+              on a server, deleting on-device is the whole story.</p>
+          </details>
+        </div>
+        <div style="text-align:center; margin-top:2.5rem;" class="rv">
+          <p style="color:var(--muted); font-weight:600;"><span data-i18n="faq.more_questions">Have more
+              questions?</span> <a href="legal.html?tab=support"
+              style="color:var(--indigo); font-weight:700; text-decoration:underline;"
+              data-i18n="faq.contact_link">Contact our support team →</a></p>
+        </div>
+      </div>
+    </section>
+
+    <!-- FINAL CTA -->
+    <section id="get">
+      <div class="wrap">
+        <div class="final rv">
+          <p class="kicker" data-i18n="final.kicker">Your body. Your data.</p>
+          <h2 data-i18n="final.title">Keep the light.</h2>
+          <p class="lede" style="margin:1rem auto 0;max-width:40ch" data-i18n="final.lede">Luminara is still in the
+            making — join the waitlist and be the first to know when it's ready.</p>
+          <div class="cta-row">
+            <a href="waitlist.html" class="btn btn-amber" data-i18n="final.cta">Join the waitlist</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer>
+    <div class="wrap">
+      <div class="footer-grid">
+        <div class="footer-col footer-brand">
+          <div class="brand">
+            <img src="pablic/logo.png" alt="Luminara">
+            Luminara
+          </div>
+          <p data-i18n="footer.tag">Luminara Health · Light you can keep.</p>
+        </div>
+        <div class="footer-col">
+          <h4 data-i18n="footer.col.product">Product</h4>
+          <ul>
+            <li><a href="#features" data-i18n="nav.features">Features</a></li>
+            <li><a href="#privacy" data-i18n="nav.privacy">Privacy</a></li>
+            <li><a href="#compare" data-i18n="nav.compare">Compare</a></li>
+            <li><a href="#faq" data-i18n="nav.faq">FAQ</a></li>
+            <li><a href="luminara-brand-story.html" data-i18n="footer.brand_story">Brand Story</a></li>
+          </ul>
+        </div>
+        <div class="footer-col">
+          <h4 data-i18n="footer.col.legal">Legal &amp; Support</h4>
+          <ul>
+            <li><a href="legal.html?tab=privacy" data-i18n="footer.privacy">Privacy Policy</a></li>
+            <li><a href="legal.html?tab=terms" data-i18n="footer.terms">Terms of Service</a></li>
+            <li><a href="legal.html?tab=support" data-i18n="footer.support">Contact &amp; Support</a></li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <div class="footer-bottom-in">
+          <div class="copyright">© <span id="yr"></span> <span data-i18n="footer.copyright_text">Luminara Health. All
+              rights reserved.</span></div>
+          <a href="https://orange-fox-787459.hostingersite.com/" target="_blank" rel="noopener" class="astracore-link"
+            data-i18n="footer.credit">Designed &amp; developed by <span class="astracore">Astracore
+              Technology</span></a>
+        </div>
+        <p class="disclaimer" data-i18n="footer.disclaimer">Luminara provides informational wellness features and is not
+          a medical device. It does not diagnose, treat, or prevent any condition. Phases, lab flags and wellness scores
+          are not a substitute for professional medical advice — always review with your healthcare provider.</p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.getElementById('yr').textContent = new Date().getFullYear();
+    const io = new IntersectionObserver((es) => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add('in'); io.unobserve(e.target); } }), { threshold: .12 });
+    document.querySelectorAll('.rv').forEach(el => io.observe(el));
+  </script>
+  <script src="i18n.js"></script>
+  <script src="nav.js"></script>
+</body>
+
+</html>
