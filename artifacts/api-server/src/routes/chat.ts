@@ -10,6 +10,7 @@ import {
   SAFETY_RESOURCES,
   type WellnessContext,
 } from "../lib/prompts";
+import { search, type Source } from "../lib/retrieval";
 
 const router: IRouter = Router();
 
@@ -39,6 +40,8 @@ const requestSchema = z.object({
   context: wellnessContextSchema,
   /** Persist the conversation to the anonymous chat store (requires DB). */
   store: z.boolean().optional(),
+  /** Set false to answer without retrieving literature (default: retrieve). */
+  ground: z.boolean().optional(),
   conversationId: z.number().int().positive().optional(),
 });
 
@@ -53,14 +56,30 @@ router.post("/chat", async (req, res) => {
     return res.status(400).json({ error: "Invalid request", details: parsed.error.flatten() });
   }
 
-  const { messages, context, store, participantPseudonym } = parsed.data;
+  const { messages, context, store, participantPseudonym, ground } = parsed.data;
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
 
   // Backstop crisis check: even before calling the model, if the newest user
   // message reads as a crisis, prepend an unmissable resource block.
   const crisis = lastUser ? looksLikeCrisis(lastUser.content) : false;
 
-  const system = buildSystemPrompt(context as WellnessContext | undefined);
+  // Retrieve grounding passages for the newest user turn. The immediately
+  // preceding user turn is folded in so follow-ups like "and what about at
+  // night?" still carry enough terms to retrieve on.
+  let sources: Source[] = [];
+  if (ground !== false && lastUser && !crisis) {
+    const priorUser = messages.filter((m) => m.role === "user").slice(-2, -1)[0];
+    const query = [priorUser?.content, lastUser.content].filter(Boolean).join(" ");
+    try {
+      sources = search(query, { k: 6, maxPerPaper: 2 });
+    } catch (err) {
+      // Retrieval must never take the chat down: an ungrounded reply is
+      // degraded, a 500 is broken.
+      logger.error({ err }, "Retrieval failed — answering ungrounded");
+    }
+  }
+
+  const system = buildSystemPrompt(context as WellnessContext | undefined, sources);
   const llmMessages: ChatMessage[] = [
     { role: "system", content: system },
     ...messages.map((m) => ({ role: m.role, content: m.content }) as ChatMessage),
@@ -116,7 +135,22 @@ router.post("/chat", async (req, res) => {
     }
   }
 
-  return res.json({ reply, crisis, conversationId });
+  // Citations are returned separately so the client can render real, clickable
+  // references rather than trusting tags the model wrote into its prose.
+  return res.json({
+    reply,
+    crisis,
+    conversationId,
+    sources: sources.map((s, i) => ({
+      tag: `S${i + 1}`,
+      pmcid: s.pmcid,
+      title: s.title,
+      journal: s.journal,
+      year: s.year,
+      url: s.url,
+      licence: s.licence,
+    })),
+  });
 });
 
 export default router;

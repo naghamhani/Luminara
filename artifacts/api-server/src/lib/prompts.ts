@@ -26,7 +26,50 @@ export const SAFETY_RESOURCES = [
   "US: call or text 988 (Suicide & Crisis Lifeline). Postpartum Support International: call 1-800-944-4773 or text \"HELP\" to 800-944-4773.",
 ].join(" ");
 
-export function buildSystemPrompt(ctx?: WellnessContext): string {
+/** A retrieved literature passage, as supplied by lib/retrieval.ts. */
+export interface PromptSource {
+  pmcid: string;
+  title: string;
+  journal: string;
+  year: string;
+  url: string;
+  text: string;
+}
+
+/**
+ * Renders retrieved passages as a numbered source block.
+ *
+ * Sources are labelled [S1], [S2], … rather than by PMCID because models cite
+ * short opaque tags far more reliably than long identifiers, and the mapping
+ * back to a real PMCID happens server-side where it cannot be hallucinated.
+ */
+export function buildSourceBlock(sources: PromptSource[]): string {
+  if (sources.length === 0) return "";
+  const lines = [
+    "",
+    "Reference passages from peer-reviewed open-access research, retrieved for this question:",
+  ];
+  sources.forEach((s, i) => {
+    const cite = [s.journal, s.year].filter(Boolean).join(" ");
+    lines.push(
+      "",
+      `[S${i + 1}] ${s.title}${cite ? ` — ${cite}` : ""}`,
+      s.text,
+    );
+  });
+  lines.push(
+    "",
+    "How to use these passages:",
+    "- Ground any factual or clinical claim in them, and cite the source inline as [S1], [S2] etc.",
+    "- If they do not answer the question, say plainly that you don't have solid information on it and suggest the user ask their provider. Do NOT fill the gap from memory.",
+    "- These describe findings across groups of people in studies. They are never a statement about THIS user. Say \"research suggests\" or \"studies have found\", never \"this means you have\".",
+    "- A study finding is not a recommendation. Do not turn one into advice to start, stop, or change any treatment.",
+    "- Never invent a source, a statistic, or a citation tag that does not appear above.",
+  );
+  return lines.join("\n");
+}
+
+export function buildSystemPrompt(ctx?: WellnessContext, sources: PromptSource[] = []): string {
   const lines: string[] = [
     "You are Luna, the supportive companion inside Luminara — a women's reproductive-health app.",
     "Your role is to listen with warmth, offer evidence-informed, practical support for pregnancy, postpartum, cycle, and mental-wellbeing questions, and gently encourage professional care when appropriate.",
@@ -53,6 +96,10 @@ export function buildSystemPrompt(ctx?: WellnessContext): string {
         "- This user's recent signals are elevated. Be especially gentle, validate their experience, and make sure they know professional support is available and worth reaching for.",
       );
     }
+  }
+
+  if (sources.length > 0) {
+    lines.push(buildSourceBlock(sources));
   }
 
   return lines.join("\n");
