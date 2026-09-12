@@ -16,6 +16,7 @@ import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
 import { goBack } from "@/utils/navigation";
 import { showAlert } from "@/utils/dialog";
+import { useTranslation } from "@/i18n";
 import {
   CARE_BACKGROUND_LABELS,
   CARE_BACKGROUNDS,
@@ -25,6 +26,7 @@ import {
 
 export default function CareProfileScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { careProfile, saveCareProfile } = useHealth();
 
@@ -76,14 +78,14 @@ export default function CareProfileScreen() {
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
-      <ScreenHeader title="Personalized care" fallbackHref="/(tabs)/profile" />
+      <ScreenHeader title={t("careProfile.title")} fallbackHref="/(tabs)/profile" />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.explainerCard, { backgroundColor: colors.primary }]}>
           <Text style={styles.explainerIcon}>🌍</Text>
-          <Text style={styles.explainerTitle}>Care that reflects you</Text>
+          <Text style={styles.explainerTitle}>{t("careProfile.explainerTitle")}</Text>
           <Text style={styles.explainerBody}>
             Health guidance isn't one-size-fits-all. Vitamin D needs, anemia screening, and
             pregnancy care can differ across communities. Sharing your background is completely
@@ -93,10 +95,10 @@ export default function CareProfileScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            My background (select any that apply)
+            {t("careProfile.backgroundLabel")}
           </Text>
           <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            Skip this entirely if you prefer — everything in Luminara works without it.
+            {t("careProfile.optionalNote")}
           </Text>
           <View style={styles.chipWrap}>
             {CARE_BACKGROUNDS.map((key) => {
@@ -133,7 +135,7 @@ export default function CareProfileScreen() {
           <View style={styles.toggleRow}>
             <View style={{ flex: 1, gap: 4 }}>
               <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-                Limited sun exposure
+                {t("careProfile.limitedSun")}
               </Text>
               <Text style={[styles.hint, { color: colors.mutedForeground }]}>
                 Indoor lifestyle, covered clothing, or long winters — for any reason. Helps
@@ -174,7 +176,7 @@ export default function CareProfileScreen() {
 
         <Pressable onPress={handleClear} style={styles.clearBtn}>
           <Text style={[styles.clearBtnText, { color: colors.mutedForeground }]}>
-            Clear my care profile
+            {t("careProfile.clear")}
           </Text>
         </Pressable>
       </ScrollView>

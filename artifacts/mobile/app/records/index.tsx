@@ -16,6 +16,7 @@ import { Skeleton } from "@/components/Skeleton";
 import { LAB_CATEGORY_ICONS, RECORD_TYPE_ICONS } from "@/components/records/recordIcons";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 import {
   LAB_CATEGORY_LABELS,
   LabResult,
@@ -130,6 +131,7 @@ function LabCard({ lab }: { lab: LabResult }) {
 
 export default function RecordsScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { records, labResults, isLoading } = useHealth();
   const [segment, setSegment] = useState<Segment>("documents");
@@ -148,7 +150,7 @@ export default function RecordsScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScreenHeader
-        title="Medical Records"
+        title={t("records.title")}
         right={
           <Pressable
             onPress={() =>
@@ -218,7 +220,7 @@ export default function RecordsScreen() {
                   { color: typeFilter === null ? "#fff" : colors.text },
                 ]}
               >
-                All
+                {t("common.all")}
               </Text>
             </Pressable>
             {presentTypes.map((t) => {
@@ -265,8 +267,8 @@ export default function RecordsScreen() {
           ) : (
             <EmptyState
               icon="file-text"
-              title="No records yet"
-              message="Add your first medical record to keep track of your health history."
+              title={t("records.emptyTitle")}
+              message={t("records.emptyMsg")}
               actionLabel="Add your first record"
               onAction={() => router.push("/records/add")}
             />
@@ -280,8 +282,8 @@ export default function RecordsScreen() {
         ) : (
           <EmptyState
             icon="activity"
-            title="No lab results yet"
-            message="Log values from a hormone panel, blood work, thyroid test, or any other lab report so you can track trends over time."
+            title={t("records.labEmptyTitle")}
+            message={t("records.labEmptyMsg")}
             actionLabel="Add your first lab result"
             onAction={() => router.push("/records/add-lab")}
           />
@@ -290,7 +292,7 @@ export default function RecordsScreen() {
         <View style={styles.footerNote}>
           <Feather name="lock" size={12} color={colors.mutedForeground} />
           <Text style={[styles.footerNoteText, { color: colors.mutedForeground }]}>
-            Records are encrypted on this device and never leave it.
+            {t("common.encryptedOnDevice")}
           </Text>
         </View>
       </ScrollView>

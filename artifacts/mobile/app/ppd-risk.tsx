@@ -28,6 +28,8 @@ import {
   type PpdRiskResult,
 } from "@/utils/backendClient";
 import { isBackendConfigured } from "@/utils/apiConfig";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 /** Feature keys that are simple yes/no toggles (everything except the EPDS
  *  and age inputs, which are derived separately). */
@@ -77,6 +79,7 @@ const TIER_COPY: Record<PpdRiskResult["tier"], { label: string; colorKey: "riskL
 
 export default function PpdRiskScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { profile } = useApp();
   const { cycleEntries, privacySettings } = useHealth();
@@ -173,9 +176,9 @@ export default function PpdRiskScreen() {
         {/* Header */}
         <View style={styles.headerRow}>
           <Pressable onPress={() => goBack("/(tabs)/resources")} hitSlop={10}>
-            <Feather name="chevron-left" size={26} color={colors.foreground} />
+            <Feather name={directionalIcon("chevron-left")} size={26} color={colors.foreground} />
           </Pressable>
-          <Text style={[styles.headerTitle, { color: colors.foreground }]}>Postpartum risk check</Text>
+          <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t("ppdRisk.title")}</Text>
           <View style={{ width: 26 }} />
         </View>
 
@@ -186,7 +189,7 @@ export default function PpdRiskScreen() {
         </Text>
 
         {/* EPDS */}
-        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Mood over the past week</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("ppdRisk.moodPastWeek")}</Text>
         <Text style={[styles.sectionSub, { color: colors.mutedForeground }]}>{EPDS_INTRO}</Text>
 
         {EPDS_ITEMS.map((item, i) => (
@@ -229,28 +232,28 @@ export default function PpdRiskScreen() {
               or text 988 (US) anytime — free, confidential, 24/7.
             </Text>
             <Pressable onPress={() => Linking.openURL("tel:988").catch(() => {})}>
-              <Text style={[styles.crisisLink, { color: "#9A1010" }]}>Call 988 →</Text>
+              <Text style={[styles.crisisLink, { color: "#9A1010" }]}>{t("ppdRisk.call988")}</Text>
             </Pressable>
           </View>
         )}
 
         {/* Factors */}
-        <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 24 }]}>Your history</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 24 }]}>{t("ppdRisk.yourHistory")}</Text>
         <FactorGroup factors={HISTORY_FACTORS} state={factors} onToggle={toggleFactor} colors={colors} />
 
-        <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 20 }]}>Life right now</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 20 }]}>{t("ppdRisk.lifeNow")}</Text>
         <FactorGroup factors={LIFE_FACTORS} state={factors} onToggle={toggleFactor} colors={colors} />
 
-        <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 20 }]}>Pregnancy & birth</Text>
+        <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 20 }]}>{t("ppdRisk.pregnancyBirth")}</Text>
         <FactorGroup factors={BIRTH_FACTORS} state={factors} onToggle={toggleFactor} colors={colors} />
 
         {/* Contribute toggle (only when research consent is on) */}
         {researchConsented && (
           <View style={[styles.card, { backgroundColor: colors.card, borderColor: colors.border, marginTop: 20 }]}>
             <View style={styles.contributeRow}>
-              <View style={{ flex: 1, paddingRight: 12 }}>
+              <View style={{ flex: 1, paddingEnd: 12 }}>
                 <Text style={[styles.contributeTitle, { color: colors.foreground }]}>
-                  Add this to the research dataset
+                  {t("ppdRisk.addToResearch")}
                 </Text>
                 <Text style={[styles.contributeSub, { color: colors.mutedForeground }]}>
                   Stores only your de-identified answers (no name, no free text) under your anonymous
@@ -333,6 +336,7 @@ function ResultCard({
   colors: ReturnType<typeof useColors>;
   epdsBandLabel: string;
 }) {
+  const { t } = useTranslation();
   const tier = TIER_COPY[result.tier];
   const tierColor = colors[tier.colorKey];
   return (
@@ -357,7 +361,7 @@ function ResultCard({
 
       {result.topContributors.length > 0 && (
         <>
-          <Text style={[styles.contribHeader, { color: colors.foreground }]}>What's driving this</Text>
+          <Text style={[styles.contribHeader, { color: colors.foreground }]}>{t("ppdRisk.whatsDriving")}</Text>
           {result.topContributors.map((c) => (
             <View key={c.key} style={styles.contribRow}>
               <Text style={[styles.contribLabel, { color: colors.foreground }]}>{c.label}</Text>
@@ -407,7 +411,7 @@ const styles = StyleSheet.create({
     height: 20,
     borderRadius: 10,
     borderWidth: 2,
-    marginRight: 10,
+    marginEnd: 10,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -422,7 +426,7 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingVertical: 13,
   },
-  factorLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", paddingRight: 12, lineHeight: 19 },
+  factorLabel: { flex: 1, fontSize: 14, fontFamily: "Inter_400Regular", paddingEnd: 12, lineHeight: 19 },
   check: {
     width: 24,
     height: 24,
@@ -452,7 +456,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     marginBottom: 12,
   },
-  tierDot: { width: 8, height: 8, borderRadius: 4, marginRight: 7 },
+  tierDot: { width: 8, height: 8, borderRadius: 4, marginEnd: 7 },
   tierLabel: { fontSize: 13, fontFamily: "Inter_600SemiBold" },
   resultScore: { fontSize: 34, fontFamily: "Inter_700Bold" },
   resultScoreSub: { fontSize: 13, fontFamily: "Inter_400Regular" },

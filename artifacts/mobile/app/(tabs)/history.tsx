@@ -23,6 +23,8 @@ import { generateProviderReportHtml } from "@/utils/generateReport";
 import { exportWellnessReportPDF } from "@/utils/pdfReport";
 import { addShareLogEntry, clearShareLog, generateShareCode, listShareLog } from "@/utils/shareLog";
 import { calculateWellnessScore, detectPhase, predictCycle } from "@/utils/wellnessAlgorithm";
+import { textAlignEnd } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 function formatDateShort(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -93,6 +95,7 @@ const hBarStyles = StyleSheet.create({
 
 function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const last7 = checkIns.slice(0, 7);
   const last30 = checkIns.slice(0, 30);
 
@@ -124,10 +127,10 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
       <View style={summaryStyles.header}>
         <View style={{ flex: 1 }}>
           <Text style={[summaryStyles.reportLabel, { color: colors.mutedForeground }]}>
-            CLINICAL WELLNESS REPORT
+            {t("history.reportEyebrow")}
           </Text>
           <Text style={[summaryStyles.title, { color: colors.foreground }]}>
-            Comprehensive Overview
+            {t("history.overview")}
           </Text>
           {firstDate && lastDate && (
             <Text style={[summaryStyles.period, { color: colors.mutedForeground }]}>
@@ -144,7 +147,7 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
       <View style={[summaryStyles.divider, { backgroundColor: colors.border }]} />
 
       <View>
-        <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>Mood Stability</Text>
+        <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>{t("history.moodStability")}</Text>
         <Text style={[summaryStyles.sectionSub, { color: colors.mutedForeground }]}>
           Average over the last {last7.length} days
         </Text>
@@ -196,13 +199,13 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
 
       <View style={{ gap: 14 }}>
         <Text style={[summaryStyles.sectionLabel, { color: colors.foreground }]}>
-          Risk Indicators & Resilience
+          {t("history.riskIndicators")}
         </Text>
 
         <View style={{ gap: 8 }}>
           <View style={summaryStyles.indicatorHeader}>
             <Text style={[summaryStyles.indicatorTitle, { color: colors.text }]}>
-              Cognitive Load & Stress
+              {t("history.cognitiveLoad")}
             </Text>
             <View
               style={[
@@ -262,7 +265,7 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
         <View style={{ gap: 8 }}>
           <View style={summaryStyles.indicatorHeader}>
             <Text style={[summaryStyles.indicatorTitle, { color: colors.text }]}>
-              Emotional Resilience
+              {t("history.emotionalResilience")}
             </Text>
             <View
               style={[
@@ -340,7 +343,7 @@ function SummarySection({ checkIns }: { checkIns: CheckIn[] }) {
       <View style={[summaryStyles.disclaimer, { backgroundColor: colors.muted }]}>
         <Feather name="info" size={13} color={colors.primary} />
         <Text style={[summaryStyles.disclaimerText, { color: colors.mutedForeground }]}>
-          This report is an expert tool for clinical awareness and should not be used for self-diagnosis. Always consult a licensed healthcare provider.
+          {t("history.disclaimer")}
         </Text>
       </View>
     </View>
@@ -373,7 +376,7 @@ const summaryStyles = StyleSheet.create({
   sectionLabel: { fontSize: 14, fontFamily: "Inter_600SemiBold" },
   sectionSub: { fontSize: 11, fontFamily: "Inter_400Regular", marginTop: 2, marginBottom: 8 },
   barRow: { flexDirection: "row", alignItems: "center", gap: 10 },
-  barVal: { fontSize: 13, fontFamily: "Inter_600SemiBold", minWidth: 36, textAlign: "right" },
+  barVal: { fontSize: 13, fontFamily: "Inter_600SemiBold", minWidth: 36, textAlign: textAlignEnd },
   metricsRow: { flexDirection: "row", gap: 8 },
   metricCard: { flex: 1, borderRadius: 14, padding: 11, alignItems: "center", gap: 4 },
   metricLabel: { fontSize: 9, fontFamily: "Inter_400Regular", textAlign: "center" },
@@ -499,14 +502,14 @@ function EntryRow({ item, isLast }: { item: CheckIn; isLast: boolean }) {
 const entryStyles = StyleSheet.create({
   timelineLine: {
     position: "absolute",
-    left: 22,
+    start: 22,
     top: 0,
     bottom: 0,
     width: 1.5,
   },
   timelineDot: {
     position: "absolute",
-    left: 15,
+    start: 15,
     top: 20,
     width: 14,
     height: 14,
@@ -516,7 +519,7 @@ const entryStyles = StyleSheet.create({
   row: {
     borderRadius: 16,
     padding: 14,
-    marginLeft: 36,
+    marginStart: 36,
     gap: 8,
   },
   rowTop: {
@@ -538,7 +541,7 @@ const entryStyles = StyleSheet.create({
   metricLabel: { fontSize: 11, fontFamily: "Inter_400Regular", width: 58 },
   metricBarBg: { flex: 1, height: 6, borderRadius: 3, overflow: "hidden" },
   metricBarFill: { height: "100%", borderRadius: 3 },
-  metricVal: { fontSize: 11, fontFamily: "Inter_600SemiBold", width: 36, textAlign: "right" },
+  metricVal: { fontSize: 11, fontFamily: "Inter_600SemiBold", width: 36, textAlign: textAlignEnd },
 });
 
 type SectionKey = "cycle" | "labs" | "medications" | "records" | "partner";
@@ -600,6 +603,7 @@ function ProviderReportBuilder({
   onShared: () => void;
 }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const health = useHealth();
   const { partnerSettings } = health;
   const [sections, setSections] = useState<Record<SectionKey, boolean>>({
@@ -719,9 +723,9 @@ function ProviderReportBuilder({
           <Feather name="clipboard" size={16} color={colors.riskLow} />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={[builderStyles.title, { color: colors.foreground }]}>Build provider report</Text>
+          <Text style={[builderStyles.title, { color: colors.foreground }]}>{t("history.buildReport")}</Text>
           <Text style={[builderStyles.sub, { color: colors.mutedForeground }]}>
-            Choose what to include, then generate a PDF to bring to your appointment.
+            {t("history.builderSub")}
           </Text>
         </View>
       </View>
@@ -756,7 +760,7 @@ function ProviderReportBuilder({
       </Pressable>
 
       <Text style={[builderStyles.privacyNote, { color: colors.mutedForeground }]}>
-        Private by design — your data stays on this device. Sharing only happens when you choose to export a PDF.
+        {t("history.builderPrivacy")}
       </Text>
     </View>
   );
@@ -789,6 +793,7 @@ const builderStyles = StyleSheet.create({
 
 function ShareHistorySection({ refreshToken }: { refreshToken: number }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const [entries, setEntries] = useState<ShareLogEntry[]>([]);
   const [loaded, setLoaded] = useState(false);
 
@@ -826,9 +831,9 @@ function ShareHistorySection({ refreshToken }: { refreshToken: number }) {
     <View style={[shareHistoryStyles.card, { backgroundColor: colors.card }]}>
       <View style={shareHistoryStyles.header}>
         <View style={{ flex: 1 }}>
-          <Text style={[shareHistoryStyles.title, { color: colors.foreground }]}>Share history</Text>
+          <Text style={[shareHistoryStyles.title, { color: colors.foreground }]}>{t("history.shareHistory")}</Text>
           <Text style={[shareHistoryStyles.sub, { color: colors.mutedForeground }]}>
-            An audit trail of provider reports that have left this device.
+            {t("history.shareSub")}
           </Text>
         </View>
         {entries.length > 0 && (
@@ -840,7 +845,7 @@ function ShareHistorySection({ refreshToken }: { refreshToken: number }) {
 
       {entries.length === 0 ? (
         <Text style={[shareHistoryStyles.emptyText, { color: colors.mutedForeground }]}>
-          No reports have been shared yet.
+          {t("history.noReports")}
         </Text>
       ) : (
         <View style={{ gap: 10 }}>
@@ -884,6 +889,7 @@ const shareHistoryStyles = StyleSheet.create({
 
 export default function HistoryScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { checkIns, profile } = useApp();
   const [sharing, setSharing] = useState(false);
@@ -918,7 +924,7 @@ export default function HistoryScreen() {
       ListHeaderComponent={
         <View style={{ gap: 14, marginBottom: 8 }}>
           <View style={styles.titleRow}>
-            <Text style={[styles.pageTitle, { color: colors.foreground }]}>Clinical Report</Text>
+            <Text style={[styles.pageTitle, { color: colors.foreground }]}>{t("history.clinicalReport")}</Text>
             {checkIns.length > 0 && (
               <Pressable
                 onPress={handleSharePdf}
@@ -937,15 +943,15 @@ export default function HistoryScreen() {
             )}
           </View>
           {checkIns.length > 0 && <SummarySection checkIns={checkIns} />}
-          <Text style={[styles.logTitle, { color: colors.foreground }]}>Timeline of Events</Text>
+          <Text style={[styles.logTitle, { color: colors.foreground }]}>{t("history.timeline")}</Text>
         </View>
       }
       ListEmptyComponent={
         <View style={styles.empty}>
           <Text style={{ fontSize: 48 }}>📋</Text>
-          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No entries yet</Text>
+          <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t("history.noEntries")}</Text>
           <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
-            Complete your first check-in to see your clinical report here.
+            {t("history.emptyMsg")}
           </Text>
         </View>
       }

@@ -15,7 +15,7 @@ import { SyncStatusBadge } from "@/components/SyncStatusBadge";
 import { useApp } from "@/context/AppContext";
 import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
-import { useTranslation } from "@/i18n";
+import { LOCALE_LABELS, useTranslation } from "@/i18n";
 import { showAlert } from "@/utils/dialog";
 import {
   cancelCyclePredictionReminders,
@@ -27,6 +27,7 @@ import {
   scheduleMedicationReminders,
 } from "@/utils/notifications";
 import { predictCycle } from "@/utils/wellnessAlgorithm";
+import { directionalIcon } from "@/utils/rtl";
 
 // Fixed reminder time for now (8:00 PM local). Could be replaced with a time
 // picker later if one gets added to the project — none exists today.
@@ -78,7 +79,7 @@ function SettingRow({
         ) : null}
       </View>
       {rightElement ?? (
-        onPress ? <Feather name="chevron-right" size={16} color={colors.mutedForeground} /> : null
+        onPress ? <Feather name={directionalIcon("chevron-right")} size={16} color={colors.mutedForeground} /> : null
       )}
     </Pressable>
   );
@@ -183,7 +184,7 @@ export default function ProfileScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const { profile, checkIns, resetProfile } = useApp();
-  const { locale, setLocale } = useTranslation();
+  const { t, locale, setLocale, needsRestart } = useTranslation();
   const {
     privacySettings,
     partnerSettings,
@@ -359,38 +360,41 @@ export default function ProfileScreen() {
       <View style={[styles.hipaaBadge, { backgroundColor: colors.softGreen, borderColor: colors.riskLow + "40", borderWidth: 1 }]}>
         <Feather name="lock" size={14} color={colors.riskLow} />
         <Text style={[styles.hipaaText, { color: colors.riskLow }]}>
-          Private by design · Your data stays on this device
+          {t("profile.privateTagline")}
         </Text>
       </View>
 
-      <SettingsSection title="Account Settings">
+      <SettingsSection title={t("profile.sectionAccount")}>
         <SettingRow
           icon="user"
-          label="Personal Details"
+          label={t("profile.personalDetails")}
           subtitle={`${profile.name} · Baby ${profile.babyName}`}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="globe"
-          label="Language"
-          subtitle="English (US)"
-        />
-        <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
-        <SettingRow
-          icon="globe"
-          label="English / عربي"
-          subtitle={locale === "en" ? "English" : "عربي"}
+          label={t("profile.language")}
+          // Each language is named in its own script — a picker that reads
+          // "Arabic" in English is useless to someone who only reads Arabic.
+          subtitle={
+            needsRestart
+              ? t("profile.languageRestartPending")
+              : LOCALE_LABELS[locale]
+          }
           rightElement={
             <Switch
               value={locale === "ar"}
               onValueChange={(value) => setLocale(value ? "ar" : "en")}
               trackColor={{ false: colors.muted, true: colors.primary }}
+              // The control is a two-state toggle, so it needs to say which
+              // language it switches TO, not just report its own state.
+              accessibilityLabel={LOCALE_LABELS[locale === "ar" ? "en" : "ar"]}
             />
           }
         />
       </SettingsSection>
 
-      <SettingsSection title="Data & Sync">
+      <SettingsSection title={t("profile.sectionDataSync")}>
         <View style={dataSyncStyles.row}>
           <View style={[rowStyles.iconWrap, { backgroundColor: colors.secondary }]}>
             <Feather name="hard-drive" size={16} color={colors.primary} />
@@ -398,18 +402,18 @@ export default function ProfileScreen() {
           <View style={{ flex: 1 }}>
             <Text style={[rowStyles.label, { color: colors.text }]}>Storage</Text>
             <Text style={[rowStyles.sub, { color: colors.mutedForeground }]}>
-              Saved only on this device
+              {t("profile.savedOnDevice")}
             </Text>
           </View>
           <SyncStatusBadge />
         </View>
       </SettingsSection>
 
-      <SettingsSection title="Privacy & Data">
+      <SettingsSection title={t("profile.sectionPrivacy")}>
         <SettingRow
           icon="globe"
-          label="Personalized care"
-          subtitle="Optional background info for more inclusive guidance"
+          label={t("profile.personalizedCare")}
+          subtitle={t("profile.personalizedCareSub")}
           onPress={() => router.push("/care-profile")}
           rightElement={
             <StatusPill
@@ -425,40 +429,40 @@ export default function ProfileScreen() {
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="sliders"
-          label="Privacy & data controls"
-          subtitle="Encryption, retention, and clearing data"
+          label={t("profile.privacyControls")}
+          subtitle={t("profile.privacyControlsSub")}
           onPress={() => router.push("/privacy")}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="award"
-          label="Research participation"
-          subtitle="Anonymous, opt-in only"
+          label={t("profile.research")}
+          subtitle={t("profile.researchSub")}
           onPress={() => router.push("/research")}
           rightElement={<StatusPill active={privacySettings.research.participating} label={privacySettings.research.participating ? "Active" : "Off"} />}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="users"
-          label="Partner settings"
-          subtitle="Consent-based sharing with a partner"
+          label={t("profile.partnerSettings")}
+          subtitle={t("profile.partnerSettingsSub")}
           onPress={() => router.push("/partner/settings")}
           rightElement={<StatusPill active={partnerSettings.enabled} label={partnerSettings.enabled ? "Enabled" : "Off"} />}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="info"
-          label="About your data"
-          subtitle="How Luminara keeps your health data private"
+          label={t("profile.aboutData")}
+          subtitle={t("profile.aboutDataSub")}
           onPress={handleAboutData}
         />
       </SettingsSection>
 
-      <SettingsSection title="Reminders & Notifications">
+      <SettingsSection title={t("profile.sectionReminders")}>
         <SettingRow
           icon="bell"
-          label="Daily check-in reminder"
-          subtitle="A nudge each evening to log how you're feeling"
+          label={t("profile.dailyReminder")}
+          subtitle={t("profile.dailyReminderSub")}
           rightElement={
             <Switch
               value={checkinReminderEnabled}
@@ -470,8 +474,8 @@ export default function ProfileScreen() {
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="clipboard"
-          label="Medication reminders"
-          subtitle="Daily reminders for your active medications & supplements"
+          label={t("profile.medReminder")}
+          subtitle={t("profile.medReminderSub")}
           rightElement={
             <Switch
               value={medicationReminderEnabled}
@@ -483,8 +487,8 @@ export default function ProfileScreen() {
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="calendar"
-          label="Cycle prediction reminders"
-          subtitle="A heads-up before your predicted period & fertile window"
+          label={t("profile.cycleReminder")}
+          subtitle={t("profile.cycleReminderSub")}
           rightElement={
             <Switch
               value={cycleReminderEnabled}
@@ -495,17 +499,17 @@ export default function ProfileScreen() {
         />
       </SettingsSection>
 
-      <SettingsSection title="App Settings">
+      <SettingsSection title={t("profile.sectionApp")}>
         <SettingRow
           icon="sun"
           label="Theme"
-          subtitle="Light mode"
+          subtitle={t("profile.lightMode")}
         />
         <View style={[{ height: 1, backgroundColor: colors.border, marginHorizontal: 16 }]} />
         <SettingRow
           icon="info"
-          label="About Luminara Health"
-          subtitle="Version 1.0.0"
+          label={t("profile.aboutApp")}
+          subtitle={t("profile.version", { version: "1.0.0" })}
           onPress={handleAboutApp}
         />
       </SettingsSection>
@@ -514,7 +518,7 @@ export default function ProfileScreen() {
         onPress={handleLogout}
         disabled={resetting}
         accessibilityRole="button"
-        accessibilityLabel="Reset app data"
+        accessibilityLabel={t("profile.resetData")}
         style={({ pressed }) => [
           styles.logoutBtn,
           { backgroundColor: colors.card, opacity: resetting ? 0.6 : pressed ? 0.8 : 1 },
@@ -527,7 +531,7 @@ export default function ProfileScreen() {
       </Pressable>
 
       <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-        Luminara Health is not a substitute for professional medical advice, diagnosis, or treatment. Always consult your healthcare provider.
+        {t("profile.medicalDisclaimer")}
       </Text>
     </ScrollView>
   );

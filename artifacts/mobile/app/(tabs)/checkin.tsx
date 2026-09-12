@@ -23,6 +23,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useApp, getTodayString } from "@/context/AppContext";
 import { useColors } from "@/hooks/useColors";
 import { useTranslation } from "@/i18n";
+import { directionalIcon } from "@/utils/rtl";
 import { Feather } from "@expo/vector-icons";
 
 function useMoods() {
@@ -333,7 +334,7 @@ export default function CheckInScreen() {
           <Text style={[styles.nextStepText, { color: colors.text }]}>
             {t("checkin.nextStepCycle")}
           </Text>
-          <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+          <Feather name={directionalIcon("chevron-right")} size={16} color={colors.mutedForeground} />
         </Pressable>
         <Pressable
           onPress={() => router.push("/(tabs)")}
@@ -371,7 +372,7 @@ export default function CheckInScreen() {
               accessibilityLabel={t("common.back")}
               style={styles.backBtn}
             >
-              <Feather name="arrow-left" size={20} color={colors.text} />
+              <Feather name={directionalIcon("arrow-left")} size={20} color={colors.text} />
             </Pressable>
           ) : (
             <View style={{ width: 36 }} />

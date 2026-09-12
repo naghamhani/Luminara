@@ -5,6 +5,8 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
 import { goBack } from "@/utils/navigation";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 interface ScreenHeaderProps {
   title: string;
@@ -17,6 +19,7 @@ interface ScreenHeaderProps {
 /** Shared in-screen header for stack (non-tab) records screens. */
 export function ScreenHeader({ title, onBack, fallbackHref = "/(tabs)", right }: ScreenHeaderProps) {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   return (
@@ -31,9 +34,9 @@ export function ScreenHeader({ title, onBack, fallbackHref = "/(tabs)", right }:
         style={styles.backBtn}
         hitSlop={8}
         accessibilityRole="button"
-        accessibilityLabel="Go back"
+        accessibilityLabel={t("common.back")}
       >
-        <Feather name="chevron-left" size={26} color={colors.text} />
+        <Feather name={directionalIcon("chevron-left")} size={26} color={colors.text} />
       </Pressable>
       <Text
         style={[styles.title, { color: colors.foreground }]}

@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import { addDays, toDateString, type CycleEntry, type CyclePrediction, type FlowLevel } from "@/types/health";
+import { useTranslation } from "@/i18n";
 
 interface CycleStripProps {
   entries: CycleEntry[];
@@ -24,6 +25,7 @@ function isFlowActive(flow: FlowLevel | undefined): boolean {
  */
 export function CycleStrip({ entries, prediction, today, days = 35 }: CycleStripProps) {
   const colors = useColors();
+  const { t } = useTranslation();
   const todayStr = today ?? toDateString(new Date());
 
   const entryByDate = new Map(entries.map((e) => [e.date, e]));
@@ -120,9 +122,9 @@ export function CycleStrip({ entries, prediction, today, days = 35 }: CycleStrip
 
       <View style={styles.legendRow}>
         <LegendItem swatchColor={colors.softRed} label="Period" colors={colors} />
-        <LegendItem swatchColor={colors.softGreen} label="Fertile window" colors={colors} />
+        <LegendItem swatchColor={colors.softGreen} label={t("cycle.fertileWindow")} colors={colors} />
         <LegendItem swatchColor={colors.teal + "33"} borderColor={colors.teal} label="Ovulation" colors={colors} />
-        <LegendItem outlineColor={colors.riskHigh} label="Predicted period" colors={colors} />
+        <LegendItem outlineColor={colors.riskHigh} label={t("cycle.predictedPeriod")} colors={colors} />
       </View>
     </View>
   );

@@ -13,6 +13,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 
 export type ErrorFallbackProps = {
   error: Error;
@@ -21,6 +22,7 @@ export type ErrorFallbackProps = {
 
 export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   const [isModalVisible, setIsModalVisible] = useState(false);
@@ -53,7 +55,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
       {__DEV__ ? (
         <Pressable
           onPress={() => setIsModalVisible(true)}
-          accessibilityLabel="View error details"
+          accessibilityLabel={t("errors.viewDetails")}
           accessibilityRole="button"
           style={({ pressed }) => [
             styles.topButton,
@@ -70,11 +72,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
 
       <View style={styles.content}>
         <Text style={[styles.title, { color: colors.foreground }]}>
-          Something went wrong
+          {t("errors.somethingWrong")}
         </Text>
 
         <Text style={[styles.message, { color: colors.mutedForeground }]}>
-          Please reload the app to continue.
+          {t("errors.reloadToContinue")}
         </Text>
 
         <Pressable
@@ -94,7 +96,7 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
               { color: colors.primaryForeground },
             ]}
           >
-            Try Again
+            {t("errors.tryAgain")}
           </Text>
         </Pressable>
       </View>
@@ -120,11 +122,11 @@ export function ErrorFallback({ error, resetError }: ErrorFallbackProps) {
                 ]}
               >
                 <Text style={[styles.modalTitle, { color: colors.foreground }]}>
-                  Error Details
+                  {t("errors.details")}
                 </Text>
                 <Pressable
                   onPress={() => setIsModalVisible(false)}
-                  accessibilityLabel="Close error details"
+                  accessibilityLabel={t("errors.closeDetails")}
                   accessibilityRole="button"
                   style={({ pressed }) => [
                     styles.closeButton,
@@ -200,7 +202,7 @@ const styles = StyleSheet.create({
   },
   topButton: {
     position: "absolute",
-    right: 16,
+    end: 16,
     width: 44,
     height: 44,
     borderRadius: 8,

@@ -3,6 +3,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 
 interface PreviewPair {
   label: string;
@@ -28,6 +29,7 @@ function JsonBlock({ value, tint }: { value: unknown; tint: string }) {
  *  anonymization is concrete rather than abstract. */
 export function AnonymizedPreviewCard({ pairs }: AnonymizedPreviewCardProps) {
   const colors = useColors();
+  const { t } = useTranslation();
 
   return (
     <View style={styles.container}>
@@ -39,7 +41,7 @@ export function AnonymizedPreviewCard({ pairs }: AnonymizedPreviewCardProps) {
               <View style={styles.columnHeader}>
                 <Feather name="eye" size={12} color={colors.mutedForeground} />
                 <Text style={[styles.columnTitle, { color: colors.mutedForeground }]}>
-                  Before (on device)
+                  {t("research.beforeOnDevice")}
                 </Text>
               </View>
               <JsonBlock value={pair.before} tint={colors.mutedForeground} />
@@ -48,7 +50,7 @@ export function AnonymizedPreviewCard({ pairs }: AnonymizedPreviewCardProps) {
               <View style={styles.columnHeader}>
                 <Feather name="shield" size={12} color={colors.accent} />
                 <Text style={[styles.columnTitle, { color: colors.accent }]}>
-                  After (exported)
+                  {t("research.afterExported")}
                 </Text>
               </View>
               <JsonBlock value={pair.after} tint={colors.accent} />

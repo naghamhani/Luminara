@@ -26,6 +26,8 @@ import {
   toDateString,
 } from "@/types/health";
 import { goBack } from "@/utils/navigation";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 function formatDateLabel(date: string): string {
   return new Date(date + "T12:00:00").toLocaleDateString("en-US", {
@@ -43,6 +45,7 @@ function addDaysLocal(date: string, n: number): string {
 
 export default function PartnerLogScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { partnerSettings, addPartnerObservation } = useHealth();
 
@@ -113,7 +116,7 @@ export default function PartnerLogScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <PartnerScreenHeader title="Log an observation" />
+      <PartnerScreenHeader title={t("partner.logObservation")} />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
@@ -125,7 +128,7 @@ export default function PartnerLogScreen() {
             hitSlop={8}
             style={styles.dateArrow}
           >
-            <Feather name="chevron-left" size={20} color={colors.text} />
+            <Feather name={directionalIcon("chevron-left")} size={20} color={colors.text} />
           </Pressable>
           <Text style={[styles.dateText, { color: colors.foreground }]}>
             {formatDateLabel(date)}
@@ -137,7 +140,7 @@ export default function PartnerLogScreen() {
             disabled={date >= today}
           >
             <Feather
-              name="chevron-right"
+              name={directionalIcon("chevron-right")}
               size={20}
               color={date >= today ? colors.border : colors.text}
             />
@@ -146,7 +149,7 @@ export default function PartnerLogScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            How did they seem today?
+            {t("partner.howSeemToday")}
           </Text>
           <View style={styles.ratingsList}>
             <RatingRow label="Mood" value={mood} onChange={setMood} low="Very low" high="Great" />
@@ -161,7 +164,7 @@ export default function PartnerLogScreen() {
             />
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <RatingRow
-              label="Sleep quality"
+              label={t("partner.sleepQuality")}
               value={sleepQuality}
               onChange={setSleepQuality}
               low="Very poor"
@@ -170,7 +173,7 @@ export default function PartnerLogScreen() {
             />
             <View style={[styles.divider, { backgroundColor: colors.border }]} />
             <RatingRow
-              label="Overall wellbeing"
+              label={t("partner.overallWellbeing")}
               value={overallWellbeing}
               onChange={setOverallWellbeing}
               low="Struggling"
@@ -182,7 +185,7 @@ export default function PartnerLogScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <ChipGroup
-            label="What stress did you notice?"
+            label={t("partner.stressNoticed")}
             options={PARTNER_STRESS_FACTORS}
             selected={stressFactors}
             onToggle={toggleStressFactor}
@@ -192,7 +195,7 @@ export default function PartnerLogScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <ChipGroup
-            label="How did you support them?"
+            label={t("partner.howSupported")}
             options={PARTNER_SUPPORT_ACTIVITIES}
             selected={supportProvided}
             onToggle={toggleSupport}
@@ -202,10 +205,10 @@ export default function PartnerLogScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Anything worrying you noticed?
+            {t("partner.worryNoticed")}
           </Text>
           <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            Optional — withdrawal, appetite changes, trouble sleeping, or anything else on your mind.
+            {t("partner.worryHint")}
           </Text>
           <TextInput
             style={[
@@ -215,7 +218,7 @@ export default function PartnerLogScreen() {
             value={concerns}
             onChangeText={setConcerns}
             multiline
-            placeholder="Share what you've noticed..."
+            placeholder={t("partner.noticedPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             textAlignVertical="top"
           />
@@ -223,7 +226,7 @@ export default function PartnerLogScreen() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Life events, visitors, milestones…
+            {t("partner.contextPlaceholder")}
           </Text>
           <TextInput
             style={[
@@ -233,7 +236,7 @@ export default function PartnerLogScreen() {
             value={contextNotes}
             onChangeText={setContextNotes}
             multiline
-            placeholder="Anything worth remembering about today..."
+            placeholder={t("partner.rememberPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             textAlignVertical="top"
           />
@@ -242,10 +245,10 @@ export default function PartnerLogScreen() {
         <View style={[styles.shareCard, { backgroundColor: colors.card }]}>
           <View style={{ flex: 1, gap: 4 }}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-              Share this entry with your partner
+              {t("partner.shareEntry")}
             </Text>
             <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-              Off keeps it visible only in this partner space — your partner will never see it.
+              {t("partner.shareEntryHint")}
             </Text>
           </View>
           <Switch
@@ -277,7 +280,7 @@ export default function PartnerLogScreen() {
             { backgroundColor: colors.primary, opacity: saving ? 0.6 : pressed ? 0.85 : 1 },
           ]}
         >
-          <Text style={styles.saveBtnText}>Save observation</Text>
+          <Text style={styles.saveBtnText}>{t("partner.saveObservation")}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>

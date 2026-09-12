@@ -29,6 +29,8 @@ import {
   type TestOutcome,
 } from "@/types/health";
 import { goBack } from "@/utils/navigation";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const FLOW_LABELS: Record<FlowLevel, string> = {
   none: "None",
@@ -63,6 +65,7 @@ function formatDateLong(date: string): string {
 
 export default function CycleLogScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { date: dateParam } = useLocalSearchParams<{ date?: string }>();
   const { cycleEntries, upsertCycleEntry } = useHealth();
@@ -156,7 +159,7 @@ export default function CycleLogScreen() {
     >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack("/cycle")} style={styles.backBtn} hitSlop={10}>
-          <Feather name="chevron-left" size={24} color={colors.text} />
+          <Feather name={directionalIcon("chevron-left")} size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>
           {date === today ? "Log today" : `Log ${formatDateLong(date)}`}
@@ -177,7 +180,7 @@ export default function CycleLogScreen() {
               style={[styles.dateChevron, { backgroundColor: colors.secondary }]}
               hitSlop={8}
             >
-              <Feather name="chevron-left" size={18} color={colors.text} />
+              <Feather name={directionalIcon("chevron-left")} size={18} color={colors.text} />
             </Pressable>
             <Text style={[styles.dateText, { color: colors.foreground }]}>{formatDateLong(date)}</Text>
             <Pressable
@@ -190,7 +193,7 @@ export default function CycleLogScreen() {
               hitSlop={8}
             >
               <Feather
-                name="chevron-right"
+                name={directionalIcon("chevron-right")}
                 size={18}
                 color={canGoForward ? colors.text : colors.border}
               />
@@ -242,7 +245,7 @@ export default function CycleLogScreen() {
         {/* BBT */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Basal body temperature
+            {t("cycle.bbt")}
           </Text>
           <TextInput
             style={[
@@ -256,13 +259,13 @@ export default function CycleLogScreen() {
             keyboardType="decimal-pad"
           />
           <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            In °C, typically between 35.5 and 37.5
+            {t("cycle.bbtHint")}
           </Text>
         </View>
 
         {/* Cervical mucus */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Cervical mucus</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("cycle.cervicalMucus")}</Text>
           <View style={styles.pillRow}>
             {CERVICAL_MUCUS_TYPES.map((type) => {
               const active = cervicalMucus === type;
@@ -296,7 +299,7 @@ export default function CycleLogScreen() {
 
         {/* Ovulation test */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Ovulation test</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("cycle.ovulationTest")}</Text>
           <SegmentedControl
             options={TEST_OPTIONS}
             labels={TEST_LABELS}
@@ -308,7 +311,7 @@ export default function CycleLogScreen() {
 
         {/* Pregnancy test */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Pregnancy test</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("cycle.pregnancyTest")}</Text>
           <SegmentedControl
             options={TEST_OPTIONS}
             labels={TEST_LABELS}
@@ -361,7 +364,7 @@ export default function CycleLogScreen() {
             ]}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Anything else worth remembering about today?"
+            placeholder={t("cycle.notesPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             multiline
             textAlignVertical="top"

@@ -28,6 +28,7 @@ import { useTranslation } from "@/i18n";
 import { REPRODUCTIVE_PHASE_LABELS, daysBetween, toDateString } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { detectPhase, predictCycle } from "@/utils/wellnessAlgorithm";
+import { directionalIcon } from "@/utils/rtl";
 
 function getDaysSince(dateStr: string): number {
   return Math.max(0, daysBetween(dateStr, toDateString(new Date())));
@@ -568,7 +569,7 @@ export default function HomeScreen() {
             </Text>
           )}
         </View>
-        <Feather name="chevron-right" size={16} color={colors.mutedForeground} />
+        <Feather name={directionalIcon("chevron-right")} size={16} color={colors.mutedForeground} />
       </Pressable>
 
       <View>
@@ -699,7 +700,7 @@ const styles = StyleSheet.create({
   },
   heroFlame: {
     position: "absolute",
-    right: -24,
+    end: -24,
     bottom: -48,
   },
   ringWrap: {

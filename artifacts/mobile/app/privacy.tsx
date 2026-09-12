@@ -11,6 +11,8 @@ import { useColors } from "@/hooks/useColors";
 import { DataTypeKey, DATA_TYPE_KEYS, DATA_TYPE_LABELS } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const DATA_TYPE_ICONS: Record<DataTypeKey, keyof typeof Feather.glyphMap> = {
   checkIns: "check-circle",
@@ -46,6 +48,7 @@ function Section({ title, children }: SectionProps) {
 
 export default function PrivacyScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { checkIns } = useApp();
   const {
@@ -151,9 +154,9 @@ export default function PrivacyScreen() {
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack("/(tabs)/profile")} style={styles.backBtn} hitSlop={10}>
-          <Feather name="chevron-left" size={26} color={colors.text} />
+          <Feather name={directionalIcon("chevron-left")} size={26} color={colors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Privacy & Data</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t("privacy.title")}</Text>
       </View>
 
       <ScrollView
@@ -168,7 +171,7 @@ export default function PrivacyScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.statusTitle, { color: colors.foreground }]}>
-                All data stays on this device
+                {t("privacy.allOnDevice")}
               </Text>
               <Text style={[styles.statusSub, { color: colors.mutedForeground }]}>
                 Private by design — nothing leaves your phone unless you export and share it
@@ -182,7 +185,7 @@ export default function PrivacyScreen() {
           <View style={styles.toggleRow}>
             <View style={{ flex: 1 }}>
               <Text style={[styles.toggleLabel, { color: colors.text }]}>
-                Encrypt sensitive data at rest
+                {t("privacy.encryptAtRest")}
               </Text>
               <Text style={[styles.toggleHint, { color: colors.mutedForeground }]}>
                 {Platform.OS === "web"
@@ -200,7 +203,7 @@ export default function PrivacyScreen() {
         </View>
 
         {/* Data inventory */}
-        <Section title="Your data on this device">
+        <Section title={t("privacy.onDevice")}>
           {DATA_TYPE_KEYS.map((key, idx) => (
             <View key={key}>
               {idx > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
@@ -220,9 +223,9 @@ export default function PrivacyScreen() {
         </Section>
 
         {/* Retention */}
-        <Section title="Data retention">
+        <Section title={t("privacy.retention")}>
           <Text style={[styles.toggleHint, { color: colors.mutedForeground, marginBottom: 12 }]}>
-            Entries older than this are deleted automatically on app start.
+            {t("privacy.retentionNote")}
           </Text>
           <View style={styles.retentionGrid}>
             {RETENTION_OPTIONS.map((opt) => {
@@ -253,7 +256,7 @@ export default function PrivacyScreen() {
         </Section>
 
         {/* Granular deletion */}
-        <Section title="Delete specific data">
+        <Section title={t("privacy.deleteSpecific")}>
           {DATA_TYPE_KEYS.map((key, idx) => (
             <View key={key}>
               {idx > 0 && <View style={[styles.divider, { backgroundColor: colors.border }]} />}
@@ -264,7 +267,7 @@ export default function PrivacyScreen() {
                   </Text>
                   {key === "checkIns" && (
                     <Text style={[styles.toggleHint, { color: colors.mutedForeground }]}>
-                      Managed by the original app data — not deleted here.
+                      {t("privacy.managedElsewhere")}
                     </Text>
                   )}
                 </View>
@@ -297,7 +300,7 @@ export default function PrivacyScreen() {
           style={[styles.deleteAllBtn, { backgroundColor: colors.riskHigh }]}
         >
           <Feather name="alert-triangle" size={16} color="#fff" />
-          <Text style={styles.deleteAllText}>Delete all health data</Text>
+          <Text style={styles.deleteAllText}>{t("privacy.deleteAll")}</Text>
         </Pressable>
 
         {/* Research shortcut */}
@@ -309,12 +312,12 @@ export default function PrivacyScreen() {
             <Feather name="git-pull-request" size={16} color={colors.purple} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.toggleLabel, { color: colors.text }]}>Research participation</Text>
+            <Text style={[styles.toggleLabel, { color: colors.text }]}>{t("privacy.research")}</Text>
             <Text style={[styles.toggleHint, { color: colors.mutedForeground }]}>
-              Contribute anonymized data to postpartum research
+              {t("privacy.contribute")}
             </Text>
           </View>
-          <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+          <Feather name={directionalIcon("chevron-right")} size={18} color={colors.mutedForeground} />
         </Pressable>
       </ScrollView>
     </View>

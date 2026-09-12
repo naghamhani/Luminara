@@ -7,39 +7,43 @@ import { Feather } from "@expo/vector-icons";
 import React from "react";
 import { Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 
 function NativeTabLayout() {
+  const { t } = useTranslation();
+
   return (
     <NativeTabs>
       <NativeTabs.Trigger name="index">
         <Icon sf={{ default: "house", selected: "house.fill" }} />
-        <Label>Home</Label>
+        <Label>{t("nav.home")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="checkin">
         <Icon sf={{ default: "heart", selected: "heart.fill" }} />
-        <Label>Check-In</Label>
+        <Label>{t("nav.checkin")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="history">
         <Icon sf={{ default: "doc.text", selected: "doc.text.fill" }} />
-        <Label>Report</Label>
+        <Label>{t("nav.report")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="resources">
         <Icon sf={{ default: "hands.and.sparkles", selected: "hands.and.sparkles.fill" }} />
-        <Label>Support</Label>
+        <Label>{t("nav.support")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="insights">
         <Icon sf={{ default: "chart.line.uptrend.xyaxis", selected: "chart.line.uptrend.xyaxis" }} />
-        <Label>Insights</Label>
+        <Label>{t("nav.insights")}</Label>
       </NativeTabs.Trigger>
       <NativeTabs.Trigger name="profile">
         <Icon sf={{ default: "person", selected: "person.fill" }} />
-        <Label>Me</Label>
+        <Label>{t("nav.me")}</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
 }
 
 function ClassicTabLayout() {
+  const { t } = useTranslation();
   const colors = useColors();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
@@ -81,7 +85,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: "Home",
+          title: t("nav.home"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="house.fill" tintColor={color} size={21} />
@@ -93,7 +97,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="checkin"
         options={{
-          title: "Check-In",
+          title: t("nav.checkin"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="heart.fill" tintColor={color} size={21} />
@@ -105,7 +109,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="history"
         options={{
-          title: "Report",
+          title: t("nav.report"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="doc.text.fill" tintColor={color} size={21} />
@@ -117,7 +121,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="resources"
         options={{
-          title: "Support",
+          title: t("nav.support"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="heart.circle.fill" tintColor={color} size={21} />
@@ -129,7 +133,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="insights"
         options={{
-          title: "Insights",
+          title: t("nav.insights"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="chart.line.uptrend.xyaxis" tintColor={color} size={21} />
@@ -141,7 +145,7 @@ function ClassicTabLayout() {
       <Tabs.Screen
         name="profile"
         options={{
-          title: "Me",
+          title: t("nav.me"),
           tabBarIcon: ({ color }) =>
             isIOS ? (
               <SymbolView name="person.fill" tintColor={color} size={21} />

@@ -12,6 +12,7 @@ import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
 import { showAlert } from "@/utils/dialog";
 import { isPartnerVerified } from "@/utils/partnerSession";
+import { useTranslation } from "@/i18n";
 
 const WATCH_ITEMS = [
   { icon: "user-minus" as const, label: "Withdrawing from you or others" },
@@ -27,8 +28,9 @@ function average(values: number[]): number {
 
 export default function PartnerDashboardScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
-  const { checkIns } = useApp();
+  const { checkIns, profile } = useApp();
   const { partnerSettings, partnerObservations, deletePartnerObservation } = useHealth();
 
   // SECURITY: this route must never render without a PIN check this session.
@@ -121,12 +123,12 @@ export default function PartnerDashboardScreen() {
         showsVerticalScrollIndicator={false}
       >
         <Text style={[styles.greeting, { color: colors.mutedForeground }]}>
-          Thank you for showing up for Nagham. Here's your support space.
+          {t("partner.greeting", { name: profile?.name ?? "" })}
         </Text>
 
         {partnerSettings.partnerCanViewSummary ? (
           <View style={[styles.summaryCard, { backgroundColor: colors.primary }]}>
-            <Text style={styles.summaryLabel}>Nagham's 7-day wellness</Text>
+            <Text style={styles.summaryLabel}>{t("partner.weeklyWellness", { name: profile?.name ?? "" })}</Text>
             {summary ? (
               <>
                 <View style={styles.summaryRow}>
@@ -137,12 +139,12 @@ export default function PartnerDashboardScreen() {
                   </View>
                 </View>
                 <Text style={styles.summaryFootnote}>
-                  A general sense of the week — not raw entries or notes. Not a diagnosis.
+                  {t("partner.summaryNote")}
                 </Text>
               </>
             ) : (
               <Text style={styles.summaryFootnote}>
-                Nagham hasn't logged enough check-ins yet for a weekly summary.
+                {t("partner.notEnoughCheckins", { name: profile?.name ?? "" })}
               </Text>
             )}
           </View>
@@ -150,7 +152,7 @@ export default function PartnerDashboardScreen() {
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <Feather name="lock" size={18} color={colors.mutedForeground} />
             <Text style={[styles.privateTitle, { color: colors.foreground }]}>
-              Summary kept private
+              {t("partner.summaryPrivate")}
             </Text>
             <Text style={[styles.privateBody, { color: colors.mutedForeground }]}>
               Nagham has chosen to keep her wellness summary private for now — and that's
@@ -167,11 +169,11 @@ export default function PartnerDashboardScreen() {
           ]}
         >
           <Feather name="edit-3" size={17} color="#fff" />
-          <Text style={styles.logBtnText}>Log an observation</Text>
+          <Text style={styles.logBtnText}>{t("partner.logObservation")}</Text>
         </Pressable>
 
         <View style={styles.sectionHeaderRow}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Your past observations</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("partner.pastObservations")}</Text>
           <Text style={[styles.countText, { color: colors.mutedForeground }]}>
             {myObservations.length}
           </Text>
@@ -181,7 +183,7 @@ export default function PartnerDashboardScreen() {
           <View style={[styles.emptyState, { backgroundColor: colors.card }]}>
             <Text style={{ fontSize: 28 }}>📝</Text>
             <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-              You haven't logged any observations yet.
+              {t("partner.noObservations")}
             </Text>
           </View>
         ) : (
@@ -193,7 +195,7 @@ export default function PartnerDashboardScreen() {
         )}
 
         <View style={[styles.guidanceCard, { backgroundColor: colors.softOrange }]}>
-          <Text style={[styles.guidanceTitle, { color: "#9A5010" }]}>What to watch for</Text>
+          <Text style={[styles.guidanceTitle, { color: "#9A5010" }]}>{t("partner.whatToWatch")}</Text>
           <Text style={[styles.guidanceSub, { color: "#B06020" }]}>
             Gentle signs that it may help to check in more closely, or to encourage professional
             support:

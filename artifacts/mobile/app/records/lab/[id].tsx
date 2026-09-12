@@ -11,6 +11,7 @@ import { useColors } from "@/hooks/useColors";
 import { LAB_CATEGORY_LABELS, LabFlag, LabMarker } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
+import { useTranslation } from "@/i18n";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -104,7 +105,7 @@ const rangeStyles = StyleSheet.create({
     width: 14,
     height: 14,
     borderRadius: 7,
-    marginLeft: -7,
+    marginStart: -7,
     borderWidth: 2,
     borderColor: "#fff",
   },
@@ -114,6 +115,7 @@ const rangeStyles = StyleSheet.create({
 
 function MarkerRow({ marker }: { marker: LabMarker }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const color =
     marker.flag === "high" ? colors.riskHigh : marker.flag === "low" ? colors.riskModerate : colors.riskLow;
 
@@ -139,7 +141,7 @@ function MarkerRow({ marker }: { marker: LabMarker }) {
         <View style={[markerStyles.callout, { backgroundColor: color + "14" }]}>
           <Feather name="alert-circle" size={13} color={color} />
           <Text style={[markerStyles.calloutText, { color }]}>
-            Out of reference range — review with your healthcare provider.
+            {t("records.outOfRange")}
           </Text>
         </View>
       )}
@@ -177,6 +179,7 @@ const markerStyles = StyleSheet.create({
 
 export default function LabDetailScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { labResults, deleteLabResult } = useHealth();
@@ -207,20 +210,20 @@ export default function LabDetailScreen() {
   if (!lab) {
     return (
       <View style={[styles.screen, { backgroundColor: colors.background }]}>
-        <ScreenHeader title="Lab Result" fallbackHref="/records" />
+        <ScreenHeader title={t("records.labResult")} fallbackHref="/records" />
         <View style={styles.notFound}>
           <Text style={{ fontSize: 40 }}>🔍</Text>
           <Text style={[styles.notFoundTitle, { color: colors.foreground }]}>
-            Lab result not found
+            {t("records.labNotFound")}
           </Text>
           <Text style={[styles.notFoundSub, { color: colors.mutedForeground }]}>
-            This lab result may have been deleted or is no longer available.
+            {t("records.labNotFoundMsg")}
           </Text>
           <Pressable
             onPress={() => router.replace("/records")}
             style={[styles.backHomeBtn, { backgroundColor: colors.primary }]}
           >
-            <Text style={styles.backHomeBtnText}>Back to Records</Text>
+            <Text style={styles.backHomeBtnText}>{t("records.backToRecords")}</Text>
           </Pressable>
         </View>
       </View>
@@ -230,7 +233,7 @@ export default function LabDetailScreen() {
   return (
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <ScreenHeader
-        title="Lab Result"
+        title={t("records.labResult")}
         fallbackHref="/records"
         right={
           <Pressable onPress={handleDelete} hitSlop={8} style={styles.deleteBtn}>
@@ -281,14 +284,14 @@ export default function LabDetailScreen() {
         <View style={styles.disclaimerRow}>
           <Feather name="info" size={12} color={colors.mutedForeground} />
           <Text style={[styles.disclaimerText, { color: colors.mutedForeground }]}>
-            Not a diagnosis — always review lab results with your healthcare provider.
+            {t("common.notADiagnosisProvider")}
           </Text>
         </View>
 
         <View style={styles.footerNote}>
           <Feather name="lock" size={12} color={colors.mutedForeground} />
           <Text style={[styles.footerNoteText, { color: colors.mutedForeground }]}>
-            Records are encrypted on this device and never leave it.
+            {t("common.encryptedOnDevice")}
           </Text>
         </View>
       </ScrollView>

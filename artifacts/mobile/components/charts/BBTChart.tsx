@@ -3,6 +3,7 @@ import { StyleSheet, Text, View } from "react-native";
 import Svg, { Circle, Defs, Line, LinearGradient, Polygon, Polyline, Rect, Stop, Text as SvgText } from "react-native-svg";
 import { useColors } from "@/hooks/useColors";
 import type { CycleEntry } from "@/types/health";
+import { useTranslation } from "@/i18n";
 
 const CHART_HEIGHT = 160;
 const Y_MIN = 36.0;
@@ -23,6 +24,7 @@ interface BBTChartProps {
  */
 export default function BBTChart({ cycleEntries, fertileWindowStart, fertileWindowEnd }: BBTChartProps) {
   const colors = useColors();
+  const { t } = useTranslation();
 
   const points = useMemo(() => {
     return [...cycleEntries]
@@ -52,7 +54,7 @@ export default function BBTChart({ cycleEntries, fertileWindowStart, fertileWind
     return (
       <View style={[styles.emptyBox, { backgroundColor: colors.secondary }]}>
         <Text style={[styles.emptyText, { color: colors.mutedForeground }]}>
-          Log basal body temperature to see your BBT chart here.
+          {t("cycle.bbtEmpty")}
         </Text>
       </View>
     );
@@ -192,7 +194,7 @@ export default function BBTChart({ cycleEntries, fertileWindowStart, fertileWind
         <View style={styles.legendRow}>
           <View style={[styles.legendSwatch, { backgroundColor: colors.warm, opacity: 0.4 }]} />
           <Text style={[styles.legendText, { color: colors.mutedForeground }]}>
-            Predicted fertile window
+            {t("cycle.predictedFertile")}
           </Text>
         </View>
       )}

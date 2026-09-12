@@ -108,7 +108,7 @@ const styles = StyleSheet.create({
     height: 16,
     borderRadius: 4,
     borderWidth: 2,
-    marginLeft: -4,
+    marginStart: -4,
   },
   labelsRow: {
     flexDirection: "row",

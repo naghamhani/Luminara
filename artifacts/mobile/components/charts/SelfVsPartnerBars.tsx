@@ -2,6 +2,7 @@ import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useColors } from "@/hooks/useColors";
 import type { PartnerCorrelation } from "@/types/health";
+import { textAlignEnd } from "@/utils/rtl";
 
 const METRIC_LABELS: Record<PartnerCorrelation["metric"], string> = {
   mood: "Mood",
@@ -110,6 +111,6 @@ const styles = StyleSheet.create({
   barSideLabel: { fontSize: 10, fontFamily: "Inter_500Medium", width: 46 },
   track: { flex: 1, height: 8, borderRadius: 4, overflow: "hidden" },
   fill: { height: "100%", borderRadius: 4 },
-  barValue: { fontSize: 11, fontFamily: "Inter_600SemiBold", minWidth: 24, textAlign: "right" },
+  barValue: { fontSize: 11, fontFamily: "Inter_600SemiBold", minWidth: 24, textAlign: textAlignEnd },
   note: { fontSize: 11, fontFamily: "Inter_400Regular", lineHeight: 16, marginTop: 2 },
 });

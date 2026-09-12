@@ -21,6 +21,7 @@ import { useHealth } from "@/context/HealthContext";
 import { useColors } from "@/hooks/useColors";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
+import { useTranslation } from "@/i18n";
 
 function ToggleRow({
   label,
@@ -58,6 +59,7 @@ function ToggleRow({
 
 export default function PartnerSettingsScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { partnerSettings, partnerObservations, savePartnerSettings } = useHealth();
 
@@ -150,14 +152,14 @@ export default function PartnerSettingsScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <PartnerScreenHeader title="Partner settings" />
+      <PartnerScreenHeader title={t("partner.settings")} />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Partner name</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("partner.partnerName")}</Text>
           <View style={styles.inlineRow}>
             <TextInput
               style={[
@@ -180,17 +182,17 @@ export default function PartnerSettingsScreen() {
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Sharing controls</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("partner.sharingControls")}</Text>
           <ToggleRow
-            label="Let me see their observations"
-            description="Only entries your partner marks as shared will appear to you. Anything they keep private stays private."
+            label={t("partner.seeObservations")}
+            description={t("partner.seeObservationsSub2")}
             value={userCanViewObservations}
             onChange={handleUserCanView}
           />
           <View style={[styles.divider, { backgroundColor: colors.border }]} />
           <ToggleRow
-            label="Let them see my weekly summary"
-            description="Shares only a 7-day average wellness percentage and trend word — never your raw check-ins, notes, or details."
+            label={t("partner.shareSummary")}
+            description={t("partner.shareSummarySub2")}
             value={partnerCanViewSummary}
             onChange={handlePartnerCanView}
           />
@@ -199,7 +201,7 @@ export default function PartnerSettingsScreen() {
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.inlineRow}>
             <Text style={[styles.sectionTitle, { color: colors.foreground, flex: 1 }]}>
-              Partner PIN
+              {t("partner.pinLabel")}
             </Text>
             <Pressable onPress={() => setShowPinChange((s) => !s)}>
               <Text style={[styles.linkText, { color: colors.primary }]}>
@@ -212,12 +214,12 @@ export default function PartnerSettingsScreen() {
               <PinInput
                 value={newPin}
                 onChangeText={setNewPin}
-                placeholder="New PIN"
+                placeholder={t("partner.newPin")}
               />
               <PinInput
                 value={confirmPin}
                 onChangeText={setConfirmPin}
-                placeholder="Confirm new PIN"
+                placeholder={t("partner.confirmNewPin")}
               />
               {pinError && (
                 <Text style={[styles.errorText, { color: colors.destructive }]}>{pinError}</Text>
@@ -227,7 +229,7 @@ export default function PartnerSettingsScreen() {
                 disabled={saving}
                 style={[styles.smallBtn, { backgroundColor: colors.primary, opacity: saving ? 0.6 : 1 }]}
               >
-                <Text style={styles.smallBtnText}>Update PIN</Text>
+                <Text style={styles.smallBtnText}>{t("partner.updatePin")}</Text>
               </Pressable>
             </View>
           )}
@@ -242,7 +244,7 @@ export default function PartnerSettingsScreen() {
               {observationCount} observation{observationCount === 1 ? "" : "s"} stored
             </Text>
             <Text style={[styles.toggleDesc, { color: colors.mutedForeground }]}>
-              Manage or delete these anytime from Privacy & Data.
+              {t("partner.pinManageNote")}
             </Text>
           </View>
         </View>
@@ -253,11 +255,11 @@ export default function PartnerSettingsScreen() {
         >
           <Feather name="power" size={16} color={colors.destructive} />
           <Text style={[styles.disableBtnText, { color: colors.destructive }]}>
-            Disable partner space
+            {t("partner.disable")}
           </Text>
         </Pressable>
         <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
-          Private by design — your data stays on this device.
+          {t("common.privateByDesign")}
         </Text>
       </ScrollView>
     </KeyboardAvoidingView>

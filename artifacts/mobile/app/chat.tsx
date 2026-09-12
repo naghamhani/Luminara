@@ -22,6 +22,8 @@ import { detectPhase } from "@/utils/wellnessAlgorithm";
 import { daysBetween, REPRODUCTIVE_PHASE_LABELS, toDateString } from "@/types/health";
 import { goBack } from "@/utils/navigation";
 import { isBackendConfigured } from "@/utils/apiConfig";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 import {
   BackendNotConfiguredError,
   sendChat,
@@ -45,6 +47,7 @@ function nextId(): string {
 
 export default function ChatScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { profile, riskLevel, latestRiskScore } = useApp();
   const { cycleEntries, privacySettings } = useHealth();
@@ -135,12 +138,12 @@ export default function ChatScreen() {
       {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + 8, borderBottomColor: colors.border }]}>
         <Pressable onPress={() => goBack("/(tabs)/resources")} hitSlop={10}>
-          <Feather name="chevron-left" size={26} color={colors.foreground} />
+          <Feather name={directionalIcon("chevron-left")} size={26} color={colors.foreground} />
         </Pressable>
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.foreground }]}>Luna</Text>
           <Text style={[styles.headerSub, { color: colors.mutedForeground }]}>
-            Supportive companion · not a doctor
+            {t("chat.headerSub")}
           </Text>
         </View>
         <View style={{ width: 26 }} />
@@ -149,7 +152,7 @@ export default function ChatScreen() {
       {!configured && (
         <View style={[styles.banner, { backgroundColor: colors.warm + "22" }]}>
           <Text style={[styles.bannerText, { color: colors.foreground }]}>
-            Chat runs on the Luminara server (local Ollama). Set EXPO_PUBLIC_API_URL to enable it.
+            {t("chat.offlineNote")}
           </Text>
         </View>
       )}
@@ -175,7 +178,7 @@ export default function ChatScreen() {
       <View style={[styles.composer, { borderTopColor: colors.border, paddingBottom: insets.bottom + 8 }]}>
         <TextInput
           style={[styles.input, { backgroundColor: colors.input, color: colors.text }]}
-          placeholder="Share what's on your mind…"
+          placeholder={t("chat.inputPlaceholder")}
           placeholderTextColor={colors.mutedForeground}
           value={input}
           onChangeText={setInput}

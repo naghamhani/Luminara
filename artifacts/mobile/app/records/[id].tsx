@@ -13,6 +13,7 @@ import { useColors } from "@/hooks/useColors";
 import { MEDICAL_RECORD_TYPE_LABELS } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
+import { useTranslation } from "@/i18n";
 
 function formatDate(dateStr: string): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -21,6 +22,7 @@ function formatDate(dateStr: string): string {
 
 export default function RecordDetailScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { records, deleteRecord } = useHealth();
@@ -75,16 +77,16 @@ export default function RecordDetailScreen() {
         <View style={styles.notFound}>
           <Text style={{ fontSize: 40 }}>🔍</Text>
           <Text style={[styles.notFoundTitle, { color: colors.foreground }]}>
-            Record not found
+            {t("records.notFound")}
           </Text>
           <Text style={[styles.notFoundSub, { color: colors.mutedForeground }]}>
-            This record may have been deleted or is no longer available.
+            {t("records.notFoundMsg")}
           </Text>
           <Pressable
             onPress={() => router.replace("/records")}
             style={[styles.backHomeBtn, { backgroundColor: colors.primary }]}
           >
-            <Text style={styles.backHomeBtnText}>Back to Records</Text>
+            <Text style={styles.backHomeBtnText}>{t("records.backToRecords")}</Text>
           </Pressable>
         </View>
       </View>
@@ -125,7 +127,7 @@ export default function RecordDetailScreen() {
             </View>
             <View style={{ flex: 1 }}>
               <Text style={[styles.attributionLabel, { color: colors.mutedForeground }]}>
-                Provider
+                {t("records.provider2")}
               </Text>
               <Text style={[styles.attributionValue, { color: colors.text }]}>
                 {record.provider}
@@ -139,7 +141,7 @@ export default function RecordDetailScreen() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.attributionLabel, { color: colors.mutedForeground }]}>
-                  Facility
+                  {t("records.facility")}
                 </Text>
                 <Text style={[styles.attributionValue, { color: colors.text }]}>
                   {record.facility}
@@ -172,10 +174,10 @@ export default function RecordDetailScreen() {
                 </View>
                 <View style={{ flex: 1 }}>
                   <Text style={[styles.fileName, { color: colors.text }]} numberOfLines={1}>
-                    PDF document
+                    {t("records.pdfDocument")}
                   </Text>
                   <Text style={[styles.fileNote, { color: colors.mutedForeground }]}>
-                    In-app preview isn't available — share to open in another app
+                    {t("records.noPreview")}
                   </Text>
                 </View>
               </View>
@@ -204,7 +206,7 @@ export default function RecordDetailScreen() {
         <View style={styles.footerNote}>
           <Feather name="lock" size={12} color={colors.mutedForeground} />
           <Text style={[styles.footerNoteText, { color: colors.mutedForeground }]}>
-            Records are encrypted on this device and never leave it.
+            {t("common.encryptedOnDevice")}
           </Text>
         </View>
       </ScrollView>
