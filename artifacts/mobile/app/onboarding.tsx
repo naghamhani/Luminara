@@ -21,6 +21,7 @@ import { LuminaraLogo } from "@/components/LuminaraLogo";
 import { MoodIllustration } from "@/components/onboarding/illustrations/MoodIllustration";
 import { RhythmsIllustration } from "@/components/onboarding/illustrations/RhythmsIllustration";
 import { RiskInsightIllustration } from "@/components/onboarding/illustrations/RiskInsightIllustration";
+import { directionalIcon, textAlignEnd } from "@/utils/rtl";
 
 function useMoods() {
   const { t } = useTranslation();
@@ -149,7 +150,7 @@ export default function OnboardingScreen() {
               }}
               style={[styles.backBtn, { backgroundColor: colors.card }]}
             >
-              <Feather name="arrow-left" size={18} color={colors.text} />
+              <Feather name={directionalIcon("arrow-left")} size={18} color={colors.text} />
             </Pressable>
           ) : (
             <View style={{ width: 36 }} />
@@ -492,7 +493,7 @@ const styles = StyleSheet.create({
     overflow: "hidden",
   },
   progressFill: { height: "100%", borderRadius: 3 },
-  stepNum: { fontSize: 12, fontFamily: "Inter_500Medium", minWidth: 30, textAlign: "right" },
+  stepNum: { fontSize: 12, fontFamily: "Inter_500Medium", minWidth: 30, textAlign: textAlignEnd },
   scrollContent: { flexGrow: 1, paddingTop: 12, paddingBottom: 8 },
 
   splashContent: { alignItems: "center", gap: 20, paddingTop: 8 },

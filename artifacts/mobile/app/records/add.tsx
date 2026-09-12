@@ -30,9 +30,11 @@ import {
 } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
+import { useTranslation } from "@/i18n";
 
 export default function AddRecordScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { addRecord } = useHealth();
 
@@ -193,14 +195,14 @@ export default function AddRecordScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScreenHeader title="Add Record" fallbackHref="/records" />
+      <ScreenHeader title={t("records.addRecord")} fallbackHref="/records" />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View>
-          <Text style={[styles.label, { color: colors.text }]}>Record type</Text>
+          <Text style={[styles.label, { color: colors.text }]}>{t("records.recordType")}</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={{ marginTop: 8 }}>
             <View style={styles.chipRow}>
               {MEDICAL_RECORD_TYPES.map((t) => {
@@ -232,19 +234,19 @@ export default function AddRecordScreen() {
           </ScrollView>
         </View>
 
-        <Field label="Title" value={title} onChangeText={setTitle} placeholder="e.g. 6-week postpartum checkup" colors={colors} />
+        <Field label="Title" value={title} onChangeText={setTitle} placeholder={t("records.titlePlaceholder")} colors={colors} />
         <Field
-          label="Provider *"
+          label={t("records.provider")}
           value={provider}
           onChangeText={setProvider}
-          placeholder="e.g. Dr. Amina Rasheed"
+          placeholder={t("records.providerPlaceholder")}
           colors={colors}
         />
         <Field
           label="Facility"
           value={facility}
           onChangeText={setFacility}
-          placeholder="e.g. Amman Women's Health Clinic"
+          placeholder={t("records.facilityPlaceholder2")}
           colors={colors}
         />
         <Field
@@ -265,7 +267,7 @@ export default function AddRecordScreen() {
             ]}
             value={content}
             onChangeText={setContent}
-            placeholder="Paste or type the note — you can transcribe from a photo"
+            placeholder={t("records.contentPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             multiline
             textAlignVertical="top"
@@ -276,7 +278,7 @@ export default function AddRecordScreen() {
           label="Tags"
           value={tagInput}
           onChangeText={setTagInput}
-          placeholder="comma, separated, tags"
+          placeholder={t("records.tagsPlaceholder")}
           colors={colors}
         />
         {tags.length > 0 && (
@@ -304,7 +306,7 @@ export default function AddRecordScreen() {
               style={[styles.attachBtn, { backgroundColor: colors.card, borderColor: colors.border }]}
             >
               <Feather name="file-plus" size={16} color={colors.primary} />
-              <Text style={[styles.attachBtnText, { color: colors.text }]}>Document (PDF)</Text>
+              <Text style={[styles.attachBtnText, { color: colors.text }]}>{t("records.documentPdf")}</Text>
             </Pressable>
           </View>
 
@@ -345,7 +347,7 @@ export default function AddRecordScreen() {
         <View style={styles.footerNote}>
           <Feather name="lock" size={12} color={colors.mutedForeground} />
           <Text style={[styles.footerNoteText, { color: colors.mutedForeground }]}>
-            Private by design — your data stays on this device.
+            {t("common.privateByDesign")}
           </Text>
         </View>
       </ScrollView>

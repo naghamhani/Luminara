@@ -16,6 +16,8 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors } from "@/hooks/useColors";
 import { showAlert } from "@/utils/dialog";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const KNOWLEDGE = [
   {
@@ -192,7 +194,7 @@ const articleModalStyles = StyleSheet.create({
   closeBtn: { width: 36, height: 36, alignItems: "center", justifyContent: "center" },
   tagPill: { paddingHorizontal: 10, paddingVertical: 4, borderRadius: 8 },
   tagPillText: { fontSize: 11, fontFamily: "Inter_600SemiBold" },
-  readTime: { fontSize: 12, fontFamily: "Inter_400Regular", marginLeft: "auto" },
+  readTime: { fontSize: 12, fontFamily: "Inter_400Regular", marginStart: "auto" },
   scroll: { paddingHorizontal: 24, paddingTop: 24, gap: 14 },
   title: { fontSize: 24, fontFamily: "Inter_700Bold", lineHeight: 30 },
   body: { fontSize: 15, fontFamily: "Inter_400Regular", lineHeight: 24 },
@@ -202,6 +204,7 @@ const articleModalStyles = StyleSheet.create({
 
 export default function ResourcesScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const [search, setSearch] = useState("");
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null);
@@ -268,17 +271,17 @@ export default function ResourcesScreen() {
         keyboardShouldPersistTaps="handled"
       >
         <Text style={[styles.pageTitle, { color: colors.foreground }]}>
-          Resources & Support
+          {t("resources.title")}
         </Text>
         <Text style={[styles.pageSub, { color: colors.mutedForeground }]}>
-          Find the guidance and care you need, wherever you are in your journey.
+          {t("resources.sub")}
         </Text>
 
         <View style={[styles.searchRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
           <Feather name="search" size={16} color={colors.mutedForeground} />
           <TextInput
             style={[styles.searchInput, { color: colors.text }]}
-            placeholder="Search articles, specialists, or guides..."
+            placeholder={t("resources.searchPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             value={search}
             onChangeText={(t) => { setSearch(t); setActiveTopic(null); }}
@@ -299,12 +302,12 @@ export default function ResourcesScreen() {
             <Feather name="message-circle" size={20} color="#fff" />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={styles.featureTitle}>Talk to Luna</Text>
+            <Text style={styles.featureTitle}>{t("resources.talkToLuna")}</Text>
             <Text style={styles.featureSub}>
-              A private, anonymous companion for how you&apos;re feeling — anytime.
+              {t("resources.lunaSub")}
             </Text>
           </View>
-          <Feather name="chevron-right" size={20} color="#ffffffcc" />
+          <Feather name={directionalIcon("chevron-right")} size={20} color="#ffffffcc" />
         </Pressable>
 
         <Pressable
@@ -315,29 +318,29 @@ export default function ResourcesScreen() {
             <Feather name="activity" size={20} color={colors.primary} />
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={[styles.featureTitle, { color: colors.foreground }]}>Postpartum risk check</Text>
+            <Text style={[styles.featureTitle, { color: colors.foreground }]}>{t("resources.ppdCheck")}</Text>
             <Text style={[styles.featureSub, { color: colors.mutedForeground }]}>
-              A research-informed mood screen (EPDS) with a personalized, non-diagnostic risk estimate.
+              {t("resources.ppdCheckSub")}
             </Text>
           </View>
-          <Feather name="chevron-right" size={20} color={colors.mutedForeground} />
+          <Feather name={directionalIcon("chevron-right")} size={20} color={colors.mutedForeground} />
         </Pressable>
 
         {/* Crisis Support */}
         <View style={[styles.urgentCard, { backgroundColor: "#FDECEC" }]}>
           <View style={styles.urgentHeader}>
             <View style={[styles.urgentDot, { backgroundColor: colors.riskHigh }]} />
-            <Text style={[styles.urgentTitle, { color: "#9A1010" }]}>Immediate Support</Text>
+            <Text style={[styles.urgentTitle, { color: "#9A1010" }]}>{t("resources.immediateSupport")}</Text>
           </View>
           <Text style={[styles.urgentDesc, { color: "#C03030" }]}>
-            If you are experiencing a mental health emergency or need someone to talk to, please reach out immediately.
+            {t("resources.urgentBody")}
           </Text>
           <Pressable
             onPress={callCrisisLine}
             style={[styles.crisisBtn, { backgroundColor: colors.riskHigh }]}
           >
             <Feather name="phone" size={15} color="#fff" />
-            <Text style={styles.crisisBtnText}>Call 988 Crisis Line</Text>
+            <Text style={styles.crisisBtnText}>{t("resources.callCrisis")}</Text>
           </Pressable>
           <Pressable
             onPress={textCrisisLine}
@@ -345,7 +348,7 @@ export default function ResourcesScreen() {
           >
             <Feather name="message-square" size={15} color={colors.riskHigh} />
             <Text style={[styles.textCounselorText, { color: colors.riskHigh }]}>
-              Text a Counselor (741741)
+              {t("resources.textCounselor")}
             </Text>
           </Pressable>
           <Text style={[styles.urgentNumbers, { color: "#9A1010" }]}>
@@ -357,9 +360,9 @@ export default function ResourcesScreen() {
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <View style={styles.cardHeaderRow}>
             <View>
-              <Text style={[styles.cardTitle, { color: colors.foreground }]}>Find a Specialist</Text>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("resources.findSpecialist")}</Text>
               <Text style={[styles.cardSub, { color: colors.mutedForeground }]}>
-                Connect with postpartum mental health specialists near you.
+                {t("resources.specialistSub")}
               </Text>
             </View>
             <Feather name="shield" size={24} color={colors.primary} />
@@ -374,7 +377,7 @@ export default function ResourcesScreen() {
           >
             <Feather name="external-link" size={14} color={colors.primary} />
             <Text style={[styles.directoryBtnText, { color: colors.primary }]}>
-              Browse PSI Directory
+              {t("resources.browsePsi")}
             </Text>
           </Pressable>
           <Pressable
@@ -387,13 +390,13 @@ export default function ResourcesScreen() {
           >
             <Feather name="external-link" size={14} color={colors.primary} />
             <Text style={[styles.directoryBtnText, { color: colors.primary }]}>
-              Search Psychology Today
+              {t("resources.searchPsychToday")}
             </Text>
           </Pressable>
           <View style={[styles.psiBadge, { backgroundColor: colors.lavender }]}>
             <Feather name="check-circle" size={12} color={colors.primary} />
             <Text style={[styles.psiBadgeText, { color: colors.primary }]}>
-              PSI directory · Telehealth options available
+              {t("resources.psiNote")}
             </Text>
           </View>
         </View>
@@ -402,11 +405,11 @@ export default function ResourcesScreen() {
         <View style={{ gap: 12 }}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-              Knowledge Library
+              {t("resources.knowledgeLibrary")}
             </Text>
             {activeTopic ? (
               <Pressable onPress={() => setActiveTopic(null)}>
-                <Text style={[styles.viewAll, { color: colors.riskHigh }]}>Clear filter ✕</Text>
+                <Text style={[styles.viewAll, { color: colors.riskHigh }]}>{t("resources.clearFilterX")}</Text>
               </Pressable>
             ) : (
               <Text style={[styles.viewAll, { color: colors.mutedForeground }]}>
@@ -421,7 +424,7 @@ export default function ResourcesScreen() {
                 No articles match "{activeTopic ?? search}"
               </Text>
               <Pressable onPress={() => { setSearch(""); setActiveTopic(null); }}>
-                <Text style={[styles.viewAll, { color: colors.primary }]}>Clear filter</Text>
+                <Text style={[styles.viewAll, { color: colors.primary }]}>{t("resources.clearFilter")}</Text>
               </Pressable>
             </View>
           ) : (
@@ -452,7 +455,7 @@ export default function ResourcesScreen() {
                     {article.sub}
                   </Text>
                 </View>
-                <Feather name="chevron-right" size={16} color={colors.mutedForeground} style={{ alignSelf: "center" }} />
+                <Feather name={directionalIcon("chevron-right")} size={16} color={colors.mutedForeground} style={{ alignSelf: "center" }} />
               </Pressable>
             ))
           )}
@@ -460,7 +463,7 @@ export default function ResourcesScreen() {
 
         {/* Explore Topics */}
         <View style={{ gap: 12 }}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Explore Topics</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("resources.exploreTopics")}</Text>
           <View style={styles.topicsGrid}>
             {TOPICS.map((topic, i) => {
               const active = activeTopic === topic.label;
@@ -503,16 +506,16 @@ export default function ResourcesScreen() {
         <View style={[styles.weeklyCard, { backgroundColor: colors.primary }]}>
           <View style={styles.weeklyHeader}>
             <View style={{ flex: 1 }}>
-              <Text style={styles.weeklyTitle}>Weekly Circle</Text>
+              <Text style={styles.weeklyTitle}>{t("resources.weeklyCircle")}</Text>
               <Text style={styles.weeklySub}>
-                Expert insights and community stories, delivered to your inbox. Coming soon.
+                {t("resources.weeklySub")}
               </Text>
             </View>
             <Text style={{ fontSize: 28 }}>💌</Text>
           </View>
           <View style={[styles.comingSoonBadge, { backgroundColor: "rgba(255,255,255,0.2)" }]}>
             <Feather name="clock" size={14} color="#fff" />
-            <Text style={styles.comingSoonText}>Not available yet</Text>
+            <Text style={styles.comingSoonText}>{t("resources.notAvailable")}</Text>
           </View>
         </View>
       </ScrollView>

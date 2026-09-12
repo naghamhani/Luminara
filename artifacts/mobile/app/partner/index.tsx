@@ -23,6 +23,8 @@ import { useColors } from "@/hooks/useColors";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
 import { clearPartnerVerification, markPartnerVerified } from "@/utils/partnerSession";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const COOLDOWN_MS = 30000;
 const MAX_ATTEMPTS = 3;
@@ -75,6 +77,7 @@ const toggleStyles = StyleSheet.create({
 
 function SetupFlow() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { savePartnerSettings } = useHealth();
 
@@ -127,7 +130,7 @@ function SetupFlow() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <PartnerScreenHeader title="Partner space" fallbackHref="/(tabs)" />
+      <PartnerScreenHeader title={t("partner.space")} fallbackHref="/(tabs)" />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
         showsVerticalScrollIndicator={false}
@@ -135,7 +138,7 @@ function SetupFlow() {
       >
         <View style={[styles.explainerCard, { backgroundColor: colors.primary }]}>
           <Text style={styles.explainerIcon}>🤝</Text>
-          <Text style={styles.explainerTitle}>A space for your support person</Text>
+          <Text style={styles.explainerTitle}>{t("partner.spaceSub")}</Text>
           <Text style={styles.explainerBody}>
             The partner space lets a designated support person — a partner, family member, or
             close friend — log their own perspective on how you're doing. It complements your
@@ -146,7 +149,7 @@ function SetupFlow() {
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
           <Text style={[styles.sectionTitle, { color: colors.foreground }]}>
-            Who is your support person?
+            {t("partner.whoIsSupport")}
           </Text>
           <TextInput
             style={[
@@ -161,7 +164,7 @@ function SetupFlow() {
           />
 
           <Text style={[styles.sectionTitle, { color: colors.foreground, marginTop: 8 }]}>
-            Set a PIN for them
+            {t("partner.setPin")}
           </Text>
           <Text style={[styles.hint, { color: colors.mutedForeground }]}>
             A 4-6 digit PIN keeps this space just for the two of you. Tap the eye to double-check
@@ -169,38 +172,38 @@ function SetupFlow() {
             ever stored.
           </Text>
           <PinInput
-            placeholder="Choose a PIN"
+            placeholder={t("partner.choosePin")}
             value={pin}
             onChangeText={setPin}
           />
           <PinInput
-            placeholder="Confirm PIN"
+            placeholder={t("partner.confirmPin")}
             value={confirmPin}
             onChangeText={setConfirmPin}
           />
         </View>
 
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Your privacy choices</Text>
+          <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("partner.privacyChoices")}</Text>
           <Text style={[styles.hint, { color: colors.mutedForeground }]}>
-            You're always in control. Change these anytime in Partner settings.
+            {t("partner.inControl")}
           </Text>
           <ConsentToggle
-            label="Let me see their observations"
-            description="When on, you can see the partner entries they choose to share with you. Anything they keep private stays private."
+            label={t("partner.seeObservations")}
+            description={t("partner.seeObservationsSub")}
             value={userCanViewObservations}
             onChange={setUserCanViewObservations}
           />
           <ConsentToggle
-            label="Let them see my weekly summary"
-            description="Shares only a 7-day average wellness percentage and trend direction — never your raw check-ins, notes, or details."
+            label={t("partner.shareSummary")}
+            description={t("partner.shareSummarySub")}
             value={partnerCanViewSummary}
             onChange={setPartnerCanViewSummary}
           />
         </View>
 
         <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
-          Private by design — your data stays on this device.
+          {t("common.privateByDesign")}
         </Text>
 
         <Pressable
@@ -214,7 +217,7 @@ function SetupFlow() {
             },
           ]}
         >
-          <Text style={styles.primaryBtnText}>Enable partner space</Text>
+          <Text style={styles.primaryBtnText}>{t("partner.enable")}</Text>
         </Pressable>
       </ScrollView>
     </KeyboardAvoidingView>
@@ -223,6 +226,7 @@ function SetupFlow() {
 
 function EnabledGateway() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { partnerSettings } = useHealth();
 
@@ -286,7 +290,7 @@ function EnabledGateway() {
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <PartnerScreenHeader
-        title="Partner space"
+        title={t("partner.space")}
         onBack={showPinEntry ? () => setShowPinEntry(false) : undefined}
       />
       <ScrollView
@@ -310,10 +314,10 @@ function EnabledGateway() {
                   I'm the partner{partnerSettings.partnerName ? ` (${partnerSettings.partnerName})` : ""}
                 </Text>
                 <Text style={[styles.gatewaySub, { color: colors.mutedForeground }]}>
-                  Enter your PIN to log an observation or view the shared summary.
+                  {t("partner.enterPinSub")}
                 </Text>
               </View>
-              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+              <Feather name={directionalIcon("chevron-right")} size={18} color={colors.mutedForeground} />
             </Pressable>
 
             <Pressable
@@ -325,17 +329,17 @@ function EnabledGateway() {
               </View>
               <View style={{ flex: 1 }}>
                 <Text style={[styles.gatewayTitle, { color: colors.foreground }]}>
-                  Partner settings
+                  {t("partner.settings")}
                 </Text>
                 <Text style={[styles.gatewaySub, { color: colors.mutedForeground }]}>
-                  Manage sharing, change the PIN, or turn off the partner space.
+                  {t("partner.manageSub")}
                 </Text>
               </View>
-              <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+              <Feather name={directionalIcon("chevron-right")} size={18} color={colors.mutedForeground} />
             </Pressable>
 
             <Text style={[styles.privacyNote, { color: colors.mutedForeground }]}>
-              Private by design — your data stays on this device.
+              {t("common.privateByDesign")}
             </Text>
           </>
         ) : (
@@ -343,7 +347,7 @@ function EnabledGateway() {
             <View style={[styles.gatewayIcon, { backgroundColor: colors.blush }]}>
               <Feather name="lock" size={22} color={colors.purple} />
             </View>
-            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>Enter partner PIN</Text>
+            <Text style={[styles.sectionTitle, { color: colors.foreground }]}>{t("partner.enterPin")}</Text>
             <PinInput
               centered
               value={pin}
@@ -351,7 +355,7 @@ function EnabledGateway() {
               placeholder="••••"
               editable={!inCooldown}
               autoFocus
-              accessibilityLabel="Partner PIN"
+              accessibilityLabel={t("partner.pinLabel")}
             />
             {inCooldown ? (
               <Text style={[styles.errorText, { color: colors.destructive }]}>

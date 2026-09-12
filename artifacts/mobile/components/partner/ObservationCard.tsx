@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, Text, View } from "react-native";
 
 import { useColors } from "@/hooks/useColors";
 import type { PartnerObservation } from "@/types/health";
+import { useTranslation } from "@/i18n";
 
 function formatDate(date: string): string {
   return new Date(date + "T12:00:00").toLocaleDateString("en-US", {
@@ -30,6 +31,7 @@ interface ObservationCardProps {
 
 export function ObservationCard({ observation, onDelete }: ObservationCardProps) {
   const colors = useColors();
+  const { t } = useTranslation();
   const chips = [...observation.stressFactors, ...observation.supportProvided];
 
   return (
@@ -66,7 +68,7 @@ export function ObservationCard({ observation, onDelete }: ObservationCardProps)
             hitSlop={8}
             style={styles.deleteBtn}
             accessibilityRole="button"
-            accessibilityLabel="Delete observation"
+            accessibilityLabel={t("partner.deleteObservation")}
             accessibilityHint={`Removes the observation logged on ${formatDate(observation.date)}`}
           >
             <Feather name="trash-2" size={16} color={colors.mutedForeground} />

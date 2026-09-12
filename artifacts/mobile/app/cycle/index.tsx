@@ -20,6 +20,8 @@ import {
 } from "@/types/health";
 import { goBack } from "@/utils/navigation";
 import { detectPhase, predictCycle } from "@/utils/wellnessAlgorithm";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const MUCUS_LABELS: Record<CervicalMucusType, string> = {
   dry: "Dry",
@@ -87,6 +89,7 @@ function flowDotColor(flow: string | undefined, colors: ReturnType<typeof useCol
 
 export default function CycleDashboardScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { profile } = useApp();
   const { cycleEntries, isLoading } = useHealth();
@@ -110,9 +113,9 @@ export default function CycleDashboardScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack("/(tabs)")} style={styles.backBtn} hitSlop={10}>
-          <Feather name="chevron-left" size={24} color={colors.text} />
+          <Feather name={directionalIcon("chevron-left")} size={24} color={colors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Cycle & Biomarkers</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t("cycle.title")}</Text>
         <View style={{ width: 32 }} />
       </View>
 
@@ -136,7 +139,7 @@ export default function CycleDashboardScreen() {
                 </Text>
               ) : (
                 <Text style={[styles.cycleDay, { color: colors.mutedForeground }]}>
-                  Not enough data to estimate your cycle day yet
+                  {t("cycle.notEnoughData")}
                 </Text>
               )}
             </View>
@@ -162,7 +165,7 @@ export default function CycleDashboardScreen() {
             <View style={styles.predictionList}>
               <PredictionRow
                 icon="droplet"
-                label="Next period"
+                label={t("cycle.nextPeriod")}
                 value={formatDate(prediction.nextPeriodStart)}
                 confidence={prediction.confidence}
                 colors={colors}
@@ -170,7 +173,7 @@ export default function CycleDashboardScreen() {
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <PredictionRow
                 icon="sun"
-                label="Fertile window"
+                label={t("cycle.fertileWindow")}
                 value={
                   prediction.fertileWindowStart && prediction.fertileWindowEnd
                     ? `${formatDate(prediction.fertileWindowStart)} – ${formatDate(prediction.fertileWindowEnd)}`
@@ -182,7 +185,7 @@ export default function CycleDashboardScreen() {
               <View style={[styles.divider, { backgroundColor: colors.border }]} />
               <PredictionRow
                 icon="star"
-                label="Estimated ovulation"
+                label={t("cycle.estOvulation")}
                 value={formatDate(prediction.ovulationDate)}
                 confidence={prediction.confidence}
                 colors={colors}
@@ -191,13 +194,13 @@ export default function CycleDashboardScreen() {
           )}
 
           <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-            Estimates based on your logged data — not contraception guidance.
+            {t("cycle.estimateNote")}
           </Text>
         </View>
 
         {/* 35-day strip */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Your calendar</Text>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("cycle.yourCalendar")}</Text>
           <CycleStrip entries={cycleEntries} prediction={prediction} today={today} />
         </View>
 
@@ -205,7 +208,7 @@ export default function CycleDashboardScreen() {
         {bbtCount >= 5 && (
           <View style={[styles.card, { backgroundColor: colors.card }]}>
             <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-              Basal body temperature
+              {t("cycle.bbt")}
             </Text>
             <BBTChart entries={cycleEntries} maxPoints={21} />
           </View>
@@ -213,7 +216,7 @@ export default function CycleDashboardScreen() {
 
         {/* Recent entries */}
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <Text style={[styles.cardTitle, { color: colors.foreground }]}>Recent entries</Text>
+          <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("cycle.recentEntries")}</Text>
           {isLoading ? (
             <View style={{ gap: 10 }}>
               <Skeleton height={44} borderRadius={10} />
@@ -223,8 +226,8 @@ export default function CycleDashboardScreen() {
           ) : recentEntries.length === 0 ? (
             <EmptyState
               icon="calendar"
-              title="No entries yet"
-              message="Log your first cycle entry to start tracking your patterns over time."
+              title={t("cycle.emptyTitle")}
+              message={t("cycle.emptyMsg")}
               actionLabel="Log today"
               onAction={() => router.push("/cycle/log")}
             />
@@ -264,7 +267,7 @@ export default function CycleDashboardScreen() {
                           .join(" · ") || "No details logged"}
                       </Text>
                     </View>
-                    <Feather name="chevron-right" size={18} color={colors.mutedForeground} />
+                    <Feather name={directionalIcon("chevron-right")} size={18} color={colors.mutedForeground} />
                   </Pressable>
                 );
               })}
@@ -280,7 +283,7 @@ export default function CycleDashboardScreen() {
           ]}
         >
           <Feather name="edit-3" size={17} color="#fff" />
-          <Text style={styles.logBtnText}>Log today</Text>
+          <Text style={styles.logBtnText}>{t("cycle.logToday")}</Text>
         </Pressable>
       </ScrollView>
     </View>

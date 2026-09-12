@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
 } from "react-native-reanimated";
 import { useColors } from "@/hooks/useColors";
+import { useTranslation } from "@/i18n";
 
 interface MoodScaleProps {
   value: number;
@@ -32,6 +33,7 @@ function MoodOption({
   label: string;
 }) {
   const colors = useColors();
+  const { t } = useTranslation();
   const scale = useSharedValue(1);
 
   const scaleStyle = useAnimatedStyle(() => ({
@@ -62,7 +64,7 @@ function MoodOption({
         accessibilityRole="radio"
         accessibilityState={{ checked: active }}
         accessibilityLabel={`${label} (${v} of 5)`}
-        accessibilityHint="Selects this rating on the mood scale"
+        accessibilityHint={t("moodScale.ratingHint")}
       >
         <Text style={[styles.num, { color: active ? "#fff" : colors.text }]}>{v}</Text>
       </TouchableOpacity>

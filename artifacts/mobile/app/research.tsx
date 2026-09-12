@@ -35,6 +35,8 @@ import {
 } from "@/utils/anonymize";
 import { isBackendConfigured } from "@/utils/apiConfig";
 import { BackendNotConfiguredError, submitResearchBundle } from "@/utils/backendClient";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const CONSENT_STEPS: ConsentStepDef[] = [
   { key: "share", title: "What we share", icon: "share-2" },
@@ -54,6 +56,7 @@ function formatDate(iso: string | undefined): string {
 
 export default function ResearchScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { privacySettings, savePrivacySettings, buildSnapshot } = useHealth();
   const research = privacySettings.research ?? DEFAULT_RESEARCH_CONSENT;
@@ -232,9 +235,9 @@ export default function ResearchScreen() {
     <View style={[styles.screen, { backgroundColor: colors.background }]}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack("/(tabs)/profile")} style={styles.backBtn} hitSlop={10}>
-          <Feather name="chevron-left" size={26} color={colors.text} />
+          <Feather name={directionalIcon("chevron-left")} size={26} color={colors.text} />
         </Pressable>
-        <Text style={[styles.headerTitle, { color: colors.foreground }]}>Research participation</Text>
+        <Text style={[styles.headerTitle, { color: colors.foreground }]}>{t("research.title")}</Text>
       </View>
 
       <ScrollView
@@ -247,7 +250,7 @@ export default function ResearchScreen() {
             <Feather name="git-pull-request" size={20} color={colors.purple} />
           </View>
           <Text style={[styles.heroTitle, { color: colors.foreground }]}>
-            Help improve postpartum care — anonymously
+            {t("research.heroTitle")}
           </Text>
           <Text style={[styles.heroBody, { color: colors.mutedForeground }]}>
             Contributing anonymized data means researchers can see patterns — like how mood,
@@ -257,13 +260,13 @@ export default function ResearchScreen() {
           <View style={styles.heroRow}>
             <Feather name="x-circle" size={14} color={colors.riskHigh} />
             <Text style={[styles.heroRowText, { color: colors.text }]}>
-              Removed: names, baby's name, exact dates, free-text notes, provider & facility names
+              {t("research.removed")}
             </Text>
           </View>
           <View style={styles.heroRow}>
             <Feather name="check-circle" size={14} color={colors.riskLow} />
             <Text style={[styles.heroRowText, { color: colors.text }]}>
-              Kept: scores, cycle signals, lab marker values — as day-offset patterns, not dates
+              {t("research.kept")}
             </Text>
           </View>
           <View style={[styles.honestyBox, { backgroundColor: colors.softGreen }]}>
@@ -282,7 +285,7 @@ export default function ResearchScreen() {
             <View style={{ marginTop: 20 }}>
               {stepIndex === 0 && (
                 <View style={styles.stepBody}>
-                  <Text style={[styles.stepTitle, { color: colors.foreground }]}>What we share</Text>
+                  <Text style={[styles.stepTitle, { color: colors.foreground }]}>{t("research.whatWeShare")}</Text>
                   <Text style={[styles.stepText, { color: colors.mutedForeground }]}>
                     Only the data types you turn on below, converted into day-offset patterns:
                     check-in scores, cycle & biomarker signals, lab marker values, medication
@@ -293,7 +296,7 @@ export default function ResearchScreen() {
               {stepIndex === 1 && (
                 <View style={styles.stepBody}>
                   <Text style={[styles.stepTitle, { color: colors.foreground }]}>
-                    What we never share
+                    {t("research.neverShare")}
                   </Text>
                   <Text style={[styles.stepText, { color: colors.mutedForeground }]}>
                     Your name, your baby's name, exact calendar dates, free-text notes or
@@ -305,7 +308,7 @@ export default function ResearchScreen() {
               {stepIndex === 2 && (
                 <View style={styles.stepBody}>
                   <Text style={[styles.stepTitle, { color: colors.foreground }]}>
-                    Your choices
+                    {t("research.yourChoices")}
                   </Text>
                   <Text style={[styles.stepText, { color: colors.mutedForeground, marginBottom: 4 }]}>
                     Choose exactly which data types to contribute. Everything defaults to off —
@@ -339,7 +342,7 @@ export default function ResearchScreen() {
                   style={[styles.primaryBtn, { backgroundColor: colors.primary }]}
                 >
                   <Feather name="check" size={16} color="#fff" />
-                  <Text style={styles.primaryBtnText}>I agree to contribute anonymized data</Text>
+                  <Text style={styles.primaryBtnText}>{t("research.agree")}</Text>
                 </Pressable>
               )}
             </View>
@@ -351,7 +354,7 @@ export default function ResearchScreen() {
               <View style={styles.statusRow}>
                 <View style={[styles.statusDot, { backgroundColor: colors.riskLow }]} />
                 <Text style={[styles.statusTitle, { color: colors.foreground }]}>
-                  You're contributing anonymized data
+                  {t("research.contributing")}
                 </Text>
               </View>
               <Text style={[styles.statusMeta, { color: colors.mutedForeground }]}>
@@ -368,7 +371,7 @@ export default function ResearchScreen() {
             {/* Editable data-type toggles */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-                What you're contributing
+                {t("research.whatContributing")}
               </Text>
               <DataTypeToggleList value={research.dataTypes} onChange={handleUpdateTypes} />
             </View>
@@ -382,7 +385,7 @@ export default function ResearchScreen() {
                 <View style={styles.previewToggleLeft}>
                   <Feather name="eye" size={16} color={colors.purple} />
                   <Text style={[styles.cardTitle, { color: colors.foreground, marginBottom: 0 }]}>
-                    Preview anonymized data
+                    {t("research.preview")}
                   </Text>
                 </View>
                 <Feather
@@ -395,7 +398,7 @@ export default function ResearchScreen() {
                 <View style={{ marginTop: 14 }}>
                   {!sampleCheckIn && !sampleCycle ? (
                     <Text style={[styles.stepText, { color: colors.mutedForeground }]}>
-                      No entries yet — log a check-in or cycle entry to see a live preview here.
+                      {t("research.previewEmpty")}
                     </Text>
                   ) : (
                     <AnonymizedPreviewCard
@@ -427,7 +430,7 @@ export default function ResearchScreen() {
 
             {/* Export */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
-              <Text style={[styles.cardTitle, { color: colors.foreground }]}>Export for a study</Text>
+              <Text style={[styles.cardTitle, { color: colors.foreground }]}>{t("research.exportForStudy")}</Text>
               <Text style={[styles.stepText, { color: colors.mutedForeground, marginBottom: 14 }]}>
                 Builds a file from your current anonymized data. You choose who to send it to via
                 the share sheet — it is never sent automatically.
@@ -443,7 +446,7 @@ export default function ResearchScreen() {
                   ) : (
                     <>
                       <Feather name="grid" size={16} color={colors.primary} />
-                      <Text style={[styles.exportBtnText, { color: colors.primary }]}>Export CSV</Text>
+                      <Text style={[styles.exportBtnText, { color: colors.primary }]}>{t("research.exportCsv")}</Text>
                     </>
                   )}
                 </Pressable>
@@ -458,7 +461,7 @@ export default function ResearchScreen() {
                     <>
                       <Feather name="file-text" size={16} color={colors.primary} />
                       <Text style={[styles.exportBtnText, { color: colors.primary }]}>
-                        Export FHIR JSON
+                        {t("research.exportFhir")}
                       </Text>
                     </>
                   )}
@@ -473,7 +476,7 @@ export default function ResearchScreen() {
             {/* Contribute directly to the research server */}
             <View style={[styles.card, { backgroundColor: colors.card }]}>
               <Text style={[styles.cardTitle, { color: colors.foreground }]}>
-                Contribute to the research dataset
+                {t("research.contributeToDataset")}
               </Text>
               <Text style={[styles.stepText, { color: colors.mutedForeground, marginBottom: 14 }]}>
                 Sends the same anonymized bundle directly to the Luminara research server, stored
@@ -491,7 +494,7 @@ export default function ResearchScreen() {
                   <>
                     <Feather name="upload-cloud" size={16} color={colors.primaryForeground} />
                     <Text style={[styles.exportBtnText, { color: colors.primaryForeground }]}>
-                      Contribute anonymously
+                      {t("research.contributeAnon")}
                     </Text>
                   </>
                 )}
@@ -505,7 +508,7 @@ export default function ResearchScreen() {
             >
               <Feather name="log-out" size={15} color={colors.riskHigh} />
               <Text style={[styles.withdrawText, { color: colors.riskHigh }]}>
-                Withdraw from research
+                {t("research.withdraw")}
               </Text>
             </Pressable>
             <Text style={[styles.withdrawHint, { color: colors.mutedForeground }]}>

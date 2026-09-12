@@ -12,6 +12,8 @@ import { useColors } from "@/hooks/useColors";
 import { toDateString, type Medication, type MedicationKind } from "@/types/health";
 import { showAlert } from "@/utils/dialog";
 import { goBack } from "@/utils/navigation";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const KIND_ICONS: Record<MedicationKind, keyof typeof Feather.glyphMap> = {
   medication: "circle",
@@ -42,6 +44,7 @@ function isPast(med: Medication, today: string): boolean {
 
 export default function MedicationsScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { medications, isLoading, updateMedication, deleteMedication } = useHealth();
 
@@ -88,10 +91,10 @@ export default function MedicationsScreen() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack("/(tabs)")} style={styles.backBtn} hitSlop={10}>
-          <Feather name="chevron-left" size={24} color={colors.text} />
+          <Feather name={directionalIcon("chevron-left")} size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>
-          Medications & Supplements
+          {t("medications.title")}
         </Text>
         <View style={{ width: 32 }} />
       </View>
@@ -108,7 +111,7 @@ export default function MedicationsScreen() {
           ]}
         >
           <Feather name="plus" size={18} color="#fff" />
-          <Text style={styles.addBtnText}>Add medication or supplement</Text>
+          <Text style={styles.addBtnText}>{t("medications.add")}</Text>
         </Pressable>
 
         {isLoading ? (
@@ -120,8 +123,8 @@ export default function MedicationsScreen() {
         ) : medications.length === 0 ? (
           <EmptyState
             icon="package"
-            title="No medications yet"
-            message="Add your medications and supplements to keep track of what you're taking and why."
+            title={t("medications.emptyTitle")}
+            message={t("medications.emptyMsg")}
             actionLabel="Add your first medication"
             onAction={() => router.push("/medications/add")}
           />
@@ -164,7 +167,7 @@ export default function MedicationsScreen() {
         )}
 
         <Text style={[styles.footerDisclaimer, { color: colors.mutedForeground }]}>
-          Always confirm changes with your prescriber.
+          {t("common.alwaysConfirmPrescriber")}
         </Text>
       </ScrollView>
     </View>

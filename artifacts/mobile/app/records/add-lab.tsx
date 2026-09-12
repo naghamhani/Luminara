@@ -27,6 +27,7 @@ import {
   toDateString,
 } from "@/types/health";
 import { goBack } from "@/utils/navigation";
+import { useTranslation } from "@/i18n";
 
 interface MarkerRow {
   key: string;
@@ -43,6 +44,7 @@ function emptyRow(): MarkerRow {
 
 export default function AddLabResultScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { addLabResult } = useHealth();
 
@@ -122,19 +124,19 @@ export default function AddLabResultScreen() {
       style={{ flex: 1, backgroundColor: colors.background }}
       behavior={Platform.OS === "ios" ? "padding" : undefined}
     >
-      <ScreenHeader title="Add Lab Result" fallbackHref="/records" />
+      <ScreenHeader title={t("records.addLab")} fallbackHref="/records" />
       <ScrollView
         contentContainerStyle={[styles.scroll, { paddingBottom: insets.bottom + 40 }]}
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
         <View>
-          <Text style={[styles.label, { color: colors.text }]}>Test name</Text>
+          <Text style={[styles.label, { color: colors.text }]}>{t("records.testName")}</Text>
           <TextInput
             style={[styles.input, { backgroundColor: colors.card, borderColor: colors.border, color: colors.text }]}
             value={testName}
             onChangeText={setTestName}
-            placeholder="e.g. Postpartum hormone panel"
+            placeholder={t("records.testNamePlaceholder")}
             placeholderTextColor={colors.mutedForeground}
           />
         </View>
@@ -201,7 +203,7 @@ export default function AddLabResultScreen() {
             <Text style={[styles.label, { color: colors.text, marginBottom: 0 }]}>Markers</Text>
             <Pressable onPress={addRow} style={styles.addRowBtn} hitSlop={8}>
               <Feather name="plus-circle" size={18} color={colors.primary} />
-              <Text style={[styles.addRowText, { color: colors.primary }]}>Add marker</Text>
+              <Text style={[styles.addRowText, { color: colors.primary }]}>{t("records.addMarker")}</Text>
             </Pressable>
           </View>
 
@@ -250,7 +252,7 @@ export default function AddLabResultScreen() {
                       style={[styles.markerField, { backgroundColor: colors.secondary, color: colors.text }]}
                       value={row.refLow}
                       onChangeText={(v) => updateRow(row.key, { refLow: v })}
-                      placeholder="Ref low"
+                      placeholder={t("records.refLow")}
                       placeholderTextColor={colors.mutedForeground}
                       keyboardType="decimal-pad"
                     />
@@ -258,7 +260,7 @@ export default function AddLabResultScreen() {
                       style={[styles.markerField, { backgroundColor: colors.secondary, color: colors.text }]}
                       value={row.refHigh}
                       onChangeText={(v) => updateRow(row.key, { refHigh: v })}
-                      placeholder="Ref high"
+                      placeholder={t("records.refHigh")}
                       placeholderTextColor={colors.mutedForeground}
                       keyboardType="decimal-pad"
                     />
@@ -287,7 +289,7 @@ export default function AddLabResultScreen() {
             ]}
             value={notes}
             onChangeText={setNotes}
-            placeholder="Optional context about this test"
+            placeholder={t("records.labNotesPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             multiline
             textAlignVertical="top"
@@ -312,7 +314,7 @@ export default function AddLabResultScreen() {
         <View style={styles.footerNote}>
           <Feather name="lock" size={12} color={colors.mutedForeground} />
           <Text style={[styles.footerNoteText, { color: colors.mutedForeground }]}>
-            Private by design — your data stays on this device.
+            {t("common.privateByDesign")}
           </Text>
         </View>
       </ScrollView>

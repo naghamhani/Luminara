@@ -17,6 +17,7 @@ import {
   type Recommendation,
 } from "@/types/health";
 import { computeSleepAnxietyCorrelation } from "@/utils/correlations";
+import { useTranslation } from "@/i18n";
 import {
   calculateWellnessScore,
   correlateWithPartner,
@@ -126,6 +127,7 @@ const trendStyles = StyleSheet.create({
 
 export default function InsightsScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { checkIns, profile } = useApp();
   const {
@@ -318,7 +320,7 @@ export default function InsightsScreen() {
         ]}
       >
         <Text style={{ fontSize: 52 }}>🔭</Text>
-        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>No insights yet</Text>
+        <Text style={[styles.emptyTitle, { color: colors.foreground }]}>{t("insights.empty")}</Text>
         <Text style={[styles.emptySub, { color: colors.mutedForeground }]}>
           Complete a few daily check-ins or log a cycle entry to unlock personalized wellness
           insights.
@@ -339,12 +341,12 @@ export default function InsightsScreen() {
       {/* Header */}
       <View style={styles.heroRow}>
         <View style={{ flex: 1 }}>
-          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>YOUR INSIGHTS</Text>
+          <Text style={[styles.eyebrow, { color: colors.mutedForeground }]}>{t("insights.eyebrow")}</Text>
           <Text style={[styles.heroTitle, { color: colors.foreground }]}>
             Whole-Picture{"\n"}Wellness
           </Text>
           <Text style={[styles.heroSub, { color: colors.mutedForeground }]}>
-            Drawing on check-ins, cycle logs, labs, and support around you.
+            {t("insights.sub")}
           </Text>
         </View>
         <View
@@ -357,7 +359,7 @@ export default function InsightsScreen() {
 
       {/* 1. Wellness overview */}
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <SectionHeader title="Wellness Overview" icon="activity" />
+        <SectionHeader title={t("insights.wellnessOverview")} icon="activity" />
         <View
           style={[
             styles.wellnessSummary,
@@ -382,14 +384,14 @@ export default function InsightsScreen() {
         <ContributionBars contributions={wellnessResult.contributions} />
         {!latestCheckIn && (
           <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-            Complete a daily check-in to include mood, sleep, and support in this score.
+            {t("insights.wellnessHint")}
           </Text>
         )}
       </View>
 
       {/* 2. Phase & cycle */}
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <SectionHeader title="Phase & Cycle" icon="calendar" />
+        <SectionHeader title={t("insights.phaseCycle")} icon="calendar" />
         <View style={styles.phaseChipRow}>
           <View style={[styles.phaseChip, { backgroundColor: colors.blush }]}>
             <Text style={[styles.phaseChipText, { color: colors.purple }]}>
@@ -413,7 +415,7 @@ export default function InsightsScreen() {
           <View style={styles.predictionGrid}>
             <View style={styles.predictionItem}>
               <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
-                Next period
+                {t("insights.nextPeriod")}
               </Text>
               <Text style={[styles.predictionValue, { color: colors.foreground }]}>
                 {cyclePrediction.nextPeriodStart ? formatDate(cyclePrediction.nextPeriodStart) : "—"}
@@ -421,7 +423,7 @@ export default function InsightsScreen() {
             </View>
             <View style={styles.predictionItem}>
               <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
-                Fertile window
+                {t("insights.fertileWindow")}
               </Text>
               <Text style={[styles.predictionValue, { color: colors.foreground }]}>
                 {cyclePrediction.fertileWindowStart && cyclePrediction.fertileWindowEnd
@@ -433,7 +435,7 @@ export default function InsightsScreen() {
             </View>
             <View style={styles.predictionItem}>
               <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
-                Avg cycle length
+                {t("insights.avgCycleLength")}
               </Text>
               <Text style={[styles.predictionValue, { color: colors.foreground }]}>
                 {cyclePrediction.avgCycleLength ? `${cyclePrediction.avgCycleLength}d` : "—"}
@@ -441,7 +443,7 @@ export default function InsightsScreen() {
             </View>
             <View style={styles.predictionItem}>
               <Text style={[styles.predictionLabel, { color: colors.mutedForeground }]}>
-                Confidence
+                {t("insights.confidence")}
               </Text>
               <Text style={[styles.predictionValue, { color: colors.foreground }]}>
                 {cyclePrediction.confidence.charAt(0).toUpperCase() + cyclePrediction.confidence.slice(1)}
@@ -450,14 +452,14 @@ export default function InsightsScreen() {
           </View>
         ) : (
           <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-            Log a few cycle entries (flow, BBT, or tests) to unlock predictions.
+            {t("insights.cycleHint")}
           </Text>
         )}
       </View>
 
       {/* 3. BBT & biomarkers */}
       <View style={[styles.card, { backgroundColor: colors.card }]}>
-        <SectionHeader title="BBT & Biomarkers" icon="thermometer" />
+        <SectionHeader title={t("insights.bbtBiomarkers")} icon="thermometer" />
         <BBTChart
           cycleEntries={cycleEntries}
           fertileWindowStart={cyclePrediction.fertileWindowStart}
@@ -467,7 +469,7 @@ export default function InsightsScreen() {
           <View style={styles.statChipsRow}>
             <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
               <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
-                Follicular avg
+                {t("insights.follicularAvg")}
               </Text>
               <Text style={[styles.statChipValue, { color: colors.foreground }]}>
                 {bbtStats.avgFollicular !== null ? `${bbtStats.avgFollicular}°C` : "—"}
@@ -475,7 +477,7 @@ export default function InsightsScreen() {
             </View>
             <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
               <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
-                Luteal avg
+                {t("insights.lutealAvg")}
               </Text>
               <Text style={[styles.statChipValue, { color: colors.foreground }]}>
                 {bbtStats.avgLuteal !== null ? `${bbtStats.avgLuteal}°C` : "—"}
@@ -483,7 +485,7 @@ export default function InsightsScreen() {
             </View>
             <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
               <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
-                Mucus peak days
+                {t("insights.mucusPeak")}
               </Text>
               <Text style={[styles.statChipValue, { color: colors.foreground }]}>
                 {bbtStats.mucusPeakDays}
@@ -491,7 +493,7 @@ export default function InsightsScreen() {
             </View>
             <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
               <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
-                Positive OPKs
+                {t("insights.positiveOpks")}
               </Text>
               <Text style={[styles.statChipValue, { color: colors.foreground }]}>
                 {bbtStats.positiveOvulationTests}
@@ -500,7 +502,7 @@ export default function InsightsScreen() {
             {bbtStats.positivePregnancyTests > 0 && (
               <View style={[styles.statChip, { backgroundColor: colors.secondary }]}>
                 <Text style={[styles.statChipLabel, { color: colors.mutedForeground }]}>
-                  Positive pregnancy tests
+                  {t("insights.positivePregTests")}
                 </Text>
                 <Text style={[styles.statChipValue, { color: colors.foreground }]}>
                   {bbtStats.positivePregnancyTests}
@@ -514,10 +516,10 @@ export default function InsightsScreen() {
       {/* 4. Factor trends */}
       {checkIns.length > 0 && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <SectionHeader title="Factor Trends" icon="trending-up" />
-          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>Mood (last 14 days)</Text>
+          <SectionHeader title={t("insights.factorTrends")} icon="trending-up" />
+          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>{t("insights.moodLast14")}</Text>
           <TrendMiniBars checkIns={checkIns} selectField={(c) => c.mood} max={5} color={colors.primary} />
-          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>Sleep hours</Text>
+          <Text style={[styles.trendGroupLabel, { color: colors.text }]}>{t("insights.sleepHours")}</Text>
           <TrendMiniBars checkIns={checkIns} selectField={(c) => c.sleep} max={10} color={colors.teal} />
           <Text style={[styles.trendGroupLabel, { color: colors.text }]}>Anxiety</Text>
           <TrendMiniBars checkIns={checkIns} selectField={(c) => c.anxiety} max={5} color={colors.warm} />
@@ -527,7 +529,7 @@ export default function InsightsScreen() {
       {/* 4b. Sleep vs. anxiety signal correlation */}
       {sleepAnxietyInsight && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <SectionHeader title="Sleep & Anxiety Signal" icon="moon" />
+          <SectionHeader title={t("insights.sleepAnxiety")} icon="moon" />
           <View
             style={[
               styles.wellnessSummary,
@@ -556,7 +558,7 @@ export default function InsightsScreen() {
       {/* 5. Self vs Partner */}
       {showPartnerSection && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <SectionHeader title="Self vs. Partner" icon="users" />
+          <SectionHeader title={t("insights.selfVsPartner")} icon="users" />
           <SelfVsPartnerBars correlations={partnerCorrelations} />
           <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
             Differences here are conversation starters, not verdicts — everyone experiences days
@@ -567,7 +569,7 @@ export default function InsightsScreen() {
       {!showPartnerSection && showPartnerOffNotice && (
         <View style={[styles.quietNoticeCard, { backgroundColor: colors.secondary }]}>
           <Text style={[styles.quietNoticeText, { color: colors.mutedForeground }]}>
-            Partner insights are turned off in settings.
+            {t("insights.partnerOff")}
           </Text>
         </View>
       )}
@@ -575,7 +577,7 @@ export default function InsightsScreen() {
       {/* 6. Lab flags */}
       {flaggedLabs.length > 0 && (
         <View style={[styles.card, { backgroundColor: colors.softRed }]}>
-          <SectionHeader title="Lab Flags" icon="flag" />
+          <SectionHeader title={t("insights.labFlags")} icon="flag" />
           <View style={styles.flagList}>
             {flaggedLabs.map((f, i) => (
               <View key={`${f.testName}-${f.marker.name}-${i}`} style={styles.flagRow}>
@@ -593,7 +595,7 @@ export default function InsightsScreen() {
             ))}
           </View>
           <Text style={[styles.disclaimer, { color: "#9A5010" }]}>
-            Not a diagnosis — review these results with your healthcare provider.
+            {t("insights.labsDisclaimer")}
           </Text>
         </View>
       )}
@@ -601,7 +603,7 @@ export default function InsightsScreen() {
       {/* 7. Risk windows ahead */}
       {riskWindows.length > 0 && (
         <View style={styles.riskWindowsSection}>
-          <SectionHeader title="Risk Windows Ahead" icon="alert-circle" />
+          <SectionHeader title={t("insights.riskWindows")} icon="alert-circle" />
           {riskWindows.map((w, i) => {
             const tint = w.severity === "elevated" ? colors.riskModerate : colors.primary;
             return (
@@ -609,7 +611,7 @@ export default function InsightsScreen() {
                 key={i}
                 style={[
                   styles.riskWindowCard,
-                  { backgroundColor: colors.card, borderLeftColor: tint, borderLeftWidth: 4 },
+                  { backgroundColor: colors.card, borderStartColor: tint, borderStartWidth: 4 },
                 ]}
               >
                 <View style={styles.riskWindowHeader}>
@@ -626,7 +628,7 @@ export default function InsightsScreen() {
                   {w.reason}
                 </Text>
                 <Text style={[styles.riskWindowSuggestion, { color: colors.mutedForeground }]}>
-                  Consider lining up extra rest or support around these days.
+                  {t("insights.riskHint")}
                 </Text>
               </View>
             );
@@ -637,7 +639,7 @@ export default function InsightsScreen() {
       {/* 8. Suggestions for you */}
       {recommendations.length > 0 && (
         <View style={[styles.card, { backgroundColor: colors.card }]}>
-          <SectionHeader title="Suggestions For You" icon="sun" />
+          <SectionHeader title={t("insights.suggestions")} icon="sun" />
           {([1, 2, 3] as const).map((priority) =>
             groupedRecommendations[priority].length > 0 ? (
               <View key={priority} style={styles.recGroup}>
@@ -659,7 +661,7 @@ export default function InsightsScreen() {
             ) : null
           )}
           <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-            Educational suggestions, not medical advice.
+            {t("insights.suggestionsNote")}
           </Text>
         </View>
       )}

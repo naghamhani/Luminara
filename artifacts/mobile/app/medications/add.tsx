@@ -25,6 +25,8 @@ import {
   type MedicationKind,
 } from "@/types/health";
 import { goBack } from "@/utils/navigation";
+import { directionalIcon } from "@/utils/rtl";
+import { useTranslation } from "@/i18n";
 
 const KIND_ICONS: Record<MedicationKind, keyof typeof Feather.glyphMap> = {
   medication: "circle",
@@ -40,6 +42,7 @@ const KIND_LABELS: Record<MedicationKind, string> = {
 
 export default function AddMedicationScreen() {
   const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams<{ id?: string }>();
   const { medications, addMedication, updateMedication } = useHealth();
@@ -135,7 +138,7 @@ export default function AddMedicationScreen() {
     >
       <View style={[styles.header, { paddingTop: insets.top + 8 }]}>
         <Pressable onPress={() => goBack("/medications")} style={styles.backBtn} hitSlop={10}>
-          <Feather name="chevron-left" size={24} color={colors.text} />
+          <Feather name={directionalIcon("chevron-left")} size={24} color={colors.text} />
         </Pressable>
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>
           {isEdit ? "Edit entry" : "Add medication"}
@@ -153,7 +156,7 @@ export default function AddMedicationScreen() {
             style={[styles.input, { backgroundColor: colors.secondary, color: colors.text }]}
             value={name}
             onChangeText={setName}
-            placeholder="e.g. Sertraline"
+            placeholder={t("medications.namePlaceholder")}
             placeholderTextColor={colors.mutedForeground}
           />
         </Field>
@@ -204,12 +207,12 @@ export default function AddMedicationScreen() {
             style={[styles.input, { backgroundColor: colors.secondary, color: colors.text }]}
             value={frequency}
             onChangeText={setFrequency}
-            placeholder="e.g. Once daily, with breakfast"
+            placeholder={t("medications.freqPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
           />
         </Field>
 
-        <Field label="Start date (YYYY-MM-DD)" error={errors.startDate} colors={colors}>
+        <Field label={t("medications.startDate")} error={errors.startDate} colors={colors}>
           <TextInput
             style={[styles.input, { backgroundColor: colors.secondary, color: colors.text }]}
             value={startDate}
@@ -221,7 +224,7 @@ export default function AddMedicationScreen() {
         </Field>
 
         <Field
-          label="End date (optional, YYYY-MM-DD)"
+          label={t("medications.endDate")}
           error={errors.endDate}
           colors={colors}
         >
@@ -229,23 +232,23 @@ export default function AddMedicationScreen() {
             style={[styles.input, { backgroundColor: colors.secondary, color: colors.text }]}
             value={endDate}
             onChangeText={setEndDate}
-            placeholder="Leave blank if ongoing"
+            placeholder={t("medications.endDatePlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             autoCapitalize="none"
           />
         </Field>
 
-        <Field label="Prescribed by (optional)" error={errors.prescribedBy} colors={colors}>
+        <Field label={t("medications.prescribedBy")} error={errors.prescribedBy} colors={colors}>
           <TextInput
             style={[styles.input, { backgroundColor: colors.secondary, color: colors.text }]}
             value={prescribedBy}
             onChangeText={setPrescribedBy}
-            placeholder="e.g. Dr. Rana Haddad"
+            placeholder={t("medications.prescribedByPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
           />
         </Field>
 
-        <Field label="Provider notes (optional)" error={errors.providerNotes} colors={colors}>
+        <Field label={t("medications.providerNotes")} error={errors.providerNotes} colors={colors}>
           <TextInput
             style={[
               styles.input,
@@ -254,7 +257,7 @@ export default function AddMedicationScreen() {
             ]}
             value={providerNotes}
             onChangeText={setProviderNotes}
-            placeholder="Any context from your provider you want to remember"
+            placeholder={t("medications.providerNotesPlaceholder")}
             placeholderTextColor={colors.mutedForeground}
             multiline
             textAlignVertical="top"
@@ -268,7 +271,7 @@ export default function AddMedicationScreen() {
         )}
 
         <Text style={[styles.disclaimer, { color: colors.mutedForeground }]}>
-          Always confirm changes with your prescriber.
+          {t("common.alwaysConfirmPrescriber")}
         </Text>
 
         <Pressable

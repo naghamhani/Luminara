@@ -105,7 +105,7 @@ const styles = StyleSheet.create({
     fontFamily: "Inter_700Bold",
     textAlign: "center",
     letterSpacing: 8,
-    paddingLeft: 40, // balance the eye button so digits stay visually centered
+    paddingStart: 40, // balance the eye button so digits stay visually centered
   },
   eyeBtn: {
     width: 40,
